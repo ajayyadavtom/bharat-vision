@@ -1,0 +1,17 @@
+export interface WeatherData {
+  temperature: number;
+  condition: "Clear" | "Rain" | "Cloudy";
+  location: string;
+  commuterAlert: string | null;
+}
+
+// Simulates fetching live local weather based on user location
+export function getBengaluruWeather(): WeatherData {
+  // Simulating typical Bengaluru evening monsoon weather
+  return {
+    temperature: 22,
+    condition: "Rain",
+    location: "Yelahanka",
+    commuterAlert: "Light drizzle expected. Carry an umbrella."
+  };
+}
