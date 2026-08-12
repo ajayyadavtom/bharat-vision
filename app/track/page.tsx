@@ -4,11 +4,13 @@ import { Navigation, Clock, Map as MapIcon, Zap, MapPin } from "lucide-react";
 import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
 
-// 1. PERFECT PATH ALIGNMENT: Pointing exactly to your root components folder
 const LiveMap = dynamic(() => import("../../components/LiveMap"), { ssr: false });
 
+import RouteDeviationAI from "../../components/RouteDeviationAI";
+import ProximityChime from "../../components/ProximityChime";
+import SmartBoardingCard from "../../components/SmartBoardingCard";
+
 export default function TrackScreen() {
-  // 2. HARDCODED DATA: Ensures it doesn't crash on missing logic files
   const smartRoutes = [
     {
       id: "r1",
@@ -28,7 +30,6 @@ export default function TrackScreen() {
 
   return (
     <div className="flex flex-col h-screen overflow-y-auto no-scrollbar pb-24 bg-surface-black relative">
-      
       <div className="p-4 pt-8 bg-gradient-to-b from-brand-dark/50 to-transparent">
         <h2 className="text-[10px] text-brand-accent uppercase tracking-[0.2em] font-bold mb-1 flex items-center gap-1">
           <Zap size={10} fill="currentColor" /> Vanara Sena
@@ -37,19 +38,31 @@ export default function TrackScreen() {
         <p className="text-xs text-gray-400">80 buses · 120 stops · updated 2s ago</p>
       </div>
 
+      {/* Route Deviation AI Anomaly Engine */}
+      <RouteDeviationAI />
+
+      {/* Proximity Deboarding Chime Engine */}
+      <div className="px-4">
+        <ProximityChime />
+      </div>
+
       {/* The Live Interactive Map */}
-      <div className="px-4 mb-6">
+      <div className="px-4 mb-6 mt-2">
         <div className="w-full h-64 bg-surface-dark border border-brand-dark rounded-3xl relative overflow-hidden shadow-lg">
-           <LiveMap />
+          <LiveMap />
         </div>
       </div>
 
-      <div className="px-4 mb-6">
+      {/* Tokyo & Singapore Crowd Density Engine */}
+      <div className="px-4">
+        <SmartBoardingCard />
+      </div>
+
+      <div className="px-4 mb-6 mt-2">
         <div className="bg-surface-dark p-5 rounded-3xl border border-surface-dark shadow-md">
           <h3 className="text-sm font-bold text-white flex items-center gap-2 mb-4">
             <Navigation size={16} className="text-brand-light" /> Plan your trip
           </h3>
-          
           <div className="relative flex flex-col gap-4">
             <div className="absolute left-2.5 top-3.5 bottom-3.5 w-0.5 bg-brand-dark rounded-full"></div>
             <div className="flex items-center gap-3 relative z-10">
@@ -94,8 +107,8 @@ export default function TrackScreen() {
                 {route.segments.map((seg, i) => (
                   <div key={i} className="flex items-center gap-2">
                     <span className={`text-[10px] px-2 py-1 rounded font-bold uppercase ${
-                      seg.mode === 'AUTO_ONDC' ? 'bg-amber-500/20 text-amber-500' : 
-                      seg.mode === 'BUS_BMTC' ? 'bg-brand-dark text-brand-accent' : 
+                      seg.mode === 'AUTO_ONDC' ? 'bg-amber-500/20 text-amber-500' :
+                      seg.mode === 'BUS_BMTC' ? 'bg-brand-dark text-brand-accent' :
                       'bg-surface-black text-gray-400 border border-surface-dark'
                     }`}>
                       {seg.mode.replace('_ONDC', '').replace('_BMTC', '')}

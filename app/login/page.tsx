@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "../../src/lib/supabase";
-import { ShieldCheck, Mail, Lock, Zap } from "lucide-react";
 import { motion } from "framer-motion";
+import { ShieldCheck, Mail, Lock, Zap } from "lucide-react";
+
+// STRICT ALIAS PATH: Connects directly to your existing src/lib/supabase.ts
+import { supabase } from "@/lib/supabase"; 
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
@@ -19,20 +21,24 @@ export default function LoginScreen() {
 
     try {
       if (isSignUp) {
+        // Creates the user in Supabase Auth
         const { error } = await supabase.auth.signUp({
           email,
           password,
         });
         if (error) throw error;
-        alert("Account created successfully! You can now sign in.");
+        alert("Commuter ID created successfully! Please sign in.");
         setIsSignUp(false);
       } else {
+        // Logs the user in and generates the secure JWT session token
         const { error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
         if (error) throw error;
-        router.push("/"); // Instantly redirects to the main dashboard
+        
+        // Push the user to the Bharat Vision Home Dashboard
+        router.push("/");
       }
     } catch (error: any) {
       alert(`Authentication Error: ${error.message}`);
@@ -52,8 +58,8 @@ export default function LoginScreen() {
         className="w-full max-w-sm mx-auto relative z-10"
       >
         <div className="flex flex-col items-center mb-8 text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-brand-base to-brand-dark rounded-2xl shadow-[0_0_30px_rgba(20,184,166,0.3)] flex items-center justify-center mb-4 border border-brand-light/20">
-            <Zap size={32} className="text-white" fill="currentColor" />
+          <div className="w-16 h-16 bg-gradient-to-br from-brand-base to-brand-dark rounded-2xl shadow-[0_0_30px_rgba(20,184,166,0.3)] flex items-center justify-center mb-4 border border-brand-light/20 relative overflow-hidden">
+            <Zap size={32} className="text-white relative z-10" fill="currentColor" />
           </div>
           <h1 className="text-3xl font-black text-white tracking-tight">
             Bharat <span className="text-brand-accent">Vision</span>
@@ -73,7 +79,7 @@ export default function LoginScreen() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full bg-surface-dark text-white rounded-2xl py-4 pl-12 pr-4 outline-none border border-surface-dark focus:border-brand-base transition-all shadow-md placeholder-gray-500 text-sm"
+              className="w-full bg-surface-dark/80 backdrop-blur-md text-white rounded-2xl py-4 pl-12 pr-4 outline-none border border-surface-dark focus:border-brand-base transition-all shadow-md placeholder-gray-500 text-sm"
               placeholder="Commuter Email"
             />
           </div>
@@ -87,7 +93,7 @@ export default function LoginScreen() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full bg-surface-dark text-white rounded-2xl py-4 pl-12 pr-4 outline-none border border-surface-dark focus:border-brand-base transition-all shadow-md placeholder-gray-500 text-sm"
+              className="w-full bg-surface-dark/80 backdrop-blur-md text-white rounded-2xl py-4 pl-12 pr-4 outline-none border border-surface-dark focus:border-brand-base transition-all shadow-md placeholder-gray-500 text-sm"
               placeholder="Password"
             />
           </div>
