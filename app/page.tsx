@@ -5,18 +5,17 @@ import { Search, Leaf, Ticket, TrainFront, CreditCard, ShieldAlert, Zap, CloudRa
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 
-// Absolute imports for standard Next.js structure
 import { useAppStore } from "@/lib/store";
 import UpiGateway from "../components/UpiGateway";
 import BehavioralHabitAI from "../components/BehavioralHabitAI";
 
 export default function VisionHome() {
   const { userName, walletBalance, carbonSavedGrams, addMoney, fetchUserData } = useAppStore();
-  const [showSplash, setShowSplash] = useState(true);
+  // FIX: Only show splash if it hasn't been shown this session
+  const [showSplash, setShowSplash] = useState(false);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [greeting, setGreeting] = useState("Namaskara");
-  
-  // Weather state (simulated to guarantee compilation without missing files)
+
   const weather = {
     temperature: 22,
     condition: "Rain",
@@ -25,15 +24,36 @@ export default function VisionHome() {
   };
 
   useEffect(() => {
-    if (fetchUserData) fetchUserData();
-    
+    fetchUserData();
+
+    // FIX: Check if user is logged in or chose Guest — if not, send to login
+    const checkAuth = async () => {
+      const guestMode = sessionStorage.getItem("bv-guest");
+      if (guestMode) return; // Guest already chose to continue
+
+      const { supabase } = await import("@/lib/supabase");
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        window.location.href = "/login";
+      }
+    };
+    checkAuth();
+
     const hour = new Date().getHours();
     if (hour < 12) setGreeting("Good Morning");
     else if (hour < 18) setGreeting("Good Afternoon");
     else setGreeting("Good Evening");
 
-    const timer = setTimeout(() => setShowSplash(false), 2500);
-    return () => clearTimeout(timer);
+    // FIX: Check if splash already shown this session
+    const hasSeenSplash = sessionStorage.getItem("bv-splash-seen");
+    if (!hasSeenSplash) {
+      setShowSplash(true);
+      const timer = setTimeout(() => {
+        setShowSplash(false);
+        sessionStorage.setItem("bv-splash-seen", "true");
+      }, 2500);
+      return () => clearTimeout(timer);
+    }
   }, [fetchUserData]);
 
   const renderWeatherIcon = () => {
@@ -47,21 +67,14 @@ export default function VisionHome() {
     setIsPaymentOpen(false);
   };
 
-  // Animation Variants
   const splashVariants = {
     hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: { staggerChildren: 0.15, delayChildren: 0.2 }
-    }
+    show: { opacity: 1, transition: { staggerChildren: 0.15, delayChildren: 0.2 } }
   };
 
   const dashboardVariants = {
     hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: { staggerChildren: 0.1, delayChildren: 0.3 }
-    }
+    show: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.3 } }
   };
 
   const itemVariants = {
@@ -78,7 +91,7 @@ export default function VisionHome() {
         onCancel={() => setIsPaymentOpen(false)}
       />
 
-      {/* ENTERPRISE SPLASH SCREEN */}
+      {/* ENTERPRISE SPLASH SCREEN — only shows once per session */}
       <AnimatePresence>
         {showSplash && (
           <motion.div
@@ -105,17 +118,11 @@ export default function VisionHome() {
                 <Zap size={44} className="text-white relative z-10" fill="currentColor" />
               </motion.div>
 
-              <motion.h1
-                variants={itemVariants}
-                className="text-4xl font-black text-white tracking-tight mb-2"
-              >
+              <motion.h1 variants={itemVariants} className="text-4xl font-black text-white tracking-tight mb-2">
                 Bharat <span className="text-brand-accent">Vision</span>
               </motion.h1>
 
-              <motion.p
-                variants={itemVariants}
-                className="text-gray-400 text-xs font-bold tracking-[0.3em] uppercase"
-              >
+              <motion.p variants={itemVariants} className="text-gray-400 text-xs font-bold tracking-[0.3em] uppercase">
                 Namma Bengaluru
               </motion.p>
             </motion.div>
@@ -133,11 +140,9 @@ export default function VisionHome() {
         {/* HEADER */}
         <motion.div variants={itemVariants} className="flex justify-between items-start">
           <div>
-            <h1 className="text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-1">
-              Namma Bengaluru
-            </h1>
+            <h1 className="text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-1">Namma Bengaluru</h1>
             <h2 className="text-2xl font-extrabold text-white">
-              {greeting}, {userName ? userName.split(' ')[0] : "Ajay"}
+              {greeting}, {userName ? userName.split(" ")[0] : "Ajay"}
             </h2>
           </div>
           <div className="flex flex-col items-end gap-2">
@@ -155,38 +160,23 @@ export default function VisionHome() {
         </motion.div>
 
         {/* WEATHER & LIVE ALERTS */}
-        <motion.div
-          variants={itemVariants}
-          className="flex items-center justify-between bg-surface-dark/80 backdrop-blur-md border border-brand-dark rounded-xl p-3 shadow-md"
-        >
+        <motion.div variants={itemVariants} className="flex items-center justify-between bg-surface-dark/80 backdrop-blur-md border border-brand-dark rounded-xl p-3 shadow-md">
           <div className="flex items-center gap-3">
-            <div className="bg-surface-black p-2 rounded-full border border-surface-dark">
-              {renderWeatherIcon()}
-            </div>
+            <div className="bg-surface-black p-2 rounded-full border border-surface-dark">{renderWeatherIcon()}</div>
             <div>
-              <p className="text-white text-sm font-bold flex items-center gap-2">
-                {weather.temperature}°C · {weather.condition}
-              </p>
-              <p className="text-[10px] text-gray-400 font-medium flex items-center gap-1">
-                <MapPin size={10} /> {weather.location}
-              </p>
+              <p className="text-white text-sm font-bold">{weather.temperature}°C · {weather.condition}</p>
+              <p className="text-[10px] text-gray-400 font-medium flex items-center gap-1"><MapPin size={10} /> {weather.location}</p>
             </div>
           </div>
           {weather.commuterAlert && (
             <div className="bg-blue-900/30 border border-blue-800/50 px-3 py-1.5 rounded-lg max-w-[140px] text-right relative overflow-hidden">
-              <motion.div
-                animate={{ opacity: [0.3, 0.6, 0.3] }}
-                transition={{ duration: 2, repeat: Infinity }}
-                className="absolute inset-0 bg-blue-500/10"
-              />
-              <p className="text-[9px] text-blue-300 font-bold leading-tight relative z-10">
-                {weather.commuterAlert}
-              </p>
+              <motion.div animate={{ opacity: [0.3, 0.6, 0.3] }} transition={{ duration: 2, repeat: Infinity }} className="absolute inset-0 bg-blue-500/10" />
+              <p className="text-[9px] text-blue-300 font-bold leading-tight relative z-10">{weather.commuterAlert}</p>
             </div>
           )}
         </motion.div>
 
-        {/* AI ROUTE SEARCH (Linked to A* Engine) */}
+        {/* AI ROUTE SEARCH */}
         <motion.div variants={itemVariants} className="relative group">
           <Link href="/route" className="block">
             <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
@@ -199,26 +189,14 @@ export default function VisionHome() {
         </motion.div>
 
         {/* BHARAT WALLET */}
-        <motion.div
-          variants={itemVariants}
-          className="bg-gradient-to-br from-brand-base to-brand-dark rounded-2xl p-5 shadow-[0_10px_30px_rgba(20,184,166,0.15)] border border-brand-light/20 relative overflow-hidden"
-        >
-          <motion.div
-            animate={{ scale: [1, 1.1, 1], opacity: [0.2, 0.3, 0.2] }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute -right-6 -top-6 w-32 h-32 bg-brand-accent/30 rounded-full blur-2xl"
-          />
+        <motion.div variants={itemVariants} className="bg-gradient-to-br from-brand-base to-brand-dark rounded-2xl p-5 shadow-[0_10px_30px_rgba(20,184,166,0.15)] border border-brand-light/20 relative overflow-hidden">
+          <motion.div animate={{ scale: [1, 1.1, 1], opacity: [0.2, 0.3, 0.2] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }} className="absolute -right-6 -top-6 w-32 h-32 bg-brand-accent/30 rounded-full blur-2xl" />
           <div className="flex justify-between items-end relative z-10">
             <div>
-              <p className="text-brand-accent text-xs font-semibold mb-1 flex items-center gap-1">
-                <CreditCard size={12} /> BHARAT WALLET
-              </p>
+              <p className="text-brand-accent text-xs font-semibold mb-1 flex items-center gap-1"><CreditCard size={12} /> BHARAT WALLET</p>
               <h3 className="text-4xl font-black text-white tracking-tight">₹{(walletBalance || 0).toFixed(2)}</h3>
             </div>
-            <button
-              onClick={() => setIsPaymentOpen(true)}
-              className="bg-brand-accent text-brand-dark text-xs font-bold px-4 py-2 rounded-xl shadow-lg active:scale-95 transition-transform hover:bg-white hover:text-brand-dark"
-            >
+            <button onClick={() => setIsPaymentOpen(true)} className="bg-brand-accent text-brand-dark text-xs font-bold px-4 py-2 rounded-xl shadow-lg active:scale-95 transition-transform hover:bg-white hover:text-brand-dark">
               Add Money
             </button>
           </div>
@@ -228,30 +206,21 @@ export default function VisionHome() {
         <motion.div variants={itemVariants}>
           <h3 className="text-lg font-bold text-white mb-3">Rapid Transit</h3>
           <div className="grid grid-cols-3 gap-3">
-            <Link
-              href="/pass"
-              className="group flex flex-col items-center justify-center bg-surface-dark/50 backdrop-blur-sm p-4 rounded-2xl border border-surface-dark hover:border-brand-base hover:bg-surface-dark transition-all shadow-md"
-            >
+            <Link href="/pass" className="group flex flex-col items-center justify-center bg-surface-dark/50 backdrop-blur-sm p-4 rounded-2xl border border-surface-dark hover:border-brand-base hover:bg-surface-dark transition-all shadow-md">
               <div className="bg-brand-dark p-3 rounded-full mb-2 group-hover:scale-110 transition-transform shadow-inner">
                 <Ticket size={24} className="text-brand-accent" />
               </div>
               <span className="text-xs font-bold text-gray-300">Smart Pass</span>
             </Link>
 
-            <Link
-              href="/track"
-              className="group flex flex-col items-center justify-center bg-surface-dark/50 backdrop-blur-sm p-4 rounded-2xl border border-surface-dark hover:border-indigo-500 hover:bg-surface-dark transition-all shadow-md"
-            >
+            <Link href="/metro" className="group flex flex-col items-center justify-center bg-surface-dark/50 backdrop-blur-sm p-4 rounded-2xl border border-surface-dark hover:border-indigo-500 hover:bg-surface-dark transition-all shadow-md">
               <div className="bg-indigo-900/50 p-3 rounded-full mb-2 group-hover:scale-110 transition-transform shadow-inner">
                 <TrainFront size={24} className="text-indigo-400" />
               </div>
-              <span className="text-xs font-bold text-gray-300">Live Track</span>
+              <span className="text-xs font-bold text-gray-300">Namma Metro</span>
             </Link>
 
-            <Link
-              href="/safety"
-              className="group flex flex-col items-center justify-center bg-surface-dark/50 backdrop-blur-sm p-4 rounded-2xl border border-surface-dark hover:border-red-500 hover:bg-surface-dark transition-all shadow-md"
-            >
+            <Link href="/safety" className="group flex flex-col items-center justify-center bg-surface-dark/50 backdrop-blur-sm p-4 rounded-2xl border border-surface-dark hover:border-red-500 hover:bg-surface-dark transition-all shadow-md">
               <div className="bg-red-900/30 p-3 rounded-full mb-2 group-hover:scale-110 transition-transform shadow-inner">
                 <ShieldAlert size={24} className="text-red-500" />
               </div>
