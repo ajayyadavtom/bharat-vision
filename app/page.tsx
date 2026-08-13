@@ -26,19 +26,6 @@ export default function VisionHome() {
   useEffect(() => {
     fetchUserData();
 
-    // FIX: Check if user is logged in or chose Guest — if not, send to login
-    const checkAuth = async () => {
-      const guestMode = sessionStorage.getItem("bv-guest");
-      if (guestMode) return; // Guest already chose to continue
-
-      const { supabase } = await import("@/lib/supabase");
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        window.location.href = "/login";
-      }
-    };
-    checkAuth();
-
     const hour = new Date().getHours();
     if (hour < 12) setGreeting("Good Morning");
     else if (hour < 18) setGreeting("Good Afternoon");

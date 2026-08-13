@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 
-import BottomNav from "../src/components/navigation/BottomNav";
+import AppShell from "@/components/auth/AppShell";
 import PwaRegistry from "../components/PwaRegistry";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -36,8 +36,7 @@ export default function RootLayout({
       <body className={`${inter.className} bg-surface-black text-white antialiased`}>
         <PwaRegistry />
         <main className="max-w-md mx-auto min-h-screen relative pb-16 shadow-2xl bg-surface-black">
-          {children}
-          <BottomNav />
+          <AppShell>{children}</AppShell>
         </main>
       </body>
     </html>

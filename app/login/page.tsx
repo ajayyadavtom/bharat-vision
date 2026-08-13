@@ -40,6 +40,8 @@ export default function LoginScreen() {
           return;
         }
         if (data.user) {
+          sessionStorage.removeItem("bv-guest");
+          localStorage.removeItem("bv-guest");
           router.push("/");
         }
       }
@@ -55,6 +57,8 @@ export default function LoginScreen() {
     setError(null);
 
     try {
+      sessionStorage.removeItem("bv-guest");
+      localStorage.removeItem("bv-guest");
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: { redirectTo: `${window.location.origin}/` },
@@ -70,9 +74,10 @@ export default function LoginScreen() {
     }
   };
 
-    const handleGuestLogin = () => {
+  const handleGuestLogin = () => {
     sessionStorage.setItem("bv-guest", "true");
-    router.push("/");
+    localStorage.setItem("bv-guest", "true");
+    router.replace("/");
   };
 
 
