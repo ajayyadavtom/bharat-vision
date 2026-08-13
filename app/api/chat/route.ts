@@ -42,7 +42,7 @@ User says: ${message}`;
 
     return NextResponse.json({ reply: reply || SAFE_FALLBACK_REPLY });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Vanara AI Engine Error:", error);
     return NextResponse.json({ reply: SAFE_FALLBACK_REPLY });
   }

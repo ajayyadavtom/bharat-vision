@@ -16,7 +16,12 @@ export default function VisionHome() {
   const { userName, walletBalance, carbonSavedGrams, addMoney, fetchUserData } = useAppStore();
   const [screenState, setScreenState] = useState<"boot" | "splash" | "ready">("boot");
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
-  const [greeting, setGreeting] = useState("Namaskara");
+  const greeting = (() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good Morning";
+    if (hour < 18) return "Good Afternoon";
+    return "Good Evening";
+  })();
 
   const weather = {
     temperature: 22,
@@ -56,11 +61,6 @@ export default function VisionHome() {
     checkAuth().then((fn) => {
       if (typeof fn === "function") cleanup = fn;
     });
-
-    const hour = new Date().getHours();
-    if (hour < 12) setGreeting("Good Morning");
-    else if (hour < 18) setGreeting("Good Afternoon");
-    else setGreeting("Good Evening");
 
     return () => cleanup?.();
   }, [fetchUserData, router]);

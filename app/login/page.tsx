@@ -16,6 +16,7 @@ export default function LoginScreen() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const getErrorMessage = (err: unknown) => (err instanceof Error ? err.message : "Connection error. Try Continue as Guest.");
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,8 +51,8 @@ export default function LoginScreen() {
           router.push("/");
         }
       }
-    } catch (err: any) {
-      setError(err?.message || "Connection error. Try Continue as Guest.");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -72,7 +73,7 @@ export default function LoginScreen() {
         setError(error.message);
         setGoogleLoading(false);
       }
-    } catch (err: any) {
+    } catch {
       setError("Google login not configured. Use email or Continue as Guest.");
       setGoogleLoading(false);
     }

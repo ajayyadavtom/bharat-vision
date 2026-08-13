@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { CreditCard, WifiOff, Ticket, AlertTriangle, Clock, ShieldCheck, RefreshCcw, Smartphone } from "lucide-react";
 import QRCode from "react-qr-code";
-import { motion } from "framer-motion";
 
 import { useAppStore } from "../../src/lib/store"; 
 
@@ -23,15 +22,30 @@ export default function PassScreen() {
   const { walletBalance, userName } = useAppStore();
   const [activeTab, setActiveTab] = useState("digital");
   const [provisionalPass, setProvisionalPass] = useState<ProvisionalTicket | null>(null);
-  
-  const [mounted, setMounted] = useState(false);
-  const [time, setTime] = useState(new Date());
+
+  const [time, setTime] = useState(() => new Date());
   const [qrPayload, setQrPayload] = useState("");
-  const [isOnline, setIsOnline] = useState(true);
+  const [isOnline, setIsOnline] = useState(() => (typeof navigator !== "undefined" ? navigator.onLine : true));
 
   // Hologram tilt coordinates
   const [tilt, setTilt] = useState({ x: 50, y: 50 });
-  const [deviceFingerprint, setDeviceFingerprint] = useState("BV-BINDING-PENDING");
+  const deviceFingerprint = useMemo(() => {
+    if (typeof navigator === "undefined" || typeof window === "undefined") {
+      return "BV-BINDING-PENDING";
+    }
+
+    const userAgent = navigator.userAgent || "UnknownDevice";
+    const screenRes = `${window.screen.width}x${window.screen.height}`;
+    const rawFingerprint = `${userAgent}-${screenRes}-${userName || "COMMUTER"}`;
+
+    let hash = 0;
+    for (let i = 0; i < rawFingerprint.length; i++) {
+      hash = (hash << 5) - hash + rawFingerprint.charCodeAt(i);
+      hash |= 0;
+    }
+
+    return `BV-DEV-${Math.abs(hash).toString(16).toUpperCase()}`;
+  }, [userName]);
 
   const generateLocalShaPayload = async (rawString: string, timeStep: number) => {
     if (typeof window !== "undefined" && window.crypto?.subtle) {
@@ -59,35 +73,18 @@ export default function PassScreen() {
   };
 
   useEffect(() => {
-    setMounted(true);
-    // Safe network check
-    setIsOnline(typeof navigator !== "undefined" ? navigator.onLine : true);
-    
-    // Generate stable device binding fingerprint from browser specs
-    const userAgent = typeof navigator !== "undefined" ? navigator.userAgent : "UnknownDevice";
-    const screenRes = typeof window !== "undefined" ? `${window.screen.width}x${window.screen.height}` : "0x0";
-    const rawFingerprint = `${userAgent}-${screenRes}-${userName || "COMMUTER"}`;
-    
-    // Simple hash for device binding ID
-    let hash = 0;
-    for (let i = 0; i < rawFingerprint.length; i++) {
-      hash = (hash << 5) - hash + rawFingerprint.charCodeAt(i);
-      hash |= 0;
-    }
-    setDeviceFingerprint(`BV-DEV-${Math.abs(hash).toString(16).toUpperCase()}`);
-
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
 
-    if (typeof window !== "undefined") {
-      window.addEventListener("online", handleOnline);
-      window.addEventListener("offline", handleOffline);
-      return () => {
-        window.removeEventListener("online", handleOnline);
-        window.removeEventListener("offline", handleOffline);
-      };
-    }
-  }, [userName]);
+    if (typeof window === "undefined") return;
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
 
   // Gyroscope / Mouse Hologram Shimmer Effect
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -99,7 +96,6 @@ export default function PassScreen() {
 
   // Ultra-Resilient Cryptographic TOTP Hash Generator
   useEffect(() => {
-    if (!mounted) return;
     let isMounted = true;
 
     const generateCryptographicToken = async () => {
@@ -126,7 +122,7 @@ export default function PassScreen() {
 
         const localPayload = await generateLocalShaPayload(rawString, timeStep);
         if (isMounted) setQrPayload(localPayload);
-      } catch (err) {
+      } catch {
         const localPayload = await generateLocalShaPayload(rawString, timeStep);
         if (isMounted) setQrPayload(localPayload);
       }
@@ -143,9 +139,7 @@ export default function PassScreen() {
       isMounted = false;
       clearInterval(interval);
     };
-  }, [userName, isOnline, mounted, deviceFingerprint]);
-
-  if (!mounted) return null;
+  }, [userName, isOnline, deviceFingerprint]);
 
   return (
     <div className="flex flex-col h-screen overflow-y-auto no-scrollbar pb-[120px] bg-surface-black px-4 pt-8 select-none [&>*]:shrink-0">
