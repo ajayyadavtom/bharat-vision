@@ -1,19 +1,27 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
 
+const SAFE_FALLBACK_REPLY = JSON.stringify({
+  status: "offline",
+  message: "Namaskara! Vanara AI is temporarily unavailable. Please try again shortly.",
+});
+
 export async function POST(req: Request) {
   try {
-    const { message } = await req.json();
+    const body = await req.json();
+    const message = typeof body?.message === "string" ? body.message.trim() : "";
     const apiKey = process.env.GEMINI_API_KEY;
 
+    if (!message) {
+      return NextResponse.json({ reply: "Please share your route query so I can help." }, { status: 400 });
+    }
+
     if (!apiKey) {
-      return NextResponse.json({
-        reply: "Vanara AI is in offline mode. GEMINI_API_KEY is not set in Vercel Environment Variables."
-      });
+      return NextResponse.json({ reply: SAFE_FALLBACK_REPLY });
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-3.6-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const currentTime = new Date().toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata" });
 
@@ -32,12 +40,10 @@ User says: ${message}`;
     const result = await model.generateContent(prompt);
     const reply = result.response.text();
 
-    return NextResponse.json({ reply });
+    return NextResponse.json({ reply: reply || SAFE_FALLBACK_REPLY });
 
   } catch (error: any) {
     console.error("Vanara AI Engine Error:", error);
-    return NextResponse.json({
-      reply: "Namaskara! Namma servers are facing heavy traffic. Please try asking again in a moment."
-    });
+    return NextResponse.json({ reply: SAFE_FALLBACK_REPLY });
   }
 }

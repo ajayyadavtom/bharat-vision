@@ -5,7 +5,7 @@ import { ShieldAlert, PhoneCall, MessageSquareWarning, MapPin, CheckCircle2, Ale
 import { motion } from "framer-motion";
 
 // ABSOLUTE ALIAS PATHS
-import { useAppStore } from "@/lib/store";
+import { useAppStore } from "../../src/lib/store";
 
 export default function SafetyScreen() {
   const { addKarma } = useAppStore();

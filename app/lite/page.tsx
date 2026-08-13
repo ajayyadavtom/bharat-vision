@@ -6,7 +6,7 @@ import { BatteryWarning, WifiOff, ShieldAlert, Zap, ArrowLeft } from "lucide-rea
 import Link from "next/link";
 
 // ABSOLUTE ALIAS PATHS
-import { useAppStore } from "@/lib/store";
+import { useAppStore } from "../../src/lib/store";
 
 export default function UltraLiteModeScreen() {
   const { userName } = useAppStore();

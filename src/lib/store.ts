@@ -48,7 +48,7 @@ export const useAppStore = create<AppState>()(
           
           if (user) {
             const { data, error } = await supabase.from('commuter_profiles').select('*').eq('id', user.id).single();
-            if (data) {
+            if (!error && data) {
               set({
                 userName: data.full_name || user.email?.split('@')[0] || "Commuter",
                 walletBalance: Number(data.wallet_balance) || 0,
@@ -67,8 +67,19 @@ export const useAppStore = create<AppState>()(
       }
     }),
     {
-      name: 'bharat-vision-storage', // This string tells the browser to save this data permanently!
-      storage: createJSONStorage(() => localStorage), 
-    }
+      name: 'bharat-vision-storage',
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        userName: state.userName,
+        walletBalance: state.walletBalance,
+        karmaPoints: state.karmaPoints,
+        carbonSavedGrams: state.carbonSavedGrams,
+      }),
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          state.isInitialized = true;
+        }
+      },
+    },
   )
 );

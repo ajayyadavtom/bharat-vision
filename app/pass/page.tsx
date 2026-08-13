@@ -5,8 +5,7 @@ import { CreditCard, WifiOff, Ticket, AlertTriangle, Clock, ShieldCheck, Refresh
 import QRCode from "react-qr-code";
 import { motion } from "framer-motion";
 
-// ABSOLUTE ALIAS PATHS
-import { useAppStore } from "@/lib/store"; 
+import { useAppStore } from "../../src/lib/store"; 
 
 interface ProvisionalTicket {
   id: string;
@@ -33,6 +32,20 @@ export default function PassScreen() {
   // Hologram tilt coordinates
   const [tilt, setTilt] = useState({ x: 50, y: 50 });
   const [deviceFingerprint, setDeviceFingerprint] = useState("BV-BINDING-PENDING");
+
+  const generateLocalShaPayload = async (rawString: string, timeStep: number) => {
+    if (typeof window !== "undefined" && window.crypto?.subtle) {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(rawString);
+      const hashBuffer = await window.crypto.subtle.digest("SHA-256", data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+      return `BV-TOTP:${hashHex.substring(0, 16).toUpperCase()}:${timeStep}`;
+    }
+
+    const weakFallback = btoa(rawString).replace(/[^a-zA-Z0-9]/g, "").substring(0, 16).toUpperCase();
+    return `BV-TOTP:${weakFallback}:${timeStep}`;
+  };
 
   const passCatalog = [
     { name: "Ordinary Day Pass", price: "₹80", type: "BMTC", color: "text-brand-accent" },
@@ -95,27 +108,27 @@ export default function PassScreen() {
       const rawString = `BMTC-SECURE-${safeUserName}-${deviceFingerprint}-${timeStep}-${isOnline ? 'ONLINE' : 'OFFLINE'}`;
       
       try {
-        let hashHex = "";
-        // Safely check if we are in a secure context allowing crypto API
-        if (typeof window !== "undefined" && window.crypto && window.crypto.subtle) {
-          const encoder = new TextEncoder();
-          const data = encoder.encode(rawString);
-          const hashBuffer = await window.crypto.subtle.digest('SHA-256', data);
-          const hashArray = Array.from(new Uint8Array(hashBuffer));
-          hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-        } else {
-          // Fallback for non-HTTPS local network testing (Mobile IP testing)
-          hashHex = btoa(rawString).replace(/[^a-zA-Z0-9]/g, '').substring(0, 16);
+        if (isOnline) {
+          const response = await fetch("/api/totp", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ userId: safeUserName, deviceFingerprint }),
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            if (isMounted && data?.code && data?.timeStep) {
+              setQrPayload(`BV-TOTP:${String(data.code).toUpperCase()}:${data.timeStep}`);
+              return;
+            }
+          }
         }
-        
-        if (isMounted) {
-          setQrPayload(`BV-TOTP:${hashHex.substring(0, 16).toUpperCase()}:${timeStep}`);
-        }
+
+        const localPayload = await generateLocalShaPayload(rawString, timeStep);
+        if (isMounted) setQrPayload(localPayload);
       } catch (err) {
-        // Absolute worst-case scenario fallback
-        if (isMounted) {
-          setQrPayload(`BV-FALLBACK:${safeUserName}-${timeStep}`);
-        }
+        const localPayload = await generateLocalShaPayload(rawString, timeStep);
+        if (isMounted) setQrPayload(localPayload);
       }
     };
 

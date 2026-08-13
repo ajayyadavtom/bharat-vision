@@ -5,7 +5,7 @@ import { CreditCard, Wifi, ShieldCheck, RefreshCcw, Smartphone, Zap, CheckCircle
 import { motion } from "framer-motion";
 
 // ABSOLUTE ALIAS PATHS
-import { useAppStore } from "@/lib/store";
+import { useAppStore } from "../../src/lib/store";
 
 export default function NcmcPage() {
   const { addMoney } = useAppStore();

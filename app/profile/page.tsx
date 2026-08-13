@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { User, MapPin, ShieldCheck, Leaf, Medal, Receipt, ChevronRight, ScanFace, Upload, CheckCircle2, Loader2, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAppStore } from "@/lib/store";
+import { useAppStore } from "../../src/lib/store";
 
 export default function ProfileScreen() {
   const { userName, carbonSavedGrams, karmaPoints } = useAppStore();

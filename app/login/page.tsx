@@ -3,13 +3,15 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { ShieldCheck, Mail, Lock, Zap, User, Loader2, ArrowRight } from "lucide-react";
+import { ShieldCheck, Mail, Lock, Zap, User, Loader2, ArrowRight, Smartphone, Eye, EyeOff } from "lucide-react";
 import { supabase } from "../../src/lib/supabase";
 
 export default function LoginScreen() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
+  const [authMode, setAuthMode] = useState<"email" | "phone">("email");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
@@ -21,8 +23,12 @@ export default function LoginScreen() {
     setError(null);
 
     try {
+      const authPayload = authMode === "email"
+        ? { email: identifier, password }
+        : { phone: identifier, password };
+
       if (isSignUp) {
-        const { data, error } = await supabase.auth.signUp({ email, password });
+        const { data, error } = await supabase.auth.signUp(authPayload);
         if (error) {
           setError(error.message);
           setLoading(false);
@@ -33,13 +39,14 @@ export default function LoginScreen() {
           setIsSignUp(false);
         }
       } else {
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data, error } = await supabase.auth.signInWithPassword(authPayload);
         if (error) {
           setError(error.message);
           setLoading(false);
           return;
         }
         if (data.user) {
+          sessionStorage.removeItem("bv-guest");
           router.push("/");
         }
       }
@@ -53,6 +60,7 @@ export default function LoginScreen() {
   const handleGoogleLogin = async () => {
     setGoogleLoading(true);
     setError(null);
+    sessionStorage.removeItem("bv-guest");
 
     try {
       const { error } = await supabase.auth.signInWithOAuth({
@@ -99,18 +107,55 @@ export default function LoginScreen() {
           </div>
         )}
 
+        <div className="grid grid-cols-2 gap-2 mb-4">
+          <button
+            type="button"
+            onClick={() => {
+              setAuthMode("email");
+              setIdentifier("");
+              setError(null);
+            }}
+            className={`py-2 rounded-xl text-xs font-bold border transition-colors ${
+              authMode === "email"
+                ? "bg-brand-dark border-brand-base text-brand-accent"
+                : "bg-surface-dark border-surface-dark text-gray-400"
+            }`}
+          >
+            Email
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setAuthMode("phone");
+              setIdentifier("");
+              setError(null);
+            }}
+            className={`py-2 rounded-xl text-xs font-bold border transition-colors ${
+              authMode === "phone"
+                ? "bg-brand-dark border-brand-base text-brand-accent"
+                : "bg-surface-dark border-surface-dark text-gray-400"
+            }`}
+          >
+            Phone
+          </button>
+        </div>
+
         <form onSubmit={handleAuth} className="flex flex-col gap-4">
           <div className="relative group">
             <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-              <Mail size={18} className="text-gray-500 group-focus-within:text-brand-light transition-colors" />
+              {authMode === "email" ? (
+                <Mail size={18} className="text-gray-500 group-focus-within:text-brand-light transition-colors" />
+              ) : (
+                <Smartphone size={18} className="text-gray-500 group-focus-within:text-brand-light transition-colors" />
+              )}
             </div>
             <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type={authMode === "email" ? "email" : "tel"}
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
               required
               className="w-full bg-surface-dark/80 backdrop-blur-md text-white rounded-2xl py-4 pl-12 pr-4 outline-none border border-surface-dark focus:border-brand-base transition-all shadow-md placeholder-gray-500 text-sm"
-              placeholder="Commuter Email"
+              placeholder={authMode === "email" ? "Commuter Email" : "Phone Number (+91...)"}
             />
           </div>
 
@@ -119,13 +164,20 @@ export default function LoginScreen() {
               <Lock size={18} className="text-gray-500 group-focus-within:text-brand-light transition-colors" />
             </div>
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full bg-surface-dark/80 backdrop-blur-md text-white rounded-2xl py-4 pl-12 pr-4 outline-none border border-surface-dark focus:border-brand-base transition-all shadow-md placeholder-gray-500 text-sm"
+              className="w-full bg-surface-dark/80 backdrop-blur-md text-white rounded-2xl py-4 pl-12 pr-12 outline-none border border-surface-dark focus:border-brand-base transition-all shadow-md placeholder-gray-500 text-sm"
               placeholder="Password"
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              className="absolute inset-y-0 right-4 flex items-center text-gray-400 hover:text-white transition-colors"
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
           </div>
 
           <button

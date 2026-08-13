@@ -3,16 +3,18 @@
 import { useState, useEffect } from "react";
 import { Search, Leaf, Ticket, TrainFront, CreditCard, ShieldAlert, Zap, CloudRain, Sun, Cloud, User, MapPin } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 
-import { useAppStore } from "@/lib/store";
+import { supabase } from "../src/lib/supabase";
+import { useAppStore } from "../src/lib/store";
 import UpiGateway from "../components/UpiGateway";
 import BehavioralHabitAI from "../components/BehavioralHabitAI";
 
 export default function VisionHome() {
+  const router = useRouter();
   const { userName, walletBalance, carbonSavedGrams, addMoney, fetchUserData } = useAppStore();
-  // FIX: Only show splash if it hasn't been shown this session
-  const [showSplash, setShowSplash] = useState(false);
+  const [screenState, setScreenState] = useState<"boot" | "splash" | "ready">("boot");
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [greeting, setGreeting] = useState("Namaskara");
 
@@ -24,37 +26,44 @@ export default function VisionHome() {
   };
 
   useEffect(() => {
-    fetchUserData();
-
-    // FIX: Check if user is logged in or chose Guest — if not, send to login
     const checkAuth = async () => {
+      await fetchUserData();
       const guestMode = sessionStorage.getItem("bv-guest");
-      if (guestMode) return; // Guest already chose to continue
-
-      const { supabase } = await import("@/lib/supabase");
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        window.location.href = "/login";
+      if (!guestMode) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          router.replace("/login");
+          return;
+        }
       }
+
+      const hasSeenSplash = sessionStorage.getItem("bv-splash-seen");
+      if (hasSeenSplash === "true") {
+        setScreenState("ready");
+        return;
+      }
+
+      setScreenState("splash");
+      const timer = setTimeout(() => {
+        sessionStorage.setItem("bv-splash-seen", "true");
+        setScreenState("ready");
+      }, 2500);
+
+      return () => clearTimeout(timer);
     };
-    checkAuth();
+
+    let cleanup: (() => void) | undefined;
+    checkAuth().then((fn) => {
+      if (typeof fn === "function") cleanup = fn;
+    });
 
     const hour = new Date().getHours();
     if (hour < 12) setGreeting("Good Morning");
     else if (hour < 18) setGreeting("Good Afternoon");
     else setGreeting("Good Evening");
 
-    // FIX: Check if splash already shown this session
-    const hasSeenSplash = sessionStorage.getItem("bv-splash-seen");
-    if (!hasSeenSplash) {
-      setShowSplash(true);
-      const timer = setTimeout(() => {
-        setShowSplash(false);
-        sessionStorage.setItem("bv-splash-seen", "true");
-      }, 2500);
-      return () => clearTimeout(timer);
-    }
-  }, [fetchUserData]);
+    return () => cleanup?.();
+  }, [fetchUserData, router]);
 
   const renderWeatherIcon = () => {
     if (weather.condition === "Rain") return <CloudRain size={16} className="text-blue-400" />;
@@ -81,6 +90,12 @@ export default function VisionHome() {
     hidden: { opacity: 0, y: 20 },
     show: { opacity: 1, y: 0, transition: { type: "spring" as const, stiffness: 300, damping: 24 } }
   };
+
+  if (screenState === "boot") {
+    return <div className="h-screen bg-surface-black" />;
+  }
+
+  const showSplash = screenState === "splash";
 
   return (
     <>
