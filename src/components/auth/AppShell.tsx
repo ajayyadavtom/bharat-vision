@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
 import { supabase } from "@/lib/supabase";
-import BottomNav from "@/components/navigation/BottomNav";
+import BottomNav from "../navigation/BottomNav";
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -22,6 +22,8 @@ export default function AppShell({ children }: AppShellProps) {
     let isMounted = true;
 
     const verifyAccess = async () => {
+      setIsCheckingAccess(true);
+
       if (isLoginPage) {
         if (!isMounted) return;
         setIsAuthorized(true);
@@ -64,7 +66,6 @@ export default function AppShell({ children }: AppShellProps) {
       }
     };
 
-    setIsCheckingAccess(true);
     verifyAccess();
 
     return () => {

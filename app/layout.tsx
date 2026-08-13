@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 
-import AppShell from "@/components/auth/AppShell";
+import AppShell from "../src/components/auth/AppShell";
 import PwaRegistry from "../components/PwaRegistry";
 
 const inter = Inter({ subsets: ["latin"] });
