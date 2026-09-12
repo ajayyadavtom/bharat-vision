@@ -100,12 +100,12 @@ export default function SafetyScreen() {
             <select
               value={hazardCategory}
               onChange={(e) => setHazardCategory(e.target.value)}
-              className="w-full bg-surface-black text-white rounded-xl py-3 px-4 outline-none border border-surface-dark focus:border-brand-base text-xs font-semibold"
+              className="w-full bg-slate-100 dark:bg-slate-900 text-slate-900 dark:text-white rounded-xl py-3 px-4 outline-none border border-slate-300 dark:border-slate-700 focus:border-brand-base text-xs font-semibold"
             >
-              <option value="Crowd Surge">Severe Crowd Surge</option>
-              <option value="Station Lighting">Station Lighting Failure</option>
-              <option value="Bus Breakdown">Bus / Metro Delay or Breakdown</option>
-              <option value="Medical Assistance">Medical Emergency</option>
+              <option value="Crowd Surge" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Severe Crowd Surge</option>
+              <option value="Station Lighting" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Station Lighting Failure</option>
+              <option value="Bus Breakdown" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Bus / Metro Delay or Breakdown</option>
+              <option value="Medical Assistance" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Medical Emergency</option>
             </select>
           </div>
 

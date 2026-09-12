@@ -3,34 +3,32 @@
 import { useState, useRef, useEffect } from "react";
 import { Mic, Send, Sparkles, StopCircle, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
-import { useAppStore } from "@/lib/store";
+import { useAppStore, ChatMessage } from "@/lib/store";
 import { getCityData } from "@/lib/cityData";
 
-interface Message {
-  id: number;
-  text: string;
-  sender: "user" | "bot";
-}
-
 export default function ChatScreen() {
-  const { currentCity } = useAppStore();
+  const { currentCity, chatMessages, addChatMessage } = useAppStore();
   const cityData = getCityData(currentCity);
   const [inputText, setInputText] = useState("");
   const [isListening, setIsListening] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 1,
-      text: `Namaskara! 🙏 I'm Vanara AI for ${cityData.name}. Ask me about ${cityData.transitAuthorities.bus} routes, ${cityData.transitAuthorities.metro} timings, or just tap the mic and speak!`,
-      sender: "bot"
+  
+  // Set initial welcome message if empty
+  useEffect(() => {
+    if (chatMessages.length === 0) {
+      addChatMessage({
+        id: Date.now(),
+        text: `Namaskara! 🙏 I'm Vanara AI for ${cityData.name}. Ask me about ${cityData.transitAuthorities.bus} routes, ${cityData.transitAuthorities.metro} timings, or just tap the mic and speak!`,
+        sender: "bot"
+      });
     }
-  ]);
+  }, [chatMessages.length, addChatMessage, cityData]);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [chatMessages]);
 
   const quickPrompts = [
     "Show me the route to Majestic",
@@ -42,8 +40,8 @@ export default function ChatScreen() {
   const handleSendMessage = async (text: string) => {
     if (!text.trim()) return;
 
-    const userMsg: Message = { id: Date.now(), text, sender: "user" };
-    setMessages(prev => [...prev, userMsg]);
+    const userMsg: ChatMessage = { id: Date.now(), text, sender: "user" };
+    addChatMessage(userMsg);
     setInputText("");
     setIsLoading(true);
 
@@ -55,12 +53,12 @@ export default function ChatScreen() {
       });
       
       const data = await response.json();
-      const botMsg: Message = { id: Date.now() + 1, text: data.reply, sender: "bot" };
-      setMessages(prev => [...prev, botMsg]);
+      const botMsg: ChatMessage = { id: Date.now() + 1, text: data.reply, sender: "bot" };
+      addChatMessage(botMsg);
     } catch (error) {
       console.error(error);
-      const errorMsg: Message = { id: Date.now() + 1, text: "Sorry, my neural link to BMTC servers timed out. Try again?", sender: "bot" };
-      setMessages(prev => [...prev, errorMsg]);
+      const errorMsg: ChatMessage = { id: Date.now() + 1, text: "Sorry, my neural link to BMTC servers timed out. Try again?", sender: "bot" };
+      addChatMessage(errorMsg);
     } finally {
       setIsLoading(false);
       setIsListening(false);
@@ -94,7 +92,7 @@ export default function ChatScreen() {
 
       {/* Chat History */}
       <div className="flex-1 overflow-y-auto no-scrollbar p-4 flex flex-col gap-4 pb-32">
-        {messages.map((msg) => (
+        {chatMessages.map((msg) => (
           <motion.div
             key={msg.id}
             initial={{ opacity: 0, y: 10 }}

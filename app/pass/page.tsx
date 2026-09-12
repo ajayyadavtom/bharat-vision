@@ -231,7 +231,7 @@ export default function PassScreen() {
                   <p className="text-[10px] text-gray-400 uppercase tracking-wider">{pass.type}</p>
                 </div>
               </div>
-              <button className="bg-brand-dark text-brand-accent text-xs font-bold px-3 py-1.5 rounded-lg border border-brand-base group-hover:bg-brand-base group-hover:text-black transition-colors">
+              <button className="bg-emerald-500/20 text-emerald-400 text-xs font-bold px-3 py-1.5 rounded-lg border border-emerald-500/50 group-hover:bg-emerald-500 group-hover:text-slate-900 transition-colors">
                 {pass.price}
               </button>
             </div>

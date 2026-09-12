@@ -7,14 +7,13 @@ import { useAppStore } from "@/lib/store";
 import { getCityData } from "@/lib/cityData";
 
 export default function AutoCabBooking() {
-  const { currentCity, walletBalance, addMoney } = useAppStore();
+  const { currentCity, walletBalance, addMoney, bookedRide, setBookedRide } = useAppStore();
   const cityData = getCityData(currentCity);
   
   const [pickup, setPickup] = useState("Current Location");
   const [dropoff, setDropoff] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [rides, setRides] = useState<any[]>([]);
-  const [bookedRide, setBookedRide] = useState<any | null>(null);
 
   const handleSearch = () => {
     if (!dropoff) return;
@@ -37,7 +36,14 @@ export default function AutoCabBooking() {
       return;
     }
     addMoney(-ride.fare);
-    setBookedRide(ride);
+    
+    // Generate PIN once and save to the ride object
+    const rideWithPin = {
+      ...ride,
+      pin: Math.floor(1000 + Math.random() * 9000)
+    };
+    
+    setBookedRide(rideWithPin);
   };
 
   return (
@@ -143,7 +149,7 @@ export default function AutoCabBooking() {
             </div>
             <div className="text-right">
               <p className="text-[10px] text-gray-400 font-bold uppercase">PIN</p>
-              <p className="text-xl font-black text-emerald-400 tracking-widest">{Math.floor(1000 + Math.random() * 9000)}</p>
+              <p className="text-xl font-black text-emerald-400 tracking-widest">{bookedRide.pin}</p>
             </div>
           </div>
           
