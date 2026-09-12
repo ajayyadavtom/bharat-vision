@@ -58,10 +58,10 @@ export default function NcmcPage() {
             <Zap size={14} className="text-indigo-400" />
             <h1 className="text-[10px] uppercase tracking-widest text-indigo-300 font-bold">RuPay NCMC Standard</h1>
           </div>
-          <h2 className="text-3xl font-extrabold text-white">Contactless Card</h2>
+          <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white">Contactless Card</h2>
         </div>
         <div className="bg-surface-dark border border-indigo-900/50 px-3 py-1.5 rounded-xl shadow-md text-right">
-          <span className="text-[10px] text-gray-400 font-bold uppercase block">Chip Status</span>
+          <span className="text-[10px] text-slate-500 dark:text-gray-400 font-bold uppercase block">Chip Status</span>
           <span className="text-emerald-400 font-black text-xs flex items-center gap-1">
             <Wifi size={12} className="animate-pulse" /> NFC Enabled
           </span>
@@ -79,7 +79,7 @@ export default function NcmcPage() {
         <div className="flex justify-between items-start mb-8 relative z-10">
           <div>
             <p className="text-[10px] uppercase tracking-widest text-indigo-300 font-bold">National Common Mobility Card</p>
-            <h3 className="text-2xl font-black text-white mt-1">₹{cardBalance.toFixed(2)}</h3>
+            <h3 className="text-2xl font-black text-slate-900 dark:text-white mt-1">₹{cardBalance.toFixed(2)}</h3>
           </div>
           <div className="bg-white/10 backdrop-blur-md p-2.5 rounded-2xl border border-white/20">
             <CreditCard size={24} className="text-indigo-400" />
@@ -88,8 +88,8 @@ export default function NcmcPage() {
 
         <div className="flex justify-between items-end relative z-10">
           <div>
-            <p className="text-[10px] text-gray-400 font-mono">{cardNumber}</p>
-            <p className="text-xs text-white font-bold mt-0.5">BMRCL & BMTC Unified Transit</p>
+            <p className="text-[10px] text-slate-500 dark:text-gray-400 font-mono">{cardNumber}</p>
+            <p className="text-xs text-slate-900 dark:text-white font-bold mt-0.5">BMRCL & BMTC Unified Transit</p>
           </div>
           <div className="flex items-center gap-1 text-xs text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/30">
             <ShieldCheck size={12} /> Active
@@ -98,13 +98,13 @@ export default function NcmcPage() {
       </motion.div>
 
       {/* NFC Tap & Sync Trigger */}
-      <div className="bg-surface-dark border border-brand-dark p-5 rounded-3xl shadow-lg mb-6 flex flex-col items-center text-center">
-        <div className="w-16 h-16 bg-surface-black rounded-2xl border border-surface-dark flex items-center justify-center mb-4 shadow-inner">
+      <div className="bg-surface-dark border border-slate-200 dark:border-brand-dark p-5 rounded-3xl shadow-lg mb-6 flex flex-col items-center text-center">
+        <div className="w-16 h-16 bg-surface-black rounded-2xl border border-slate-200 dark:border-surface-dark flex items-center justify-center mb-4 shadow-inner">
           <Smartphone size={28} className="text-brand-accent animate-pulse" />
         </div>
 
-        <h3 className="text-base font-bold text-white mb-1">NFC Hardware Bridge</h3>
-        <p className="text-xs text-gray-400 mb-5 max-w-xs">
+        <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">NFC Hardware Bridge</h3>
+        <p className="text-xs text-slate-500 dark:text-gray-400 mb-5 max-w-xs">
           Hold your physical RuPay NCMC card to the back of your phone to sync chip balance or top-up instantly.
         </p>
 
@@ -139,10 +139,10 @@ export default function NcmcPage() {
       </div>
 
       {/* Auto Top-Up Settings */}
-      <div className="bg-surface-dark border border-brand-dark p-5 rounded-3xl shadow-lg flex justify-between items-center">
+      <div className="bg-surface-dark border border-slate-200 dark:border-brand-dark p-5 rounded-3xl shadow-lg flex justify-between items-center">
         <div>
-          <h4 className="text-sm font-bold text-white">Auto Top-Up via UPI</h4>
-          <p className="text-[10px] text-gray-400 mt-0.5">Automatically reload ₹100 when balance dips below ₹50.</p>
+          <h4 className="text-sm font-bold text-slate-900 dark:text-white">Auto Top-Up via UPI</h4>
+          <p className="text-[10px] text-slate-500 dark:text-gray-400 mt-0.5">Automatically reload ₹100 when balance dips below ₹50.</p>
         </div>
         <button
           onClick={() => setAutoTopUp(!autoTopUp)}

@@ -54,7 +54,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
         >
           <motion.div className="flex flex-col items-center">
             <motion.div className="w-24 h-24 bg-emerald-500 rounded-3xl shadow-[0_0_50px_rgba(16,185,129,0.3)] flex items-center justify-center mb-6 relative overflow-hidden">
-              <Zap size={44} className="text-white relative z-10" fill="currentColor" />
+              <Zap size={44} className="text-slate-900 dark:text-white relative z-10" fill="currentColor" />
             </motion.div>
             <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight mb-2">
               Bharat <span className="text-emerald-500">Vision</span>

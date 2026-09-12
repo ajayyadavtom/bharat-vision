@@ -44,13 +44,13 @@ export default function OndcTransactionBundle() {
         </h3>
       </div>
 
-      <h4 className="text-xl font-extrabold text-white mb-1 relative z-10">Multi-Modal Bundle</h4>
-      <p className="text-xs text-gray-400 mb-5 relative z-10">
+      <h4 className="text-xl font-extrabold text-slate-900 dark:text-white mb-1 relative z-10">Multi-Modal Bundle</h4>
+      <p className="text-xs text-slate-500 dark:text-gray-400 mb-5 relative z-10">
         Book your first-mile auto and main transit pass in a single unified transaction.
       </p>
 
       {/* Segment 1: ONDC Auto */}
-      <div className="bg-surface-black border border-surface-dark p-4 rounded-2xl mb-3 relative z-10">
+      <div className="bg-surface-black border border-slate-200 dark:border-surface-dark p-4 rounded-2xl mb-3 relative z-10">
         <div className="flex justify-between items-start mb-2">
           <div className="flex items-center gap-3">
             <div className="bg-amber-500/20 p-2.5 rounded-xl border border-amber-500/30">
@@ -58,13 +58,13 @@ export default function OndcTransactionBundle() {
             </div>
             <div>
               <p className="text-[10px] uppercase tracking-wider text-amber-500 font-bold">First Mile</p>
-              <h5 className="text-sm font-bold text-white leading-tight">Open-Network Auto</h5>
+              <h5 className="text-sm font-bold text-slate-900 dark:text-white leading-tight">Open-Network Auto</h5>
             </div>
           </div>
-          <span className="text-sm font-black text-white">₹45</span>
+          <span className="text-sm font-black text-slate-900 dark:text-white">₹45</span>
         </div>
         <div className="pl-12">
-          <p className="text-xs text-gray-400 flex items-center gap-1">
+          <p className="text-xs text-slate-500 dark:text-gray-400 flex items-center gap-1">
             <MapPin size={12} className="text-gray-500" /> Current Location <ArrowRight size={10} className="text-gray-600" /> Bus Stop
           </p>
           
@@ -85,7 +85,7 @@ export default function OndcTransactionBundle() {
       </div>
 
       {/* Segment 2: BMTC Transit */}
-      <div className="bg-surface-black border border-surface-dark p-4 rounded-2xl mb-5 relative z-10">
+      <div className="bg-surface-black border border-slate-200 dark:border-surface-dark p-4 rounded-2xl mb-5 relative z-10">
         <div className="flex justify-between items-start mb-2">
           <div className="flex items-center gap-3">
             <div className="bg-brand-dark p-2.5 rounded-xl border border-brand-base">
@@ -93,18 +93,18 @@ export default function OndcTransactionBundle() {
             </div>
             <div>
               <p className="text-[10px] uppercase tracking-wider text-brand-accent font-bold">Main Transit</p>
-              <h5 className="text-sm font-bold text-white leading-tight">Vajra AC Pass (Route 500D)</h5>
+              <h5 className="text-sm font-bold text-slate-900 dark:text-white leading-tight">Vajra AC Pass (Route 500D)</h5>
             </div>
           </div>
-          <span className="text-sm font-black text-white">₹140</span>
+          <span className="text-sm font-black text-slate-900 dark:text-white">₹140</span>
         </div>
       </div>
 
       {/* Total & Action */}
       <div className="flex items-center justify-between border-t border-indigo-900/50 pt-4 mt-2 relative z-10">
         <div>
-          <p className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Unified Total</p>
-          <p className="text-2xl font-black text-white">₹185</p>
+          <p className="text-[10px] text-slate-500 dark:text-gray-400 uppercase tracking-widest font-bold">Unified Total</p>
+          <p className="text-2xl font-black text-slate-900 dark:text-white">₹185</p>
         </div>
         
         {bookingState === "idle" && (
@@ -120,7 +120,7 @@ export default function OndcTransactionBundle() {
         )}
 
         {bookingState === "processing" && (
-          <button disabled className="bg-surface-black border border-surface-dark text-gray-400 font-bold py-3 px-6 rounded-xl text-xs flex items-center gap-2 opacity-80">
+          <button disabled className="bg-surface-black border border-slate-200 dark:border-surface-dark text-slate-500 dark:text-gray-400 font-bold py-3 px-6 rounded-xl text-xs flex items-center gap-2 opacity-80">
             <Loader2 size={16} className="animate-spin" /> Splitting Payments...
           </button>
         )}
@@ -136,10 +136,10 @@ export default function OndcTransactionBundle() {
       <AnimatePresence>
         {bookingState === "confirmed" && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="mt-4 pt-4 border-t border-indigo-900/50 relative z-10 flex gap-2">
-            <div className="flex-1 bg-surface-black border border-surface-dark p-3 rounded-xl flex items-center justify-center gap-2 text-amber-400 text-[10px] font-bold">
+            <div className="flex-1 bg-surface-black border border-slate-200 dark:border-surface-dark p-3 rounded-xl flex items-center justify-center gap-2 text-amber-400 text-[10px] font-bold">
               <Car size={14} /> Auto Arriving (3m)
             </div>
-            <div className="flex-1 bg-surface-black border border-surface-dark p-3 rounded-xl flex items-center justify-center gap-2 text-brand-accent text-[10px] font-bold">
+            <div className="flex-1 bg-surface-black border border-slate-200 dark:border-surface-dark p-3 rounded-xl flex items-center justify-center gap-2 text-brand-accent text-[10px] font-bold">
               <Ticket size={14} /> View AC Pass
             </div>
           </motion.div>

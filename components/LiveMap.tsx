@@ -158,15 +158,15 @@ export default function LiveMap() {
     <div className="w-full h-full relative z-0 bg-surface-black">
       
       {/* WebSocket Status Badge Overlay */}
-      <div className="absolute top-3 right-3 z-[400] bg-surface-black/90 backdrop-blur-md px-3 py-1.5 rounded-full border border-brand-dark flex items-center gap-2 shadow-2xl">
+      <div className="absolute top-3 right-3 z-[400] bg-surface-black/90 backdrop-blur-md px-3 py-1.5 rounded-full border border-slate-200 dark:border-brand-dark flex items-center gap-2 shadow-2xl">
         <span className={`w-2.5 h-2.5 rounded-full ${wsConnected ? "bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]" : "bg-amber-400"}`}></span>
-        <span className="text-[9px] font-black tracking-widest text-white uppercase">
+        <span className="text-[9px] font-black tracking-widest text-slate-900 dark:text-white uppercase">
           {wsConnected ? "SSE / WS Active Stream" : "Connecting..."}
         </span>
       </div>
       
       {/* 60FPS Native Render Badge Overlay */}
-      <div className="absolute bottom-3 left-3 z-[400] bg-surface-black/90 backdrop-blur-md px-2 py-1 rounded border border-brand-dark flex items-center shadow-2xl pointer-events-none">
+      <div className="absolute bottom-3 left-3 z-[400] bg-surface-black/90 backdrop-blur-md px-2 py-1 rounded border border-slate-200 dark:border-brand-dark flex items-center shadow-2xl pointer-events-none">
         <span className="text-[8px] font-black tracking-widest text-brand-light uppercase">
           60 FPS Vector Canvas (Lerp enabled)
         </span>

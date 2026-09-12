@@ -85,7 +85,7 @@ export default function UpiGateway({ isOpen, amount, onSuccess, onCancel }: UpiG
           {/* Close Button */}
           <button 
             onClick={onCancel}
-            className="absolute top-5 right-5 text-gray-400 hover:text-white transition-colors"
+            className="absolute top-5 right-5 text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:text-white transition-colors"
           >
             <X size={20} />
           </button>
@@ -95,12 +95,12 @@ export default function UpiGateway({ isOpen, amount, onSuccess, onCancel }: UpiG
             <span className="text-[10px] uppercase tracking-widest text-brand-light font-bold">Secure Payment Gateway</span>
           </div>
           
-          <h3 className="text-2xl font-black text-white mb-1">Top-Up Bharat Wallet</h3>
-          <p className="text-xs text-gray-400 mb-6">Instant credit via UPI, NCMC, or Razorpay SDK</p>
+          <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-1">Top-Up Bharat Wallet</h3>
+          <p className="text-xs text-slate-500 dark:text-gray-400 mb-6">Instant credit via UPI, NCMC, or Razorpay SDK</p>
 
           {/* Amount Display Box */}
-          <div className="bg-surface-black p-4 rounded-2xl border border-surface-dark flex justify-between items-center mb-6">
-            <span className="text-xs text-gray-300 font-bold uppercase">Recharge Amount</span>
+          <div className="bg-surface-black p-4 rounded-2xl border border-slate-200 dark:border-surface-dark flex justify-between items-center mb-6">
+            <span className="text-xs text-slate-600 dark:text-gray-300 font-bold uppercase">Recharge Amount</span>
             <span className="text-2xl font-black text-brand-accent">₹{amount}.00</span>
           </div>
 
@@ -108,19 +108,19 @@ export default function UpiGateway({ isOpen, amount, onSuccess, onCancel }: UpiG
           <div className="grid grid-cols-3 gap-2 mb-6">
             <button
               onClick={() => setSelectedMethod("upi")}
-              className={`py-3 rounded-xl text-xs font-bold transition-all border ${selectedMethod === "upi" ? "bg-brand-dark border-brand-base text-white shadow-md" : "bg-surface-black border-surface-dark text-gray-400"}`}
+              className={`py-3 rounded-xl text-xs font-bold transition-all border ${selectedMethod === "upi" ? "bg-brand-dark border-brand-base text-slate-900 dark:text-white shadow-md" : "bg-surface-black border-slate-200 dark:border-surface-dark text-slate-500 dark:text-gray-400"}`}
             >
               UPI / QR
             </button>
             <button
               onClick={() => setSelectedMethod("card")}
-              className={`py-3 rounded-xl text-xs font-bold transition-all border ${selectedMethod === "card" ? "bg-brand-dark border-brand-base text-white shadow-md" : "bg-surface-black border-surface-dark text-gray-400"}`}
+              className={`py-3 rounded-xl text-xs font-bold transition-all border ${selectedMethod === "card" ? "bg-brand-dark border-brand-base text-slate-900 dark:text-white shadow-md" : "bg-surface-black border-slate-200 dark:border-surface-dark text-slate-500 dark:text-gray-400"}`}
             >
               Cards
             </button>
             <button
               onClick={() => setSelectedMethod("netbanking")}
-              className={`py-3 rounded-xl text-xs font-bold transition-all border ${selectedMethod === "netbanking" ? "bg-brand-dark border-brand-base text-white shadow-md" : "bg-surface-black border-surface-dark text-gray-400"}`}
+              className={`py-3 rounded-xl text-xs font-bold transition-all border ${selectedMethod === "netbanking" ? "bg-brand-dark border-brand-base text-slate-900 dark:text-white shadow-md" : "bg-surface-black border-slate-200 dark:border-surface-dark text-slate-500 dark:text-gray-400"}`}
             >
               NetBanking
             </button>
@@ -128,12 +128,12 @@ export default function UpiGateway({ isOpen, amount, onSuccess, onCancel }: UpiG
 
           {selectedMethod === "upi" && (
             <div className="mb-6">
-              <label className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block mb-2">Virtual Payment Address (VPA)</label>
+              <label className="text-[10px] text-slate-500 dark:text-gray-400 font-bold uppercase tracking-wider block mb-2">Virtual Payment Address (VPA)</label>
               <input
                 type="text"
                 value={upiId}
                 onChange={(e) => setUpiId(e.target.value)}
-                className="w-full bg-surface-black text-white rounded-xl py-3 px-4 outline-none border border-surface-dark focus:border-brand-base text-xs font-mono"
+                className="w-full bg-surface-black text-slate-900 dark:text-white rounded-xl py-3 px-4 outline-none border border-slate-200 dark:border-surface-dark focus:border-brand-base text-xs font-mono"
                 placeholder="username@okhdfcbank"
               />
             </div>

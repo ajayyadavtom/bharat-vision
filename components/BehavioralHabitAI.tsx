@@ -52,7 +52,7 @@ export default function BehavioralHabitAI() {
 
           <button 
             onClick={() => setIsVisible(false)}
-            className="absolute top-3 right-3 text-gray-500 hover:text-white transition-colors bg-slate-800 p-1.5 rounded-full"
+            className="absolute top-3 right-3 text-gray-500 hover:text-slate-900 dark:text-white transition-colors bg-slate-800 p-1.5 rounded-full"
           >
             <X size={14} />
           </button>
@@ -64,21 +64,21 @@ export default function BehavioralHabitAI() {
 
           {!booked ? (
             <>
-              <h3 className="text-lg font-black text-white mb-1">Book your usual commute?</h3>
+              <h3 className="text-lg font-black text-slate-900 dark:text-white mb-1">Book your usual commute?</h3>
               
-              <div className="flex items-center gap-2 text-xs text-gray-300 font-medium mb-4 bg-slate-800/80 p-3 rounded-xl border border-slate-700">
+              <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-gray-300 font-medium mb-4 bg-slate-800/80 p-3 rounded-xl border border-slate-700">
                 <MapPin size={14} className="text-brand-accent" /> Yelahanka
                 <ArrowRight size={14} className="text-gray-500" />
-                <span className="text-white font-bold">East West College</span>
+                <span className="text-slate-900 dark:text-white font-bold">East West College</span>
               </div>
 
               <div className="flex justify-between items-center bg-slate-950 p-3 rounded-xl border border-slate-800 mb-4">
                 <div>
-                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Multi-Modal Fare</p>
-                  <p className="text-xl font-black text-white mt-0.5">₹45</p>
+                  <p className="text-[10px] text-slate-500 dark:text-gray-400 font-bold uppercase tracking-wider">Multi-Modal Fare</p>
+                  <p className="text-xl font-black text-slate-900 dark:text-white mt-0.5">₹45</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">ETA</p>
+                  <p className="text-[10px] text-slate-500 dark:text-gray-400 font-bold uppercase tracking-wider">ETA</p>
                   <p className="text-sm font-bold text-emerald-400 flex items-center gap-1 justify-end">
                     <Clock size={12} /> 38 mins
                   </p>
@@ -109,8 +109,8 @@ export default function BehavioralHabitAI() {
               <div className="w-12 h-12 bg-emerald-500/20 rounded-full flex items-center justify-center mb-3 border border-emerald-500">
                 <CheckCircle2 size={24} className="text-emerald-400" />
               </div>
-              <h3 className="text-lg font-black text-white">Tickets Generated!</h3>
-              <p className="text-xs text-gray-400 mt-1">Multi-modal passes sent to Smart Tickets.</p>
+              <h3 className="text-lg font-black text-slate-900 dark:text-white">Tickets Generated!</h3>
+              <p className="text-xs text-slate-500 dark:text-gray-400 mt-1">Multi-modal passes sent to Smart Tickets.</p>
             </motion.div>
           )}
         </motion.div>

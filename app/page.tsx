@@ -35,7 +35,7 @@ export default function VisionHome() {
   const renderWeatherIcon = () => {
     if (weather.condition === "Rain") return <CloudRain size={16} className="text-blue-400" />;
     if (weather.condition === "Clear") return <Sun size={16} className="text-amber-400" />;
-    return <Cloud size={16} className="text-gray-400" />;
+    return <Cloud size={16} className="text-slate-500 dark:text-gray-400" />;
   };
 
   const handlePaymentSuccess = () => {
@@ -119,7 +119,7 @@ export default function VisionHome() {
           <div className="flex justify-between items-end relative z-10">
             <div>
               <p className="text-emerald-50 text-xs font-semibold mb-1 flex items-center gap-1"><CreditCard size={12} /> BHARAT WALLET</p>
-              <h3 className="text-4xl font-black text-white tracking-tight">₹{(walletBalance || 0).toFixed(2)}</h3>
+              <h3 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">₹{(walletBalance || 0).toFixed(2)}</h3>
             </div>
             <button onClick={() => setIsPaymentOpen(true)} className="bg-white text-emerald-600 text-xs font-bold px-4 py-2 rounded-xl shadow-sm active:scale-95 transition-transform hover:bg-slate-50">
               Add Money

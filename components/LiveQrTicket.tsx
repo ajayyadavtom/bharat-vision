@@ -105,8 +105,8 @@ export default function LiveQrTicket({ route = "500D", userId = "AJAY_M_001" }) 
             className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-surface-black/80 rounded-2xl border-2 border-alert-red overflow-hidden p-4 text-center"
           >
             <AlertOctagon size={40} className="text-alert-red mb-2 animate-pulse" />
-            <h3 className="text-white font-black uppercase tracking-widest text-sm mb-1">Security Lock</h3>
-            <p className="text-[10px] text-gray-300 font-medium">
+            <h3 className="text-slate-900 dark:text-white font-black uppercase tracking-widest text-sm mb-1">Security Lock</h3>
+            <p className="text-[10px] text-slate-600 dark:text-gray-300 font-medium">
               Screen recording and backgrounding disabled for anti-fraud protection.
             </p>
           </motion.div>
@@ -135,7 +135,7 @@ export default function LiveQrTicket({ route = "500D", userId = "AJAY_M_001" }) 
       </div>
 
       <div className="flex items-center gap-2 mb-1">
-        <h2 className="text-white font-bold text-xl">Route {route} Ticket</h2>
+        <h2 className="text-slate-900 dark:text-white font-bold text-xl">Route {route} Ticket</h2>
         {networkMode === "online" ? (
           <div className="bg-green-500/20 text-green-400 p-1 rounded border border-green-500/30" title="Online mode (Server sync)">
             <Wifi size={14} />
@@ -156,8 +156,8 @@ export default function LiveQrTicket({ route = "500D", userId = "AJAY_M_001" }) 
       </p>
       
       {/* The Live Clock UI */}
-      <div className="mt-3 flex items-center gap-2 bg-surface-black px-3 py-1.5 rounded-lg border border-surface-dark">
-        <span className="text-gray-400 text-xs font-mono">{networkMode === "online" ? "Server sync in:" : "Refreshes in:"}</span>
+      <div className="mt-3 flex items-center gap-2 bg-surface-black px-3 py-1.5 rounded-lg border border-slate-200 dark:border-surface-dark">
+        <span className="text-slate-500 dark:text-gray-400 text-xs font-mono">{networkMode === "online" ? "Server sync in:" : "Refreshes in:"}</span>
         <span className={`font-black font-mono text-sm transition-colors ${
           timeLeft <= 10 ? "text-alert-red animate-pulse" : (networkMode === "online" ? "text-brand-accent" : "text-indigo-400")
         }`}>

@@ -41,7 +41,7 @@ export default function LeaderboardScreen() {
   const getRankIcon = (rank: number) => {
     switch (rank) {
       case 1: return <Crown size={20} className="text-amber-400 drop-shadow-[0_0_10px_rgba(251,191,36,0.8)]" />;
-      case 2: return <Medal size={20} className="text-gray-300 drop-shadow-[0_0_10px_rgba(209,213,219,0.8)]" />;
+      case 2: return <Medal size={20} className="text-slate-600 dark:text-gray-300 drop-shadow-[0_0_10px_rgba(209,213,219,0.8)]" />;
       case 3: return <Medal size={20} className="text-amber-700 drop-shadow-[0_0_10px_rgba(180,83,9,0.8)]" />;
       default: return <span className="font-bold text-gray-500 w-5 text-center">{rank}</span>;
     }
@@ -50,7 +50,7 @@ export default function LeaderboardScreen() {
   const calculateLevel = (points: number) => {
     if (points >= 2000) return { tier: "Platinum", color: "text-indigo-400", border: "border-indigo-500/50", bg: "bg-indigo-900/20" };
     if (points >= 1000) return { tier: "Gold", color: "text-amber-400", border: "border-amber-500/50", bg: "bg-amber-900/20" };
-    if (points >= 500) return { tier: "Silver", color: "text-gray-300", border: "border-gray-400/50", bg: "bg-gray-800/40" };
+    if (points >= 500) return { tier: "Silver", color: "text-slate-600 dark:text-gray-300", border: "border-gray-400/50", bg: "bg-gray-800/40" };
     return { tier: "Bronze", color: "text-amber-700", border: "border-amber-900/50", bg: "bg-amber-950/30" };
   };
 
@@ -61,12 +61,12 @@ export default function LeaderboardScreen() {
       
       {/* Navigation Header */}
       <div className="flex items-center gap-3 mb-6">
-        <Link href="/profile" className="p-2 bg-surface-dark border border-brand-dark rounded-full hover:bg-brand-dark transition-colors">
-          <ArrowLeft size={20} className="text-white" />
+        <Link href="/profile" className="p-2 bg-surface-dark border border-slate-200 dark:border-brand-dark rounded-full hover:bg-brand-dark transition-colors">
+          <ArrowLeft size={20} className="text-slate-900 dark:text-white" />
         </Link>
         <div>
-          <h2 className="text-2xl font-extrabold text-white">Civic Leaderboard</h2>
-          <p className="text-xs text-gray-400">Namma Bengaluru Commuter Ranks</p>
+          <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white">Civic Leaderboard</h2>
+          <p className="text-xs text-slate-500 dark:text-gray-400">Namma Bengaluru Commuter Ranks</p>
         </div>
       </div>
 
@@ -80,10 +80,10 @@ export default function LeaderboardScreen() {
         
         <div className="relative z-10 flex justify-between items-center">
           <div>
-            <p className="text-[10px] uppercase tracking-widest text-gray-300 font-bold mb-1 flex items-center gap-1">
+            <p className="text-[10px] uppercase tracking-widest text-slate-600 dark:text-gray-300 font-bold mb-1 flex items-center gap-1">
               <Star size={12} className={userLevel.color} /> Current Status
             </p>
-            <h3 className="text-3xl font-black text-white">{karmaPoints} <span className="text-sm font-semibold text-gray-400">pts</span></h3>
+            <h3 className="text-3xl font-black text-slate-900 dark:text-white">{karmaPoints} <span className="text-sm font-semibold text-slate-500 dark:text-gray-400">pts</span></h3>
             <span className={`inline-block mt-2 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border ${userLevel.color} ${userLevel.border}`}>
               {userLevel.tier} Commuter
             </span>
@@ -96,8 +96,8 @@ export default function LeaderboardScreen() {
       </motion.div>
 
       {/* Top 5 Leaderboard List */}
-      <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">Top Commuters This Week</h3>
-      <div className="bg-surface-dark border border-brand-dark rounded-3xl p-2 mb-8 shadow-lg flex flex-col gap-1">
+      <h3 className="text-sm font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-3">Top Commuters This Week</h3>
+      <div className="bg-surface-dark border border-slate-200 dark:border-brand-dark rounded-3xl p-2 mb-8 shadow-lg flex flex-col gap-1">
         {leaderboard.slice(0, 5).map((user, idx) => (
           <motion.div 
             key={idx}
@@ -113,7 +113,7 @@ export default function LeaderboardScreen() {
                 {getRankIcon(user.rank)}
               </div>
               <div>
-                <p className={`text-sm font-bold ${user.isCurrentUser ? "text-brand-accent" : "text-white"}`}>
+                <p className={`text-sm font-bold ${user.isCurrentUser ? "text-brand-accent" : "text-slate-900 dark:text-white"}`}>
                   {user.name} {user.isCurrentUser && "(You)"}
                 </p>
               </div>
@@ -126,28 +126,28 @@ export default function LeaderboardScreen() {
       </div>
 
       {/* Ways to Earn & Redeem */}
-      <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">Earn & Redeem</h3>
+      <h3 className="text-sm font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-3">Earn & Redeem</h3>
       <div className="grid grid-cols-2 gap-3">
         
-        <div className="bg-surface-dark border border-brand-dark p-4 rounded-2xl flex flex-col gap-2">
+        <div className="bg-surface-dark border border-slate-200 dark:border-brand-dark p-4 rounded-2xl flex flex-col gap-2">
           <div className="bg-emerald-900/30 w-8 h-8 rounded-lg flex items-center justify-center mb-1">
             <Leaf size={16} className="text-emerald-400" />
           </div>
-          <h4 className="text-xs font-bold text-white">Green Transit</h4>
-          <p className="text-[10px] text-gray-400 leading-tight">Earn +5 pts for choosing multi-modal routes over private cabs.</p>
+          <h4 className="text-xs font-bold text-slate-900 dark:text-white">Green Transit</h4>
+          <p className="text-[10px] text-slate-500 dark:text-gray-400 leading-tight">Earn +5 pts for choosing multi-modal routes over private cabs.</p>
         </div>
 
-        <div className="bg-surface-dark border border-brand-dark p-4 rounded-2xl flex flex-col gap-2">
+        <div className="bg-surface-dark border border-slate-200 dark:border-brand-dark p-4 rounded-2xl flex flex-col gap-2">
           <div className="bg-red-900/30 w-8 h-8 rounded-lg flex items-center justify-center mb-1">
             <ShieldAlert size={16} className="text-red-400" />
           </div>
-          <h4 className="text-xs font-bold text-white">SafeKeep Intel</h4>
-          <p className="text-[10px] text-gray-400 leading-tight">Earn +15 pts for reporting accurate hazards and crowd surges.</p>
+          <h4 className="text-xs font-bold text-slate-900 dark:text-white">SafeKeep Intel</h4>
+          <p className="text-[10px] text-slate-500 dark:text-gray-400 leading-tight">Earn +15 pts for reporting accurate hazards and crowd surges.</p>
         </div>
 
       </div>
 
-      <button className="w-full mt-4 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white font-extrabold py-4 rounded-2xl text-xs shadow-lg active:scale-95 transition-transform flex items-center justify-center gap-2">
+      <button className="w-full mt-4 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-slate-900 dark:text-white font-extrabold py-4 rounded-2xl text-xs shadow-lg active:scale-95 transition-transform flex items-center justify-center gap-2">
         <Gift size={18} />
         <span>Redeem 500 Pts for 1-Day Pass</span>
       </button>

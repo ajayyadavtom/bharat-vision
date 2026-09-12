@@ -74,8 +74,8 @@ export default function VisualBoardingLens() {
       ) : hasPermission === false ? (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-surface-black z-0 px-6 text-center">
           <AlertTriangle size={48} className="text-gray-600 mb-4" />
-          <h3 className="text-white font-bold text-lg mb-2">Camera Required</h3>
-          <p className="text-gray-400 text-xs">Allow camera access to scan approaching BMTC bus boards.</p>
+          <h3 className="text-slate-900 dark:text-white font-bold text-lg mb-2">Camera Required</h3>
+          <p className="text-slate-500 dark:text-gray-400 text-xs">Allow camera access to scan approaching BMTC bus boards.</p>
         </div>
       ) : null}
 
@@ -88,11 +88,11 @@ export default function VisualBoardingLens() {
               Vision Assist Active
             </span>
           </div>
-          <h2 className="text-2xl font-black text-white">Target: Route {targetRoute}</h2>
-          <p className="text-xs font-bold text-gray-300">Towards {targetDestination}</p>
+          <h2 className="text-2xl font-black text-slate-900 dark:text-white">Target: Route {targetRoute}</h2>
+          <p className="text-xs font-bold text-slate-600 dark:text-gray-300">Towards {targetDestination}</p>
         </div>
         
-        <Link href="/" className="bg-black/40 backdrop-blur-md p-3 rounded-full border border-white/20 text-white hover:bg-black/60 transition-colors">
+        <Link href="/" className="bg-black/40 backdrop-blur-md p-3 rounded-full border border-white/20 text-slate-900 dark:text-white hover:bg-black/60 transition-colors">
           <X size={20} />
         </Link>
       </div>
@@ -135,12 +135,12 @@ export default function VisualBoardingLens() {
                 <XCircle size={64} className="text-red-500" />
               </div>
               <div className="bg-red-950/90 backdrop-blur-xl border border-red-500 p-6 rounded-3xl shadow-2xl">
-                <h3 className="text-3xl font-black text-white mb-1 uppercase tracking-wider">Wrong Bus</h3>
+                <h3 className="text-3xl font-black text-slate-900 dark:text-white mb-1 uppercase tracking-wider">Wrong Bus</h3>
                 <p className="text-sm font-bold text-red-400 mb-4">Do Not Board</p>
                 <div className="bg-black/50 p-3 rounded-xl text-left border border-red-900">
-                  <p className="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-1">OCR Detected</p>
-                  <p className="text-lg font-black text-white">Route 401K</p>
-                  <p className="text-xs text-gray-300">Towards Yeshwanthpur</p>
+                  <p className="text-[10px] text-slate-500 dark:text-gray-400 uppercase tracking-widest font-bold mb-1">OCR Detected</p>
+                  <p className="text-lg font-black text-slate-900 dark:text-white">Route 401K</p>
+                  <p className="text-xs text-slate-600 dark:text-gray-300">Towards Yeshwanthpur</p>
                 </div>
               </div>
             </motion.div>
@@ -157,12 +157,12 @@ export default function VisualBoardingLens() {
                 <CheckCircle2 size={64} className="text-emerald-400" />
               </div>
               <div className="bg-emerald-950/90 backdrop-blur-xl border border-emerald-500 p-6 rounded-3xl shadow-2xl w-full max-w-sm">
-                <h3 className="text-3xl font-black text-white mb-1 uppercase tracking-wider">Your Bus</h3>
+                <h3 className="text-3xl font-black text-slate-900 dark:text-white mb-1 uppercase tracking-wider">Your Bus</h3>
                 <p className="text-sm font-bold text-emerald-400 mb-4">Safe to Board</p>
                 <div className="bg-black/50 p-3 rounded-xl text-left border border-emerald-900 mb-4">
-                  <p className="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-1">OCR Match</p>
-                  <p className="text-lg font-black text-white">Route {targetRoute}</p>
-                  <p className="text-xs text-gray-300">Towards {targetDestination}</p>
+                  <p className="text-[10px] text-slate-500 dark:text-gray-400 uppercase tracking-widest font-bold mb-1">OCR Match</p>
+                  <p className="text-lg font-black text-slate-900 dark:text-white">Route {targetRoute}</p>
+                  <p className="text-xs text-slate-600 dark:text-gray-300">Towards {targetDestination}</p>
                 </div>
                 <button className="w-full bg-emerald-500 text-black font-black py-3.5 rounded-xl text-sm shadow-lg pointer-events-auto active:scale-95 transition-transform flex items-center justify-center gap-2">
                   <Bus size={18} /> Generate E-Ticket

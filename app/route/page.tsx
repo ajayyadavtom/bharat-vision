@@ -53,19 +53,57 @@ export default function RoutePlannerScreen() {
   };
 
   const handleVoiceInput = () => {
-    setIsListening(true);
-    setNlpStatus("Listening to heavy traffic environment...");
-    setTimeout(() => {
-      setNlpStatus("Raw Acoustic: 'drop me at byapnahali'");
+    if (isListening) {
+      setIsListening(false);
+      return;
+    }
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Speech recognition is not supported in this browser.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = "en-IN";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => {
+      setIsListening(true);
+      setNlpStatus("Listening to environment...");
+    };
+
+    recognition.onresult = (event: any) => {
+      const speechResult = event.results[0][0].transcript;
+      setNlpStatus(`Acoustic: '${speechResult}'`);
+      
+      // Simulate NLP correction delay
       setTimeout(() => {
-        setNlpStatus("NLP Correction: 'Baiyappanahalli Metro Station'");
-        setDestination("Baiyappanahalli Metro Station");
+        setNlpStatus(`NLP Targeting: '${speechResult}'`);
+        setDestination(speechResult);
         setTimeout(() => {
           setIsListening(false);
-          handleSearchRoute();
+          // In React, state updates are async, so handleSearchRoute might read the old destination.
+          // Wait, handleSearchRoute relies on the `destination` state!
+          // We can't guarantee `destination` is updated when handleSearchRoute runs, 
+          // so we'll just set it and let the user click search, or we pass it as a param.
+          // Since handleSearchRoute relies on state, we'll just set the state and end listening.
         }, 1500);
-      }, 1500);
-    }, 2000);
+      }, 1000);
+    };
+
+    recognition.onerror = (event: any) => {
+      console.error("Speech recognition error", event.error);
+      setIsListening(false);
+      setNlpStatus("Error capturing voice.");
+    };
+
+    recognition.onend = () => {
+      // Don't set isListening to false here if we are still showing NLP status animation
+    };
+
+    recognition.start();
   };
 
   const getModeIcon = (mode: string) => {
@@ -74,7 +112,7 @@ export default function RoutePlannerScreen() {
       case 'Metro': return <TrainFront size={16} className="text-indigo-400" />;
       case 'Bus': return <Bus size={16} className="text-brand-accent" />;
       case 'Walk': return <Navigation size={16} className="text-emerald-400" />;
-      default: return <Navigation size={16} className="text-gray-400" />;
+      default: return <Navigation size={16} className="text-slate-500 dark:text-gray-400" />;
     }
   };
 
@@ -86,7 +124,7 @@ export default function RoutePlannerScreen() {
             <Zap size={14} className="text-brand-accent" />
             <h1 className="text-[10px] uppercase tracking-widest text-brand-light font-bold">A* Multi-Modal Engine</h1>
           </div>
-          <h2 className="text-3xl font-extrabold text-white">Journey Planner</h2>
+          <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white">Journey Planner</h2>
         </div>
       </div>
 
@@ -97,7 +135,7 @@ export default function RoutePlannerScreen() {
             <CloudRain size={24} className="text-blue-400" />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-white">Monsoon Downpour</h3>
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white">Monsoon Downpour</h3>
             <p className="text-[10px] text-blue-300">Waterlogging reported near Silk Board.</p>
           </div>
         </div>
@@ -112,7 +150,7 @@ export default function RoutePlannerScreen() {
             type="text"
             value={origin}
             onChange={(e) => setOrigin(e.target.value)}
-            className="w-full bg-surface-black text-white rounded-xl py-3 pl-8 pr-4 outline-none border border-surface-dark focus:border-brand-base text-xs font-semibold"
+            className="w-full bg-surface-black text-slate-900 dark:text-white rounded-xl py-3 pl-8 pr-4 outline-none border border-slate-200 dark:border-surface-dark focus:border-brand-base text-xs font-semibold"
             placeholder="Origin"
           />
         </div>
@@ -126,7 +164,7 @@ export default function RoutePlannerScreen() {
               type="text"
               value={destination}
               onChange={(e) => setDestination(e.target.value)}
-              className="w-full bg-surface-black text-white rounded-xl py-3 pl-8 pr-4 outline-none border border-surface-dark focus:border-brand-base text-xs font-semibold"
+              className="w-full bg-surface-black text-slate-900 dark:text-white rounded-xl py-3 pl-8 pr-4 outline-none border border-slate-200 dark:border-surface-dark focus:border-brand-base text-xs font-semibold"
               placeholder="Destination"
             />
           </div>
@@ -140,10 +178,10 @@ export default function RoutePlannerScreen() {
         </div>
 
         {/* Rain-Safe Toggle */}
-        <div className="flex items-center justify-between bg-surface-black p-3 rounded-xl border border-surface-dark mt-1">
+        <div className="flex items-center justify-between bg-surface-black p-3 rounded-xl border border-slate-200 dark:border-surface-dark mt-1">
           <div className="flex items-center gap-2">
             <Umbrella size={16} className={isRainSafe ? "text-blue-400" : "text-gray-500"} />
-            <span className={`text-xs font-bold ${isRainSafe ? "text-blue-100" : "text-gray-400"}`}>Enable Rain-Safe Routing</span>
+            <span className={`text-xs font-bold ${isRainSafe ? "text-blue-100" : "text-slate-500 dark:text-gray-400"}`}>Enable Rain-Safe Routing</span>
           </div>
           <button
             onClick={() => setIsRainSafe(!isRainSafe)}
@@ -176,7 +214,7 @@ export default function RoutePlannerScreen() {
             </div>
             <div>
               <p className="text-[10px] uppercase tracking-widest text-brand-light font-bold">Namma Kannada NLP</p>
-              <p className="text-xs text-white font-mono mt-0.5">{nlpStatus}</p>
+              <p className="text-xs text-slate-900 dark:text-white font-mono mt-0.5">{nlpStatus}</p>
             </div>
           </motion.div>
         )}
@@ -195,7 +233,7 @@ export default function RoutePlannerScreen() {
             </div>
           )}
 
-          <div className="bg-gradient-to-br from-brand-base to-brand-dark p-5 rounded-2xl shadow-lg border border-brand-light/20 flex justify-between items-center text-white">
+          <div className="bg-gradient-to-br from-brand-base to-brand-dark p-5 rounded-2xl shadow-lg border border-brand-light/20 flex justify-between items-center text-slate-900 dark:text-white">
             <div>
               <p className="text-[10px] text-brand-light font-bold uppercase tracking-wider">Optimized Combo</p>
               <h3 className="text-3xl font-black mt-0.5">{mlEta || routeResult.totalDuration} mins</h3>
@@ -212,21 +250,21 @@ export default function RoutePlannerScreen() {
 
           <div className="flex flex-col gap-3">
             {routeResult.segments.map((seg, idx) => (
-              <div key={idx} className="bg-surface-dark p-4 rounded-2xl border border-surface-dark flex items-center justify-between shadow-md">
+              <div key={idx} className="bg-surface-dark p-4 rounded-2xl border border-slate-200 dark:border-surface-dark flex items-center justify-between shadow-md">
                 <div className="flex items-center gap-3">
-                  <div className="bg-surface-black p-3 rounded-xl border border-brand-dark">
+                  <div className="bg-surface-black p-3 rounded-xl border border-slate-200 dark:border-brand-dark">
                     {getModeIcon(seg.mode)}
                   </div>
                   <div>
                     <span className="text-[10px] font-bold text-brand-accent uppercase tracking-wider block mb-0.5">
                       {seg.mode} Connection
                     </span>
-                    <h4 className="text-xs font-bold text-white leading-tight">{seg.title}</h4>
+                    <h4 className="text-xs font-bold text-slate-900 dark:text-white leading-tight">{seg.title}</h4>
                   </div>
                 </div>
                 <div className="text-right flex-shrink-0 ml-3">
-                  <p className="text-xs font-black text-white">{seg.durationMinutes} min</p>
-                  <p className="text-[10px] text-gray-400 font-semibold">₹{seg.fareRupees}</p>
+                  <p className="text-xs font-black text-slate-900 dark:text-white">{seg.durationMinutes} min</p>
+                  <p className="text-[10px] text-slate-500 dark:text-gray-400 font-semibold">₹{seg.fareRupees}</p>
                 </div>
               </div>
             ))}

@@ -60,8 +60,8 @@ export default function ARNavigatorScreen() {
       ) : hasPermission === false ? (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-surface-black z-0 px-6 text-center">
           <VideoOff size={48} className="text-gray-600 mb-4" />
-          <h3 className="text-white font-bold text-lg mb-2">Camera Access Required</h3>
-          <p className="text-gray-400 text-xs">Please allow camera permissions in your browser to use the AR Spatial Navigator.</p>
+          <h3 className="text-slate-900 dark:text-white font-bold text-lg mb-2">Camera Access Required</h3>
+          <p className="text-slate-500 dark:text-gray-400 text-xs">Please allow camera permissions in your browser to use the AR Spatial Navigator.</p>
         </div>
       ) : null}
 
@@ -74,15 +74,15 @@ export default function ARNavigatorScreen() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping"></span>
-            <span className="text-[10px] font-bold tracking-widest text-white uppercase drop-shadow-md">
+            <span className="text-[10px] font-bold tracking-widest text-slate-900 dark:text-white uppercase drop-shadow-md">
               Live AR Tracking
             </span>
           </div>
-          <h2 className="text-2xl font-black text-white drop-shadow-lg">Platform 3</h2>
+          <h2 className="text-2xl font-black text-slate-900 dark:text-white drop-shadow-lg">Platform 3</h2>
           <p className="text-xs font-bold text-brand-light drop-shadow-md">Purple Line Towards Whitefield</p>
         </div>
         
-        <Link href="/" className="bg-black/40 backdrop-blur-md p-3 rounded-full border border-white/20 text-white hover:bg-black/60 transition-colors">
+        <Link href="/" className="bg-black/40 backdrop-blur-md p-3 rounded-full border border-white/20 text-slate-900 dark:text-white hover:bg-black/60 transition-colors">
           <X size={20} />
         </Link>
       </div>
@@ -110,14 +110,14 @@ export default function ARNavigatorScreen() {
               <span className="text-[10px] text-brand-light font-bold uppercase tracking-widest mb-1">
                 Distance to Target
               </span>
-              <span className="text-4xl font-black text-white tabular-nums tracking-tighter">
-                {distance} <span className="text-lg text-gray-300">m</span>
+              <span className="text-4xl font-black text-slate-900 dark:text-white tabular-nums tracking-tighter">
+                {distance} <span className="text-lg text-slate-600 dark:text-gray-300">m</span>
               </span>
             </div>
           </motion.div>
 
           {/* Scanning Reticle */}
-          <Scan size={300} className="absolute text-white/10" strokeWidth={1} />
+          <Scan size={300} className="absolute text-slate-900 dark:text-white/10" strokeWidth={1} />
         </div>
       )}
 
@@ -129,8 +129,8 @@ export default function ARNavigatorScreen() {
               <MapPin size={24} className="text-indigo-400" />
             </div>
             <div>
-              <h4 className="text-sm font-bold text-white">Majestic Interchange</h4>
-              <p className="text-xs text-gray-400 mt-0.5">Proceed straight towards Concourse A</p>
+              <h4 className="text-sm font-bold text-slate-900 dark:text-white">Majestic Interchange</h4>
+              <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">Proceed straight towards Concourse A</p>
             </div>
           </div>
           

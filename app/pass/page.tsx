@@ -137,13 +137,13 @@ export default function PassScreen() {
 
           {/* Moving Anti-Piracy Watermark */}
           <div className="absolute inset-0 pointer-events-none z-20 flex items-center justify-center overflow-hidden opacity-5">
-            <p className="text-white font-black text-4xl rotate-[-30deg] uppercase tracking-widest whitespace-nowrap">
+            <p className="text-slate-900 dark:text-white font-black text-4xl rotate-[-30deg] uppercase tracking-widest whitespace-nowrap">
               BHARAT VISION VERIFIED • {userName || "COMMUTER"} •
             </p>
           </div>
 
           <div className="bg-surface-dark p-6 relative z-10 flex flex-col items-center justify-center">
-            <div className="absolute inset-0 bg-gradient-to-br from-brand-base/20 to-surface-black opacity-50"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-brand-base/20 to-white dark:to-surface-black opacity-50"></div>
             
             <div className="relative z-10 flex flex-col items-center w-full">
               
@@ -155,7 +155,7 @@ export default function PassScreen() {
                   </span>
                 </div>
                 
-                <span className="text-[9px] font-mono text-gray-400 flex items-center gap-1">
+                <span className="text-[9px] font-mono text-slate-500 dark:text-gray-400 flex items-center gap-1">
                   <Smartphone size={10} /> {deviceFingerprint}
                 </span>
               </div>
@@ -164,12 +164,12 @@ export default function PassScreen() {
                 {qrPayload ? (
                   <QRCode value={qrPayload} size={200} level="H" />
                 ) : (
-                  <RefreshCcw className="animate-spin text-gray-300" size={32} />
+                  <RefreshCcw className="animate-spin text-slate-600 dark:text-gray-300" size={32} />
                 )}
               </div>
               
-              <div className="w-full flex justify-between items-center bg-surface-black p-3 rounded-xl border border-surface-dark">
-                <span className="text-xs font-bold text-gray-300 uppercase">{userName || "Commuter"}</span>
+              <div className="w-full flex justify-between items-center bg-surface-black p-3 rounded-xl border border-slate-200 dark:border-surface-dark">
+                <span className="text-xs font-bold text-slate-600 dark:text-gray-300 uppercase">{userName || "Commuter"}</span>
                 <span className="text-xs font-mono text-brand-accent tabular-nums">
                   {time.toLocaleTimeString('en-IN', { hour12: true })}
                 </span>
@@ -179,11 +179,11 @@ export default function PassScreen() {
           </div>
         </div>
 
-      <div className="flex bg-surface-dark p-1 rounded-xl mb-6 border border-brand-dark">
+      <div className="flex bg-surface-dark p-1 rounded-xl mb-6 border border-slate-200 dark:border-brand-dark">
         <button 
           onClick={() => setActiveTab("digital")}
           className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
-            activeTab === "digital" ? "bg-brand-dark text-white shadow-md" : "text-gray-400"
+            activeTab === "digital" ? "bg-brand-dark text-slate-900 dark:text-white shadow-md" : "text-slate-500 dark:text-gray-400"
           }`}
         >
           Digital Wallet
@@ -191,23 +191,23 @@ export default function PassScreen() {
         <button 
           onClick={() => setActiveTab("ncmc")}
           className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
-            activeTab === "ncmc" ? "bg-indigo-900/50 text-indigo-300 shadow-md" : "text-gray-400"
+            activeTab === "ncmc" ? "bg-indigo-900/50 text-indigo-300 shadow-md" : "text-slate-500 dark:text-gray-400"
           }`}
         >
           Physical NCMC Card
         </button>
       </div>
 
-      <div className="mb-6 flex items-center justify-between bg-surface-dark p-4 rounded-2xl border border-brand-dark">
+      <div className="mb-6 flex items-center justify-between bg-surface-dark p-4 rounded-2xl border border-slate-200 dark:border-brand-dark">
         <div className="flex items-center gap-3">
           <div className={`p-2 rounded-full ${activeTab === "digital" ? "bg-brand-dark" : "bg-indigo-900/50"}`}>
             <CreditCard size={20} className={activeTab === "digital" ? "text-brand-accent" : "text-indigo-400"} />
           </div>
           <div>
-            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
+            <p className="text-[10px] text-slate-500 dark:text-gray-400 font-bold uppercase tracking-wider">
               {activeTab === "digital" ? "App Wallet Balance" : "NCMC Chip Balance"}
             </p>
-            <p className="text-xl font-extrabold text-white">
+            <p className="text-xl font-extrabold text-slate-900 dark:text-white">
               ₹{activeTab === "digital" ? (walletBalance || 0).toFixed(2) : "50.00"}
             </p>
           </div>
@@ -218,17 +218,17 @@ export default function PassScreen() {
       </div>
 
       <div>
-        <h3 className="text-lg font-bold text-white mb-3">Buy Passes</h3>
+        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-3">Buy Passes</h3>
         <div className="flex flex-col gap-3">
           {passCatalog.map((pass, index) => (
-            <div key={index} className="flex justify-between items-center bg-surface-dark p-4 rounded-2xl border border-surface-dark hover:border-brand-base transition-colors cursor-pointer group">
+            <div key={index} className="flex justify-between items-center bg-surface-dark p-4 rounded-2xl border border-slate-200 dark:border-surface-dark hover:border-brand-base transition-colors cursor-pointer group">
               <div className="flex items-center gap-3">
-                <div className="bg-surface-black p-2 rounded-lg border border-brand-dark group-hover:border-brand-base transition-colors">
+                <div className="bg-surface-black p-2 rounded-lg border border-slate-200 dark:border-brand-dark group-hover:border-brand-base transition-colors">
                   <Ticket size={20} className={pass.color} />
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-white">{pass.name}</h4>
-                  <p className="text-[10px] text-gray-400 uppercase tracking-wider">{pass.type}</p>
+                  <h4 className="text-sm font-bold text-slate-900 dark:text-white">{pass.name}</h4>
+                  <p className="text-[10px] text-slate-500 dark:text-gray-400 uppercase tracking-wider">{pass.type}</p>
                 </div>
               </div>
               <button className="bg-emerald-500/20 text-emerald-400 text-xs font-bold px-3 py-1.5 rounded-lg border border-emerald-500/50 group-hover:bg-emerald-500 group-hover:text-slate-900 transition-colors">

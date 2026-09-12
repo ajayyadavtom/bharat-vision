@@ -53,33 +53,33 @@ export default function AutoCabBooking() {
         <h2 className="text-[10px] text-amber-500 uppercase tracking-[0.2em] font-bold mb-1 flex items-center gap-1">
           <Zap size={12} /> ONDC Beckn Open Network
         </h2>
-        <h1 className="text-3xl font-extrabold text-white flex items-center gap-2">
+        <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
           <Car className="text-amber-500" size={28} /> Auto & Cab
         </h1>
-        <p className="text-xs text-gray-400">First & Last Mile Connectivity in {cityData.name}</p>
+        <p className="text-xs text-slate-500 dark:text-gray-400">First & Last Mile Connectivity in {cityData.name}</p>
       </div>
 
       {/* Booking Form */}
-      <div className="bg-surface-dark p-5 rounded-3xl border border-surface-dark mb-6 shadow-lg">
+      <div className="bg-surface-dark p-5 rounded-3xl border border-slate-200 dark:border-surface-dark mb-6 shadow-lg">
         <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-3 bg-surface-black p-3 rounded-2xl border border-surface-dark focus-within:border-amber-500 transition-colors">
+          <div className="flex items-center gap-3 bg-surface-black p-3 rounded-2xl border border-slate-200 dark:border-surface-dark focus-within:border-amber-500 transition-colors">
             <MapPin size={18} className="text-brand-light" />
             <input 
               type="text" 
               value={pickup}
               onChange={(e) => setPickup(e.target.value)}
               placeholder="Pickup Location"
-              className="bg-transparent text-white text-sm outline-none w-full font-semibold placeholder-gray-500"
+              className="bg-transparent text-slate-900 dark:text-white text-sm outline-none w-full font-semibold placeholder-gray-500"
             />
           </div>
-          <div className="flex items-center gap-3 bg-surface-black p-3 rounded-2xl border border-surface-dark focus-within:border-amber-500 transition-colors">
+          <div className="flex items-center gap-3 bg-surface-black p-3 rounded-2xl border border-slate-200 dark:border-surface-dark focus-within:border-amber-500 transition-colors">
             <Navigation size={18} className="text-amber-500" />
             <input 
               type="text" 
               value={dropoff}
               onChange={(e) => setDropoff(e.target.value)}
               placeholder="Where to?"
-              className="bg-transparent text-white text-sm outline-none w-full font-semibold placeholder-gray-500"
+              className="bg-transparent text-slate-900 dark:text-white text-sm outline-none w-full font-semibold placeholder-gray-500"
             />
           </div>
           
@@ -96,7 +96,7 @@ export default function AutoCabBooking() {
       {/* Results */}
       {rides.length > 0 && !bookedRide && (
         <div className="flex flex-col gap-3">
-          <h3 className="text-sm font-bold text-gray-300 uppercase tracking-wider mb-2">Available Rides</h3>
+          <h3 className="text-sm font-bold text-slate-600 dark:text-gray-300 uppercase tracking-wider mb-2">Available Rides</h3>
           {rides.map(ride => (
             <motion.div 
               key={ride.id}
@@ -109,8 +109,8 @@ export default function AutoCabBooking() {
                   <Car size={24} className="text-amber-400" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-white">{ride.type}</h4>
-                  <p className="text-[10px] text-gray-400">{ride.network} • {ride.eta} away</p>
+                  <h4 className="text-sm font-bold text-slate-900 dark:text-white">{ride.type}</h4>
+                  <p className="text-[10px] text-slate-500 dark:text-gray-400">{ride.network} • {ride.eta} away</p>
                 </div>
               </div>
               <div className="flex flex-col items-end gap-2">
@@ -138,24 +138,24 @@ export default function AutoCabBooking() {
             <Car size={32} className="text-emerald-400" />
           </div>
           <div>
-            <h3 className="text-xl font-black text-white mb-1">Driver Assigned!</h3>
-            <p className="text-sm text-gray-300">Your {bookedRide.type.toLowerCase()} is on the way.</p>
+            <h3 className="text-xl font-black text-slate-900 dark:text-white mb-1">Driver Assigned!</h3>
+            <p className="text-sm text-slate-600 dark:text-gray-300">Your {bookedRide.type.toLowerCase()} is on the way.</p>
           </div>
           
-          <div className="w-full bg-surface-black rounded-2xl p-4 flex justify-between items-center mt-2 border border-surface-dark">
+          <div className="w-full bg-surface-black rounded-2xl p-4 flex justify-between items-center mt-2 border border-slate-200 dark:border-surface-dark">
             <div className="text-left">
-              <p className="text-[10px] text-gray-400 font-bold uppercase">Driver</p>
-              <p className="text-sm font-bold text-white">{bookedRide.driver} ★ {bookedRide.rating}</p>
+              <p className="text-[10px] text-slate-500 dark:text-gray-400 font-bold uppercase">Driver</p>
+              <p className="text-sm font-bold text-slate-900 dark:text-white">{bookedRide.driver} ★ {bookedRide.rating}</p>
             </div>
             <div className="text-right">
-              <p className="text-[10px] text-gray-400 font-bold uppercase">PIN</p>
+              <p className="text-[10px] text-slate-500 dark:text-gray-400 font-bold uppercase">PIN</p>
               <p className="text-xl font-black text-emerald-400 tracking-widest">{bookedRide.pin}</p>
             </div>
           </div>
           
           <div className="flex items-center gap-2 mt-2">
             <ShieldCheck size={16} className="text-emerald-500" />
-            <span className="text-xs text-gray-400 font-semibold">Ride tracked via Bharat Vision</span>
+            <span className="text-xs text-slate-500 dark:text-gray-400 font-semibold">Ride tracked via Bharat Vision</span>
           </div>
         </motion.div>
       )}

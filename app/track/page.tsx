@@ -86,7 +86,7 @@ export default function TrackScreen() {
             </div>
             <div className="flex items-center gap-3 relative z-10">
               <div className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center shadow-md">
-                <MapPin size={12} className="text-white" />
+                <MapPin size={12} className="text-slate-900 dark:text-white" />
               </div>
               <input type="text" placeholder="Where to?" className="flex-1 bg-transparent text-sm text-slate-900 dark:text-white outline-none placeholder-slate-400" />
             </div>

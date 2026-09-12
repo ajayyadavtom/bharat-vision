@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { User, MapPin, ShieldCheck, Leaf, Medal, Receipt, ChevronRight, ScanFace, Upload, CheckCircle2, Loader2, X, Settings, Image as ImageIcon } from "lucide-react";
+import { User, Terminal, Moon, Bell, Shield, Globe, LogOut, MapPin, ShieldCheck, Leaf, Medal, Receipt, ChevronRight, ScanFace, Upload, CheckCircle2, Loader2, X, Settings, Image as ImageIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useAppStore } from "@/lib/store";
@@ -71,7 +71,7 @@ export default function ProfileScreen() {
             <User size={32} className="text-slate-400" />
           )}
           <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-            <ImageIcon size={20} className="text-white" />
+            <ImageIcon size={20} className="text-slate-900 dark:text-white" />
           </div>
         </div>
         
@@ -150,7 +150,7 @@ export default function ProfileScreen() {
       </div>
 
       {/* Action List */}
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3 mb-6">
         <button 
           onClick={() => setShowHistory(true)}
           className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-emerald-500 p-4 rounded-2xl flex items-center justify-between transition-colors shadow-sm"
@@ -162,12 +162,6 @@ export default function ProfileScreen() {
           <ChevronRight size={16} className="text-slate-400" />
         </button>
       </div>
-
-      {/* 
-        NOTE: I have REMOVED the broken Developer Terminal, Dark Mode, 
-        Notifications, Privacy, and Logout buttons from this page. 
-        They are now properly managed inside app/settings/page.tsx
-      */}
 
       {/* Ride History Modal */}
       <AnimatePresence>
@@ -181,7 +175,7 @@ export default function ProfileScreen() {
             >
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-xl font-black text-slate-900 dark:text-white">Ride History</h3>
-                <button onClick={() => setShowHistory(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-white">
+                <button onClick={() => setShowHistory(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-900 dark:text-white">
                   <X size={20} />
                 </button>
               </div>
@@ -227,7 +221,7 @@ export default function ProfileScreen() {
             >
               <button 
                 onClick={() => setShowScanner(false)}
-                className="absolute top-4 right-4 text-gray-400 hover:text-white"
+                className="absolute top-4 right-4 text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:text-white"
               >
                 <X size={20} />
               </button>
@@ -239,10 +233,10 @@ export default function ProfileScreen() {
                     <ScanFace size={32} className="text-indigo-400 relative z-10" />
                   </div>
                   
-                  <h3 className="text-xl font-black text-white mb-2">
+                  <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2">
                     {isScanning ? "Analyzing ID..." : "Upload Institutional ID"}
                   </h3>
-                  <p className="text-xs text-gray-400 mb-6">
+                  <p className="text-xs text-slate-500 dark:text-gray-400 mb-6">
                     Our AI will extract your details to instantly provision your student transit pass.
                   </p>
 
@@ -270,22 +264,22 @@ export default function ProfileScreen() {
                   <div className="w-16 h-16 bg-emerald-900/40 rounded-full border border-emerald-500 flex items-center justify-center mb-4">
                     <CheckCircle2 size={32} className="text-emerald-400" />
                   </div>
-                  <h3 className="text-xl font-black text-white mb-1">ID Verified Successfully</h3>
+                  <h3 className="text-xl font-black text-slate-900 dark:text-white mb-1">ID Verified Successfully</h3>
                   <p className="text-xs text-emerald-400 mb-6">Concession framework active.</p>
 
                   <div className="w-full bg-black/50 p-4 rounded-xl border border-slate-800 text-left flex flex-col gap-2">
                     <div>
                       <span className="text-[9px] text-gray-500 uppercase font-bold">Commuter Name</span>
-                      <p className="text-sm font-bold text-white">{scannedData?.name}</p>
+                      <p className="text-sm font-bold text-slate-900 dark:text-white">{scannedData?.name}</p>
                     </div>
                     <div>
                       <span className="text-[9px] text-gray-500 uppercase font-bold">Date of Birth</span>
-                      <p className="text-sm font-bold text-white">{scannedData?.dob}</p>
+                      <p className="text-sm font-bold text-slate-900 dark:text-white">{scannedData?.dob}</p>
                     </div>
                     <div>
                       <span className="text-[9px] text-gray-500 uppercase font-bold">Institution</span>
-                      <p className="text-sm font-bold text-white">{scannedData?.college}</p>
-                      <p className="text-[10px] text-gray-400">{scannedData?.university}</p>
+                      <p className="text-sm font-bold text-slate-900 dark:text-white">{scannedData?.college}</p>
+                      <p className="text-[10px] text-slate-500 dark:text-gray-400">{scannedData?.university}</p>
                     </div>
                   </div>
 

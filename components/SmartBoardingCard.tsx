@@ -33,7 +33,7 @@ export default function SmartBoardingCard() {
     <motion.div
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-surface-dark border border-brand-dark p-5 rounded-3xl shadow-lg mt-6 relative overflow-hidden"
+      className="bg-surface-dark border border-slate-200 dark:border-brand-dark p-5 rounded-3xl shadow-lg mt-6 relative overflow-hidden"
     >
       {/* Dynamic Background Pulse on Update */}
       {flash && <div className="absolute inset-0 bg-white/5 animate-pulse pointer-events-none"></div>}
@@ -44,17 +44,17 @@ export default function SmartBoardingCard() {
             <span className="w-2 h-2 rounded-full bg-brand-accent animate-ping"></span>
             <h3 className="text-[10px] uppercase tracking-widest text-brand-light font-bold">Live Telemetry</h3>
           </div>
-          <h4 className="text-xl font-black text-white flex items-center gap-2">
+          <h4 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
             <Bus size={20} className="text-brand-accent" /> Route 285M
           </h4>
-          <p className="text-xs text-gray-400 mt-0.5">Yelahanka ⇄ East West College of Engineering</p>
+          <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">Yelahanka ⇄ East West College of Engineering</p>
         </div>
       </div>
 
       {/* Singapore-Style Crowd Density */}
       <div className="mb-5">
         <div className="flex justify-between items-end mb-2">
-          <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Crowd Density</span>
+          <span className="text-[10px] text-slate-500 dark:text-gray-400 font-bold uppercase tracking-wider">Crowd Density</span>
           <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md border ${status.bg} ${status.border}`}>
             <Users size={12} className={status.color} />
             <span className={`text-[10px] font-black uppercase tracking-wider ${status.color}`}>
@@ -64,7 +64,7 @@ export default function SmartBoardingCard() {
         </div>
         
         {/* Segmented Density Bar */}
-        <div className="flex w-full h-2 rounded-full overflow-hidden bg-surface-black border border-surface-dark gap-0.5">
+        <div className="flex w-full h-2 rounded-full overflow-hidden bg-surface-black border border-slate-200 dark:border-surface-dark gap-0.5">
           <motion.div className="h-full bg-emerald-500" animate={{ width: `${Math.min(occupancy, 40)}%` }} transition={{ ease: "linear" }} />
           <motion.div className="h-full bg-amber-500" animate={{ width: `${Math.max(0, Math.min(occupancy - 40, 40))}%` }} transition={{ ease: "linear" }} />
           <motion.div className="h-full bg-red-500" animate={{ width: `${Math.max(0, occupancy - 80)}%` }} transition={{ ease: "linear" }} />
@@ -83,8 +83,8 @@ export default function SmartBoardingCard() {
           </div>
           
           <div className="flex-1">
-            <p className="text-sm font-bold text-white leading-tight">Board via the Front Door</p>
-            <p className="text-[10px] text-gray-400 mt-1">
+            <p className="text-sm font-bold text-slate-900 dark:text-white leading-tight">Board via the Front Door</p>
+            <p className="text-[10px] text-slate-500 dark:text-gray-400 mt-1">
               Positions you perfectly for the Green Line escalators upon arrival.
             </p>
           </div>
@@ -95,7 +95,7 @@ export default function SmartBoardingCard() {
             <Clock size={14} className="text-indigo-400" />
             <span className="font-semibold">Expected Transfer Time</span>
           </div>
-          <span className="text-sm font-black text-white">45 sec</span>
+          <span className="text-sm font-black text-slate-900 dark:text-white">45 sec</span>
         </div>
       </div>
 

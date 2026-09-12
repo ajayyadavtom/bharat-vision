@@ -144,12 +144,12 @@ export default function LoginScreen() {
         {/* Logo */}
         <div className="flex flex-col items-center mb-8 text-center">
           <div className="w-16 h-16 bg-gradient-to-br from-brand-base to-brand-dark rounded-2xl shadow-[0_0_30px_rgba(20,184,166,0.3)] flex items-center justify-center mb-4 border border-brand-light/20 relative overflow-hidden">
-            <Zap size={32} className="text-white relative z-10" fill="currentColor" />
+            <Zap size={32} className="text-slate-900 dark:text-white relative z-10" fill="currentColor" />
           </div>
-          <h1 className="text-3xl font-black text-white tracking-tight">
+          <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
             Bharat <span className="text-brand-accent">Vision</span>
           </h1>
-          <p className="text-xs text-gray-400 mt-2 font-bold uppercase tracking-widest flex items-center gap-1">
+          <p className="text-xs text-slate-500 dark:text-gray-400 mt-2 font-bold uppercase tracking-widest flex items-center gap-1">
             <ShieldCheck size={14} className="text-brand-accent" /> Secure Commuter Portal
           </p>
         </div>
@@ -162,18 +162,18 @@ export default function LoginScreen() {
         )}
 
         {/* Mode Toggle — Email vs Phone */}
-        <div className="flex bg-surface-dark p-1 rounded-xl mb-6 border border-brand-dark">
+        <div className="flex bg-surface-dark p-1 rounded-xl mb-6 border border-slate-200 dark:border-brand-dark">
           <button
             type="button"
             onClick={() => { setLoginMode("email"); setError(null); setOtpSent(false); }}
-            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 ${loginMode === "email" ? "bg-brand-dark text-white shadow-md" : "text-gray-400"}`}
+            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 ${loginMode === "email" ? "bg-brand-dark text-slate-900 dark:text-white shadow-md" : "text-slate-500 dark:text-gray-400"}`}
           >
             <Mail size={14} /> Email
           </button>
           <button
             type="button"
             onClick={() => { setLoginMode("phone"); setError(null); setOtpSent(false); }}
-            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 ${loginMode === "phone" ? "bg-brand-dark text-white shadow-md" : "text-gray-400"}`}
+            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 ${loginMode === "phone" ? "bg-brand-dark text-slate-900 dark:text-white shadow-md" : "text-slate-500 dark:text-gray-400"}`}
           >
             <Phone size={14} /> Mobile
           </button>
@@ -192,7 +192,7 @@ export default function LoginScreen() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="w-full bg-surface-dark/80 backdrop-blur-md text-white rounded-2xl py-4 pl-12 pr-4 outline-none border border-surface-dark focus:border-brand-base transition-all shadow-md placeholder-gray-500 text-sm"
+                  className="w-full bg-surface-dark/80 backdrop-blur-md text-slate-900 dark:text-white rounded-2xl py-4 pl-12 pr-4 outline-none border border-slate-200 dark:border-surface-dark focus:border-brand-base transition-all shadow-md placeholder-gray-500 text-sm"
                   placeholder="Commuter Email"
                 />
               </div>
@@ -207,7 +207,7 @@ export default function LoginScreen() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="w-full bg-surface-dark/80 backdrop-blur-md text-white rounded-2xl py-4 pl-12 pr-12 outline-none border border-surface-dark focus:border-brand-base transition-all shadow-md placeholder-gray-500 text-sm"
+                  className="w-full bg-surface-dark/80 backdrop-blur-md text-slate-900 dark:text-white rounded-2xl py-4 pl-12 pr-12 outline-none border border-slate-200 dark:border-surface-dark focus:border-brand-base transition-all shadow-md placeholder-gray-500 text-sm"
                   placeholder="Password"
                 />
                 <button
@@ -253,7 +253,7 @@ export default function LoginScreen() {
                   onChange={(e) => setPhone(e.target.value)}
                   required
                   disabled={otpSent}
-                  className="w-full bg-surface-dark/80 backdrop-blur-md text-white rounded-2xl py-4 pl-12 pr-4 outline-none border border-surface-dark focus:border-brand-base transition-all shadow-md placeholder-gray-500 text-sm disabled:opacity-50"
+                  className="w-full bg-surface-dark/80 backdrop-blur-md text-slate-900 dark:text-white rounded-2xl py-4 pl-12 pr-4 outline-none border border-slate-200 dark:border-surface-dark focus:border-brand-base transition-all shadow-md placeholder-gray-500 text-sm disabled:opacity-50"
                   placeholder="+91 98765 43210"
                 />
               </div>
@@ -269,7 +269,7 @@ export default function LoginScreen() {
                     onChange={(e) => setOtp(e.target.value)}
                     required
                     maxLength={6}
-                    className="w-full bg-surface-dark/80 backdrop-blur-md text-white rounded-2xl py-4 pl-12 pr-4 outline-none border border-surface-dark focus:border-brand-base transition-all shadow-md placeholder-gray-500 text-sm text-center tracking-[0.5em] font-bold"
+                    className="w-full bg-surface-dark/80 backdrop-blur-md text-slate-900 dark:text-white rounded-2xl py-4 pl-12 pr-4 outline-none border border-slate-200 dark:border-surface-dark focus:border-brand-base transition-all shadow-md placeholder-gray-500 text-sm text-center tracking-[0.5em] font-bold"
                     placeholder="Enter 6-digit OTP"
                   />
                 </div>
@@ -316,9 +316,9 @@ export default function LoginScreen() {
         <button
           type="button"
           onClick={handleGuestLogin}
-          className="w-full bg-surface-dark/80 backdrop-blur-md border border-brand-dark/50 hover:border-brand-base text-white font-bold py-4 rounded-2xl shadow-md active:scale-95 transition-all flex justify-center items-center gap-2"
+          className="w-full bg-surface-dark/80 backdrop-blur-md border border-slate-200 dark:border-brand-dark/50 hover:border-brand-base text-slate-900 dark:text-white font-bold py-4 rounded-2xl shadow-md active:scale-95 transition-all flex justify-center items-center gap-2"
         >
-          <User size={18} className="text-gray-400" />
+          <User size={18} className="text-slate-500 dark:text-gray-400" />
           Continue as Guest
         </button>
 
@@ -327,7 +327,7 @@ export default function LoginScreen() {
           <button
             type="button"
             onClick={() => { setIsSignUp(!isSignUp); setError(null); setOtpSent(false); }}
-            className="text-xs text-gray-400 hover:text-white transition-colors font-semibold"
+            className="text-xs text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:text-white transition-colors font-semibold"
           >
             {isSignUp ? "Already have an ID? Sign In" : "Need a Commuter ID? Register"}
           </button>

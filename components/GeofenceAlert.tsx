@@ -67,11 +67,11 @@ export default function GeofenceAlert({
   }, [activeTracking, targetLat, targetLng, destinationName, alertTriggered]);
 
   return (
-    <div className="bg-surface-dark border border-brand-dark p-5 rounded-3xl shadow-lg my-4">
+    <div className="bg-surface-dark border border-slate-200 dark:border-brand-dark p-5 rounded-3xl shadow-lg my-4">
       <div className="flex justify-between items-center mb-3">
         <div className="flex items-center gap-2">
           <MapPin size={18} className="text-brand-accent" />
-          <h4 className="text-white font-bold text-sm">Geofence Deboarding Guard</h4>
+          <h4 className="text-slate-900 dark:text-white font-bold text-sm">Geofence Deboarding Guard</h4>
         </div>
         <button
           onClick={() => {
@@ -90,12 +90,12 @@ export default function GeofenceAlert({
 
       {activeTracking ? (
         <div className="flex flex-col gap-2">
-          <p className="text-xs text-gray-400">
-            Monitoring proximity to <strong className="text-white">{destinationName}</strong>...
+          <p className="text-xs text-slate-500 dark:text-gray-400">
+            Monitoring proximity to <strong className="text-slate-900 dark:text-white">{destinationName}</strong>...
           </p>
           {distanceMeters !== null ? (
-            <div className="flex justify-between items-center bg-surface-black p-3 rounded-xl border border-surface-dark">
-              <span className="text-xs text-gray-300">Distance to destination:</span>
+            <div className="flex justify-between items-center bg-surface-black p-3 rounded-xl border border-slate-200 dark:border-surface-dark">
+              <span className="text-xs text-slate-600 dark:text-gray-300">Distance to destination:</span>
               <span className={`text-xs font-mono font-bold ${distanceMeters <= 300 ? "text-amber-400 animate-pulse" : "text-brand-accent"}`}>
                 {distanceMeters} meters
               </span>
@@ -112,7 +112,7 @@ export default function GeofenceAlert({
           )}
         </div>
       ) : (
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-slate-500 dark:text-gray-400">
           Activate this guard during your bus or metro commute to receive automated vibration and voice alerts 300 meters before your stop.
         </p>
       )}

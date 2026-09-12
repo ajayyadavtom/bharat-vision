@@ -59,14 +59,14 @@ export default function ProximityChime() {
 
   if (!isTracking && !hasTriggered) {
     return (
-      <div className="bg-surface-dark border border-brand-dark p-4 rounded-3xl shadow-lg mt-6">
+      <div className="bg-surface-dark border border-slate-200 dark:border-brand-dark p-4 rounded-3xl shadow-lg mt-6">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <BellRing size={18} className="text-gray-400" />
-            <h3 className="text-sm font-bold text-white">Geofence Alarm</h3>
+            <BellRing size={18} className="text-slate-500 dark:text-gray-400" />
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white">Geofence Alarm</h3>
           </div>
         </div>
-        <p className="text-xs text-gray-400 mb-4">
+        <p className="text-xs text-slate-500 dark:text-gray-400 mb-4">
           Enable background tracking. We will vibrate and alert you 300m before your stop.
         </p>
         <button
@@ -94,23 +94,23 @@ export default function ProximityChime() {
 
           <div className="flex justify-between items-center relative z-10">
             <div className="flex items-center gap-3">
-              <div className="bg-surface-black p-2 rounded-full border border-brand-dark">
+              <div className="bg-surface-black p-2 rounded-full border border-slate-200 dark:border-brand-dark">
                 <Bus size={20} className="text-brand-accent" />
               </div>
               <div>
                 <p className="text-[10px] uppercase tracking-widest text-brand-light font-bold mb-0.5">Live Distance</p>
-                <p className="text-xl font-black text-white">{distance} <span className="text-xs text-gray-400 font-semibold">meters</span></p>
+                <p className="text-xl font-black text-slate-900 dark:text-white">{distance} <span className="text-xs text-slate-500 dark:text-gray-400 font-semibold">meters</span></p>
               </div>
             </div>
             
             <div className="text-right flex flex-col items-end">
               <Volume2 size={16} className="text-brand-accent mb-1 animate-pulse" />
-              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Alarm Armed</p>
+              <p className="text-[10px] text-slate-500 dark:text-gray-400 font-bold uppercase tracking-wider">Alarm Armed</p>
             </div>
           </div>
           
           {/* Progress Bar */}
-          <div className="w-full bg-surface-black h-2 rounded-full mt-4 overflow-hidden border border-surface-dark relative z-10">
+          <div className="w-full bg-surface-black h-2 rounded-full mt-4 overflow-hidden border border-slate-200 dark:border-surface-dark relative z-10">
             <motion.div 
               className="h-full bg-brand-accent"
               initial={{ width: "0%" }}
@@ -143,7 +143,7 @@ export default function ProximityChime() {
                 setIsTracking(false);
                 setHasTriggered(false);
               }}
-              className="w-full bg-black hover:bg-gray-900 text-white font-black py-3 rounded-xl text-xs active:scale-95 transition-transform flex items-center justify-center gap-2 shadow-lg"
+              className="w-full bg-black hover:bg-gray-900 text-slate-900 dark:text-white font-black py-3 rounded-xl text-xs active:scale-95 transition-transform flex items-center justify-center gap-2 shadow-lg"
             >
               <CheckCircle2 size={18} /> Dismiss Alarm
             </button>

@@ -63,17 +63,17 @@ export default function DemandForecastingDashboard() {
             <BarChart3 size={14} className="text-indigo-400" />
             <h1 className="text-[10px] uppercase tracking-widest text-indigo-400 font-bold">BMTC Smart City API</h1>
           </div>
-          <h2 className="text-3xl font-extrabold text-white">Demand Forecast</h2>
+          <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white">Demand Forecast</h2>
         </div>
         <div className="bg-surface-dark border border-indigo-900 px-3 py-1.5 rounded-xl shadow-md text-right">
-          <span className="text-[10px] text-gray-400 font-bold uppercase block">AI Status</span>
+          <span className="text-[10px] text-slate-500 dark:text-gray-400 font-bold uppercase block">AI Status</span>
           <span className="text-indigo-400 font-black text-xs flex items-center gap-1">
             <Activity size={12} className="animate-pulse" /> Aggregating Intent
           </span>
         </div>
       </div>
 
-      <p className="text-xs text-gray-400 mb-6 bg-surface-dark p-3 rounded-xl border border-surface-dark">
+      <p className="text-xs text-slate-500 dark:text-gray-400 mb-6 bg-surface-dark p-3 rounded-xl border border-slate-200 dark:border-surface-dark">
         This dashboard aggregates live commuter search intent across the Bharat Vision network to predict crowd surges before they happen.
       </p>
 
@@ -91,7 +91,7 @@ export default function DemandForecastingDashboard() {
                   ? "bg-red-950/20 border-red-500/50 shadow-[0_0_20px_rgba(239,68,68,0.1)]"
                   : node.status === "Resolved"
                   ? "bg-emerald-950/20 border-emerald-500/30"
-                  : "bg-surface-dark border-brand-dark"
+                  : "bg-surface-dark border-slate-200 dark:border-brand-dark"
               }`}
             >
               {/* Background Alert Pulse */}
@@ -101,11 +101,11 @@ export default function DemandForecastingDashboard() {
 
               <div className="flex justify-between items-start mb-4 relative z-10">
                 <div>
-                  <h3 className="text-lg font-black text-white flex items-center gap-2">
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
                     <MapPin size={18} className={node.status === "Critical Deficit" ? "text-red-400" : "text-brand-accent"} />
                     {node.location}
                   </h3>
-                  <p className="text-xs font-bold text-gray-400 flex items-center gap-1 mt-1">
+                  <p className="text-xs font-bold text-slate-500 dark:text-gray-400 flex items-center gap-1 mt-1">
                     <ArrowRight size={12} /> Towards {node.destination}
                   </p>
                 </div>
@@ -113,7 +113,7 @@ export default function DemandForecastingDashboard() {
                 <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-full border ${
                   node.status === "Critical Deficit" ? "bg-red-500/20 text-red-400 border-red-500/50" 
                   : node.status === "Resolved" ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/50"
-                  : "bg-surface-black text-gray-400 border-gray-600"
+                  : "bg-surface-black text-slate-500 dark:text-gray-400 border-gray-600"
                 }`}>
                   {node.status}
                 </span>
@@ -121,20 +121,20 @@ export default function DemandForecastingDashboard() {
 
               {/* Data Metrics */}
               <div className="grid grid-cols-3 gap-2 mb-5 relative z-10">
-                <div className="bg-surface-black p-3 rounded-xl border border-surface-dark text-center">
+                <div className="bg-surface-black p-3 rounded-xl border border-slate-200 dark:border-surface-dark text-center">
                   <p className="text-[9px] text-gray-500 font-bold uppercase tracking-wider mb-1 flex items-center justify-center gap-1">
                     <Activity size={10} /> App Searches
                   </p>
-                  <p className="text-xl font-black text-white">{node.searchIntentCount}</p>
+                  <p className="text-xl font-black text-slate-900 dark:text-white">{node.searchIntentCount}</p>
                 </div>
-                <div className="bg-surface-black p-3 rounded-xl border border-surface-dark text-center">
+                <div className="bg-surface-black p-3 rounded-xl border border-slate-200 dark:border-surface-dark text-center">
                   <p className="text-[9px] text-gray-500 font-bold uppercase tracking-wider mb-1 flex items-center justify-center gap-1">
                     <Bus size={10} /> Fleet Cap.
                   </p>
-                  <p className="text-xl font-black text-white">{node.arrivingCapacity}</p>
+                  <p className="text-xl font-black text-slate-900 dark:text-white">{node.arrivingCapacity}</p>
                 </div>
                 <div className={`p-3 rounded-xl border text-center ${
-                  node.deficit > 0 ? "bg-red-950/40 border-red-900/50" : "bg-surface-black border-surface-dark"
+                  node.deficit > 0 ? "bg-red-950/40 border-red-900/50" : "bg-surface-black border-slate-200 dark:border-surface-dark"
                 }`}>
                   <p className={`text-[9px] font-bold uppercase tracking-wider mb-1 flex items-center justify-center gap-1 ${
                     node.deficit > 0 ? "text-red-400" : "text-gray-500"

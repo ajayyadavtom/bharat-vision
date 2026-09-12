@@ -37,7 +37,7 @@ export default function UltraLiteModeScreen() {
   };
 
   return (
-    <div className="min-h-screen bg-black px-4 py-8 text-white font-mono flex flex-col gap-6 selection:bg-white selection:text-black">
+    <div className="min-h-screen bg-black px-4 py-8 text-slate-900 dark:text-white font-mono flex flex-col gap-6 selection:bg-white selection:text-black">
       
       {/* High-Contrast Header */}
       <div className="border-b-4 border-white pb-4 flex justify-between items-start">
@@ -57,8 +57,8 @@ export default function UltraLiteModeScreen() {
             <BatteryWarning size={20} />
             <span className="font-bold text-xs uppercase">Power</span>
           </div>
-          <p className="text-xl font-black text-white">12%</p>
-          <p className="text-[10px] text-gray-400 uppercase mt-1">Animations: OFF</p>
+          <p className="text-xl font-black text-slate-900 dark:text-white">12%</p>
+          <p className="text-[10px] text-slate-500 dark:text-gray-400 uppercase mt-1">Animations: OFF</p>
         </div>
 
         <div className="bg-black border-2 border-red-500 p-4">
@@ -66,8 +66,8 @@ export default function UltraLiteModeScreen() {
             <WifiOff size={20} />
             <span className="font-bold text-xs uppercase">Network</span>
           </div>
-          <p className="text-xl font-black text-white">EDGE</p>
-          <p className="text-[10px] text-gray-400 uppercase mt-1">Map & GPS: OFF</p>
+          <p className="text-xl font-black text-slate-900 dark:text-white">EDGE</p>
+          <p className="text-[10px] text-slate-500 dark:text-gray-400 uppercase mt-1">Map & GPS: OFF</p>
         </div>
       </div>
 

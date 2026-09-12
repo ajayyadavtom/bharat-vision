@@ -68,16 +68,44 @@ export default function ChatScreen() {
   const toggleListening = () => {
     if (isListening) {
       setIsListening(false);
-      if (inputText) {
-        handleSendMessage(inputText);
-      }
-    } else {
-      setIsListening(true);
-      // Simulate speech to text for demo
-      setTimeout(() => {
-        setInputText("Is there a women-only bus to Silk Board?");
-      }, 1500);
+      // We do not submit here, we let the speech recognition onend/onresult handle it
+      // or we can manually stop it if we keep a ref to the recognition object.
+      return;
     }
+
+    // Check for browser support
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Speech recognition is not supported in this browser. Please type your message.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = "en-IN"; // Indian English by default, captures Hindi/Kannada mix well
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => {
+      setIsListening(true);
+      setInputText("");
+    };
+
+    recognition.onresult = (event: any) => {
+      const speechResult = event.results[0][0].transcript;
+      setInputText(speechResult);
+      handleSendMessage(speechResult);
+    };
+
+    recognition.onerror = (event: any) => {
+      console.error("Speech recognition error", event.error);
+      setIsListening(false);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognition.start();
   };
 
   return (
@@ -100,7 +128,7 @@ export default function ChatScreen() {
             className={`p-3 max-w-[85%] shadow-sm ${
               msg.sender === "bot" 
                 ? "bg-white dark:bg-slate-900 rounded-2xl rounded-tl-sm border border-slate-200 dark:border-slate-800 self-start text-slate-700 dark:text-slate-200" 
-                : "bg-emerald-500 rounded-2xl rounded-tr-sm border border-emerald-400 self-end text-white"
+                : "bg-emerald-500 rounded-2xl rounded-tr-sm border border-emerald-400 self-end text-slate-900 dark:text-white"
             }`}
           >
             <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.text}</p>
@@ -118,7 +146,7 @@ export default function ChatScreen() {
             transition={{ delay: 0.3 + index * 0.1 }} 
             onClick={() => handleSendMessage(prompt)}
             disabled={isLoading}
-            className="text-left bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-300 py-2.5 px-4 rounded-full w-fit hover:bg-emerald-50 dark:hover:bg-slate-800 hover:text-emerald-700 dark:hover:text-white transition-colors disabled:opacity-50 shadow-sm"
+            className="text-left bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-300 py-2.5 px-4 rounded-full w-fit hover:bg-emerald-50 dark:hover:bg-slate-800 hover:text-emerald-700 dark:hover:text-slate-900 dark:text-white transition-colors disabled:opacity-50 shadow-sm"
           >
             {prompt}
           </motion.button>
@@ -132,7 +160,7 @@ export default function ChatScreen() {
             onClick={toggleListening}
             className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 shadow-sm transition-all ${
               isListening 
-                ? "bg-red-500 animate-pulse text-white" 
+                ? "bg-red-500 animate-pulse text-slate-900 dark:text-white" 
                 : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
             }`}
           >
