@@ -2,40 +2,53 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Map, AlertOctagon, Check, X, Users, MapPin, Medal, Loader2, GitMerge } from "lucide-react";
+import { AlertOctagon, Check, X, Users, Medal, Loader2, GitMerge, Camera } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 
-export default function RouteDeviationAI() {
+export default function RouteDeviationAI({ externalTrigger, resetTrigger }: { externalTrigger?: boolean, resetTrigger?: () => void }) {
   const { addKarma } = useAppStore();
   const [isVisible, setIsVisible] = useState(false);
-  const [voteStatus, setVoteStatus] = useState<"pending" | "voting" | "verifying" | "confirmed">("pending");
+  const [voteStatus, setVoteStatus] = useState<"pending" | "voting" | "ocr" | "verifying" | "confirmed">("pending");
 
   useEffect(() => {
-    // Simulate the AI detecting an anomaly via GPS & Beacon cross-check after 4 seconds on the tracking screen
-    const detectAnomaly = setTimeout(() => {
+    if (externalTrigger) {
       setIsVisible(true);
-    }, 4000);
-
-    return () => clearTimeout(detectAnomaly);
-  }, []);
+      setVoteStatus("pending");
+    } else {
+      // Real-time AI simulation: Anomaly detected after 15 seconds on tracking screen if not triggered manually
+      const detectAnomaly = setTimeout(() => {
+        setIsVisible(true);
+      }, 15000);
+      return () => clearTimeout(detectAnomaly);
+    }
+  }, [externalTrigger]);
 
   const handleVote = (hasDeviated: boolean) => {
     setVoteStatus("voting");
-    
-    // Simulate the decentralized consensus verification
     setTimeout(() => {
       setVoteStatus("verifying");
-      
       setTimeout(() => {
         setVoteStatus("confirmed");
-        if (hasDeviated) {
-          addKarma(15); // Gamification reward for confirming the route change
-        }
-        
-        // Hide the overlay after a few seconds
-        setTimeout(() => setIsVisible(false), 4500);
+        if (hasDeviated) addKarma(15);
+        setTimeout(() => {
+          setIsVisible(false);
+          if (resetTrigger) resetTrigger();
+        }, 4500);
       }, 2500);
     }, 1000);
+  };
+
+  const handleCameraOcr = () => {
+    setVoteStatus("ocr");
+    setTimeout(() => {
+      // Simulate successful OCR verification
+      setVoteStatus("confirmed");
+      addKarma(25);
+      setTimeout(() => {
+        setIsVisible(false);
+        if (resetTrigger) resetTrigger();
+      }, 4500);
+    }, 3000);
   };
 
   if (!isVisible) return null;
@@ -47,59 +60,91 @@ export default function RouteDeviationAI() {
           initial={{ opacity: 0, y: -20, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -20, scale: 0.95 }}
-          className="bg-surface-dark border border-amber-500/50 p-5 rounded-3xl shadow-[0_15px_40px_rgba(245,158,11,0.2)] pointer-events-auto relative overflow-hidden"
+          className="bg-white dark:bg-slate-900 border border-amber-500/50 p-5 rounded-3xl shadow-[0_15px_40px_rgba(0,0,0,0.15)] dark:shadow-[0_15px_40px_rgba(245,158,11,0.2)] pointer-events-auto relative overflow-hidden"
         >
           {/* AI Beacon Scan Effect */}
-          <div className="absolute inset-0 bg-gradient-to-b from-amber-500/0 via-amber-500/10 to-amber-500/0 animate-[shimmer_2s_infinite] pointer-events-none"></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-amber-500/0 via-amber-500/5 dark:via-amber-500/10 to-amber-500/0 animate-[shimmer_2s_infinite] pointer-events-none"></div>
 
           {voteStatus === "pending" && (
             <>
-              <div className="flex items-center gap-2 mb-3">
-                <AlertOctagon size={16} className="text-amber-500 animate-pulse" />
-                <span className="text-[10px] uppercase tracking-widest text-amber-400 font-black">AI Anomaly Detected</span>
+              <div className="flex justify-between items-start mb-3">
+                <div className="flex items-center gap-2">
+                  <AlertOctagon size={16} className="text-amber-500 animate-pulse" />
+                  <span className="text-[10px] uppercase tracking-widest text-amber-600 dark:text-amber-400 font-black">AI Anomaly Detected</span>
+                </div>
+                <div className="bg-indigo-100 dark:bg-indigo-900/30 text-[9px] text-indigo-700 dark:text-indigo-300 px-2 py-1 rounded font-bold uppercase">
+                  GTFS-RT Pipeline
+                </div>
               </div>
 
-              <h3 className="text-lg font-black text-white mb-2 leading-tight">
+              <h3 className="text-lg font-black text-slate-900 dark:text-white mb-2 leading-tight">
                 Are you on Route 500D?
               </h3>
               
-              <p className="text-xs text-gray-300 font-medium mb-4 bg-surface-black/50 p-3 rounded-xl border border-surface-dark">
-                Our sensors indicate this bus just took a sharp left turn away from the Outer Ring Road. Did the conductor change the route?
-              </p>
+              <div className="text-xs text-slate-600 dark:text-slate-300 font-medium mb-4 bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border border-slate-100 dark:border-slate-700">
+                <p className="mb-2">
+                  <strong className="text-indigo-500">Geo-Fence & Beacon Cross-Check:</strong> We detected transit Wi-Fi signals confirming you are onboard.
+                </p>
+                <p>
+                  Our ML model noticed 5 passengers took a sudden detour away from Outer Ring Road. <br/><br/>
+                  <strong>Did the conductor change the destination display to Electronic City?</strong>
+                </p>
+              </div>
 
-              <div className="flex gap-3">
+              <div className="flex items-center gap-2 mb-3 bg-emerald-50 dark:bg-emerald-900/20 p-2 rounded-lg border border-emerald-100 dark:border-emerald-800">
+                <Medal size={14} className="text-emerald-600 dark:text-emerald-400" />
+                <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300">Weighted Trust Score: 2x (Verified Frequent Rider)</span>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleVote(true)}
+                    className="flex-1 bg-amber-500 text-white dark:text-black font-black py-3 rounded-xl text-xs shadow-sm active:scale-95 transition-transform flex items-center justify-center gap-2"
+                  >
+                    <Check size={16} /> Yes, Detour
+                  </button>
+                  <button
+                    onClick={() => handleVote(false)}
+                    className="flex-1 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-bold py-3 rounded-xl text-xs active:scale-95 transition-transform flex items-center justify-center gap-2"
+                  >
+                    <X size={16} /> Normal Path
+                  </button>
+                </div>
                 <button
-                  onClick={() => handleVote(true)}
-                  className="flex-1 bg-amber-500 text-black font-black py-3 rounded-xl text-xs shadow-lg active:scale-95 transition-transform flex items-center justify-center gap-2"
+                  onClick={handleCameraOcr}
+                  className="w-full bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-500/30 text-indigo-700 dark:text-indigo-300 font-bold py-3 rounded-xl text-xs active:scale-95 transition-transform flex items-center justify-center gap-2 mt-1"
                 >
-                  <Check size={16} /> Yes, Detour
-                </button>
-                <button
-                  onClick={() => handleVote(false)}
-                  className="flex-1 bg-surface-black border border-surface-dark text-white font-bold py-3 rounded-xl text-xs active:scale-95 transition-transform flex items-center justify-center gap-2"
-                >
-                  <X size={16} /> No, Normal Path
+                  <Camera size={16} /> Fallback: Use Camera (OCR)
                 </button>
               </div>
             </>
           )}
 
+          {voteStatus === "ocr" && (
+            <div className="flex flex-col items-center justify-center py-4 text-center">
+              <Camera size={24} className="text-indigo-500 animate-pulse mb-3" />
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-2">Analyzing Display Board...</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Extracting LED text via OCR Neural Net</p>
+            </div>
+          )}
+
           {voteStatus === "voting" && (
             <div className="flex flex-col items-center justify-center py-4 text-center">
               <Loader2 size={24} className="text-amber-500 animate-spin mb-3" />
-              <h3 className="text-sm font-bold text-white">Transmitting Data...</h3>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">Transmitting Data...</h3>
             </div>
           )}
 
           {voteStatus === "verifying" && (
             <div className="flex flex-col items-center justify-center py-4 text-center">
-              <div className="flex items-center justify-center gap-1 mb-3 text-brand-accent">
+              <div className="flex items-center justify-center gap-1 mb-3 text-indigo-500">
                 <Users size={16} className="animate-bounce" />
                 <Users size={20} className="animate-bounce delay-75" />
                 <Users size={16} className="animate-bounce delay-150" />
               </div>
-              <h3 className="text-sm font-bold text-white">Verifying Consensus</h3>
-              <p className="text-xs text-gray-400 mt-1">Cross-checking with 3 other passengers onboard...</p>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">Verifying Consensus</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Cross-checking with 3 other passengers onboard...</p>
             </div>
           )}
 
@@ -109,16 +154,16 @@ export default function RouteDeviationAI() {
               animate={{ opacity: 1, scale: 1 }}
               className="flex flex-col items-center justify-center py-2 text-center"
             >
-              <div className="w-12 h-12 bg-emerald-500/20 rounded-full flex items-center justify-center mb-3 border border-emerald-500">
-                <GitMerge size={24} className="text-emerald-400" />
+              <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-500/20 rounded-full flex items-center justify-center mb-3 border border-emerald-500">
+                <GitMerge size={24} className="text-emerald-600 dark:text-emerald-400" />
               </div>
-              <h3 className="text-lg font-black text-white">Route Graph Updated!</h3>
-              <p className="text-xs text-gray-300 mt-1 mb-3">
-                Consensus reached. Ghost ETAs removed for upcoming stops.
+              <h3 className="text-lg font-black text-slate-900 dark:text-white">Route Graph Updated!</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-300 mt-1 mb-3">
+                Decentralized consensus reached. Ghost ETAs removed instantly.
               </p>
-              <div className="bg-amber-900/40 border border-amber-500/30 px-4 py-2 rounded-full flex items-center gap-2">
-                <Medal size={16} className="text-amber-400" />
-                <span className="text-xs font-bold text-amber-400">+15 Karma Points Earned</span>
+              <div className="bg-amber-100 dark:bg-amber-900/40 border border-amber-300 dark:border-amber-500/30 px-4 py-2 rounded-full flex items-center gap-2">
+                <Medal size={16} className="text-amber-600 dark:text-amber-400" />
+                <span className="text-xs font-bold text-amber-600 dark:text-amber-400">+25 Karma Points Earned</span>
               </div>
             </motion.div>
           )}

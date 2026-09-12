@@ -1,59 +1,35 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Search, Leaf, Ticket, TrainFront, CreditCard, ShieldAlert, Zap, CloudRain, Sun, Cloud, User, MapPin } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { useAppStore } from "@/lib/store";
+import { getCityData, CITIES } from "@/lib/cityData";
 import UpiGateway from "../components/UpiGateway";
 import BehavioralHabitAI from "../components/BehavioralHabitAI";
 
 export default function VisionHome() {
-  const { userName, walletBalance, carbonSavedGrams, addMoney, fetchUserData } = useAppStore();
-  // FIX: Only show splash if it hasn't been shown this session
-  const [showSplash, setShowSplash] = useState(false);
+  const router = useRouter();
+  const { userName, walletBalance, carbonSavedGrams, addMoney, fetchUserData, currentCity, setCurrentCity } = useAppStore();
+  const cityData = getCityData(currentCity);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
-  const [greeting, setGreeting] = useState("Namaskara");
+
+  // Compute greeting dynamically
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Good Morning" : hour < 18 ? "Good Afternoon" : "Good Evening";
 
   const weather = {
     temperature: 22,
     condition: "Rain",
-    location: "Yelahanka",
+    location: cityData.name,
     commuterAlert: "Light drizzle expected. Carry an umbrella."
   };
 
   useEffect(() => {
     fetchUserData();
-
-    // FIX: Check if user is logged in or chose Guest — if not, send to login
-    const checkAuth = async () => {
-      const guestMode = sessionStorage.getItem("bv-guest");
-      if (guestMode) return; // Guest already chose to continue
-
-      const { supabase } = await import("@/lib/supabase");
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        window.location.href = "/login";
-      }
-    };
-    checkAuth();
-
-    const hour = new Date().getHours();
-    if (hour < 12) setGreeting("Good Morning");
-    else if (hour < 18) setGreeting("Good Afternoon");
-    else setGreeting("Good Evening");
-
-    // FIX: Check if splash already shown this session
-    const hasSeenSplash = sessionStorage.getItem("bv-splash-seen");
-    if (!hasSeenSplash) {
-      setShowSplash(true);
-      const timer = setTimeout(() => {
-        setShowSplash(false);
-        sessionStorage.setItem("bv-splash-seen", "true");
-      }, 2500);
-      return () => clearTimeout(timer);
-    }
   }, [fetchUserData]);
 
   const renderWeatherIcon = () => {
@@ -67,14 +43,9 @@ export default function VisionHome() {
     setIsPaymentOpen(false);
   };
 
-  const splashVariants = {
-    hidden: { opacity: 0 },
-    show: { opacity: 1, transition: { staggerChildren: 0.15, delayChildren: 0.2 } }
-  };
-
   const dashboardVariants = {
     hidden: { opacity: 0 },
-    show: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.3 } }
+    show: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.1 } }
   };
 
   const itemVariants = {
@@ -84,153 +55,118 @@ export default function VisionHome() {
 
   return (
     <>
-      <UpiGateway
-        isOpen={isPaymentOpen}
-        amount={500}
-        onSuccess={handlePaymentSuccess}
-        onCancel={() => setIsPaymentOpen(false)}
-      />
-
-      {/* ENTERPRISE SPLASH SCREEN — only shows once per session */}
-      <AnimatePresence>
-        {showSplash && (
-          <motion.div
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0, scale: 1.05, filter: "blur(10px)" }}
-            transition={{ duration: 0.6, ease: "easeInOut" }}
-            className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-surface-black"
-          >
-            <motion.div
-              variants={splashVariants}
-              initial="hidden"
-              animate="show"
-              className="flex flex-col items-center"
-            >
-              <motion.div
-                variants={itemVariants}
-                className="w-24 h-24 bg-gradient-to-br from-brand-base to-brand-dark rounded-3xl shadow-[0_0_50px_rgba(20,184,166,0.3)] flex items-center justify-center mb-6 border border-brand-light/20 relative overflow-hidden"
-              >
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-                  className="absolute -inset-10 bg-gradient-to-t from-brand-accent/20 to-transparent blur-xl"
-                />
-                <Zap size={44} className="text-white relative z-10" fill="currentColor" />
-              </motion.div>
-
-              <motion.h1 variants={itemVariants} className="text-4xl font-black text-white tracking-tight mb-2">
-                Bharat <span className="text-brand-accent">Vision</span>
-              </motion.h1>
-
-              <motion.p variants={itemVariants} className="text-gray-400 text-xs font-bold tracking-[0.3em] uppercase">
-                Namma Bengaluru
-              </motion.p>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* MAIN DASHBOARD */}
       <motion.div
         variants={dashboardVariants}
         initial="hidden"
-        animate={showSplash ? "hidden" : "show"}
+        animate="show"
         className="flex flex-col h-screen overflow-y-auto no-scrollbar gap-6 p-4 pt-8 pb-[120px] relative z-10 [&>*]:shrink-0"
       >
-        {/* HEADER */}
         <motion.div variants={itemVariants} className="flex justify-between items-start">
           <div>
-            <h1 className="text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-1">Namma Bengaluru</h1>
-            <h2 className="text-2xl font-extrabold text-white">
+            <select 
+              value={currentCity}
+              onChange={(e) => setCurrentCity(e.target.value)}
+              className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-1 bg-transparent outline-none cursor-pointer"
+            >
+              {Object.values(CITIES).map(city => (
+                <option key={city.id} value={city.id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{city.name} {city.state}</option>
+              ))}
+            </select>
+            <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white">
               {greeting}, {userName ? userName.split(" ")[0] : "Ajay"}
             </h2>
           </div>
           <div className="flex flex-col items-end gap-2">
-            <Link
-              href="/profile"
-              className="w-10 h-10 bg-surface-dark border border-brand-accent rounded-full flex items-center justify-center shadow-[0_0_10px_rgba(20,184,166,0.15)] active:scale-95 transition-transform hover:bg-brand-dark"
-            >
-              <User size={18} className="text-brand-light" />
+            <Link href="/profile" className="w-10 h-10 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full flex items-center justify-center shadow-sm active:scale-95 transition-transform hover:bg-slate-50 dark:hover:bg-slate-800">
+              <User size={18} className="text-slate-600 dark:text-slate-300" />
             </Link>
-            <div className="flex items-center gap-1.5 bg-brand-dark px-3 py-1.5 rounded-full border border-brand-base shadow-lg cursor-default">
-              <Leaf size={14} className="text-brand-accent" />
-              <span className="text-xs text-brand-accent font-semibold">{carbonSavedGrams || 0} g saved</span>
+            <div className="flex items-center gap-1.5 bg-emerald-100 dark:bg-emerald-900/30 px-3 py-1.5 rounded-full border border-emerald-200 dark:border-emerald-800 shadow-sm cursor-default">
+              <Leaf size={14} className="text-emerald-600 dark:text-emerald-400" />
+              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">{carbonSavedGrams || 0} g saved</span>
             </div>
           </div>
         </motion.div>
 
-        {/* WEATHER & LIVE ALERTS */}
-        <motion.div variants={itemVariants} className="flex items-center justify-between bg-surface-dark/80 backdrop-blur-md border border-brand-dark rounded-xl p-3 shadow-md">
+        <motion.div variants={itemVariants} className="flex items-center justify-between bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-sm">
           <div className="flex items-center gap-3">
-            <div className="bg-surface-black p-2 rounded-full border border-surface-dark">{renderWeatherIcon()}</div>
+            <div className="bg-slate-100 dark:bg-slate-800 p-2 rounded-full border border-slate-200 dark:border-slate-700">{renderWeatherIcon()}</div>
             <div>
-              <p className="text-white text-sm font-bold">{weather.temperature}°C · {weather.condition}</p>
-              <p className="text-[10px] text-gray-400 font-medium flex items-center gap-1"><MapPin size={10} /> {weather.location}</p>
+              <p className="text-slate-900 dark:text-white text-sm font-bold">{weather.temperature}°C · {weather.condition}</p>
+              <p className="text-[10px] text-slate-500 font-medium flex items-center gap-1"><MapPin size={10} /> {weather.location}</p>
             </div>
           </div>
           {weather.commuterAlert && (
-            <div className="bg-blue-900/30 border border-blue-800/50 px-3 py-1.5 rounded-lg max-w-[140px] text-right relative overflow-hidden">
+            <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800/50 px-3 py-1.5 rounded-lg max-w-[140px] text-right relative overflow-hidden">
               <motion.div animate={{ opacity: [0.3, 0.6, 0.3] }} transition={{ duration: 2, repeat: Infinity }} className="absolute inset-0 bg-blue-500/10" />
-              <p className="text-[9px] text-blue-300 font-bold leading-tight relative z-10">{weather.commuterAlert}</p>
+              <p className="text-[9px] text-blue-700 dark:text-blue-300 font-bold leading-tight relative z-10">{weather.commuterAlert}</p>
             </div>
           )}
         </motion.div>
 
-        {/* AI ROUTE SEARCH */}
         <motion.div variants={itemVariants} className="relative group">
           <Link href="/route" className="block">
             <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-              <Search size={20} className="text-gray-400 group-hover:text-brand-light transition-colors" />
+              <Search size={20} className="text-slate-400 group-hover:text-emerald-500 transition-colors" />
             </div>
-            <div className="w-full bg-surface-dark/80 backdrop-blur-md text-gray-400 rounded-2xl py-4 pl-12 pr-4 border border-brand-dark/50 group-hover:border-brand-base transition-all shadow-md text-sm text-left">
+            <div className="w-full bg-white dark:bg-slate-900 text-slate-500 rounded-2xl py-4 pl-12 pr-4 border border-slate-200 dark:border-slate-800 group-hover:border-emerald-500 transition-all shadow-sm text-sm text-left">
               Where to? (e.g., Silk Board to Majestic)
             </div>
           </Link>
         </motion.div>
 
-        {/* BHARAT WALLET */}
-        <motion.div variants={itemVariants} className="bg-gradient-to-br from-brand-base to-brand-dark rounded-2xl p-5 shadow-[0_10px_30px_rgba(20,184,166,0.15)] border border-brand-light/20 relative overflow-hidden">
-          <motion.div animate={{ scale: [1, 1.1, 1], opacity: [0.2, 0.3, 0.2] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }} className="absolute -right-6 -top-6 w-32 h-32 bg-brand-accent/30 rounded-full blur-2xl" />
+        <motion.div variants={itemVariants} className="bg-emerald-500 dark:bg-emerald-600 rounded-2xl p-5 shadow-lg border border-emerald-400 dark:border-emerald-500 relative overflow-hidden">
+          <motion.div animate={{ scale: [1, 1.1, 1], opacity: [0.2, 0.3, 0.2] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }} className="absolute -right-6 -top-6 w-32 h-32 bg-white/20 rounded-full blur-2xl" />
           <div className="flex justify-between items-end relative z-10">
             <div>
-              <p className="text-brand-accent text-xs font-semibold mb-1 flex items-center gap-1"><CreditCard size={12} /> BHARAT WALLET</p>
+              <p className="text-emerald-50 text-xs font-semibold mb-1 flex items-center gap-1"><CreditCard size={12} /> BHARAT WALLET</p>
               <h3 className="text-4xl font-black text-white tracking-tight">₹{(walletBalance || 0).toFixed(2)}</h3>
             </div>
-            <button onClick={() => setIsPaymentOpen(true)} className="bg-brand-accent text-brand-dark text-xs font-bold px-4 py-2 rounded-xl shadow-lg active:scale-95 transition-transform hover:bg-white hover:text-brand-dark">
+            <button onClick={() => setIsPaymentOpen(true)} className="bg-white text-emerald-600 text-xs font-bold px-4 py-2 rounded-xl shadow-sm active:scale-95 transition-transform hover:bg-slate-50">
               Add Money
             </button>
           </div>
         </motion.div>
 
-        {/* RAPID ACTION GRID */}
         <motion.div variants={itemVariants}>
-          <h3 className="text-lg font-bold text-white mb-3">Rapid Transit</h3>
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-3">Rapid Transit</h3>
           <div className="grid grid-cols-3 gap-3">
-            <Link href="/pass" className="group flex flex-col items-center justify-center bg-surface-dark/50 backdrop-blur-sm p-4 rounded-2xl border border-surface-dark hover:border-brand-base hover:bg-surface-dark transition-all shadow-md">
-              <div className="bg-brand-dark p-3 rounded-full mb-2 group-hover:scale-110 transition-transform shadow-inner">
-                <Ticket size={24} className="text-brand-accent" />
+            <Link href="/pass" className="group flex flex-col items-center justify-center bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-emerald-500 transition-all shadow-sm">
+              <div className="bg-emerald-50 dark:bg-emerald-900/30 p-3 rounded-full mb-2 group-hover:scale-110 transition-transform">
+                <Ticket size={24} className="text-emerald-500 dark:text-emerald-400" />
               </div>
-              <span className="text-xs font-bold text-gray-300">Smart Pass</span>
+              <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Smart Pass</span>
             </Link>
 
-            <Link href="/metro" className="group flex flex-col items-center justify-center bg-surface-dark/50 backdrop-blur-sm p-4 rounded-2xl border border-surface-dark hover:border-indigo-500 hover:bg-surface-dark transition-all shadow-md">
-              <div className="bg-indigo-900/50 p-3 rounded-full mb-2 group-hover:scale-110 transition-transform shadow-inner">
-                <TrainFront size={24} className="text-indigo-400" />
+            <Link href="/metro" className="group flex flex-col items-center justify-center bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-indigo-500 transition-all shadow-sm">
+              <div className="bg-indigo-50 dark:bg-indigo-900/30 p-3 rounded-full mb-2 group-hover:scale-110 transition-transform">
+                <TrainFront size={24} className="text-indigo-500 dark:text-indigo-400" />
               </div>
-              <span className="text-xs font-bold text-gray-300">Namma Metro</span>
+              <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Namma Metro</span>
             </Link>
 
-            <Link href="/safety" className="group flex flex-col items-center justify-center bg-surface-dark/50 backdrop-blur-sm p-4 rounded-2xl border border-surface-dark hover:border-red-500 hover:bg-surface-dark transition-all shadow-md">
-              <div className="bg-red-900/30 p-3 rounded-full mb-2 group-hover:scale-110 transition-transform shadow-inner">
-                <ShieldAlert size={24} className="text-red-500" />
+            <Link href="/auto" className="group flex flex-col items-center justify-center bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-amber-500 transition-all shadow-sm">
+              <div className="bg-amber-50 dark:bg-amber-900/30 p-3 rounded-full mb-2 group-hover:scale-110 transition-transform">
+                <Search size={24} className="text-amber-500 dark:text-amber-400" />
               </div>
-              <span className="text-xs font-bold text-gray-300">SafeKeep</span>
+              <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Auto/Cab</span>
+            </Link>
+
+            <Link href="/safety" className="group flex flex-col items-center justify-center bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-red-500 transition-all shadow-sm">
+              <div className="bg-red-50 dark:bg-red-900/30 p-3 rounded-full mb-2 group-hover:scale-110 transition-transform">
+                <ShieldAlert size={24} className="text-red-500 dark:text-red-400" />
+              </div>
+              <span className="text-xs font-bold text-slate-700 dark:text-slate-300">SafeKeep</span>
             </Link>
           </div>
         </motion.div>
       </motion.div>
 
-      {/* AI ZERO-CLICK BOOKING OVERLAY */}
+      <AnimatePresence>
+        {isPaymentOpen && (
+          <UpiGateway isOpen={isPaymentOpen} amount={500} onSuccess={handlePaymentSuccess} onCancel={() => setIsPaymentOpen(false)} />
+        )}
+      </AnimatePresence>
+
       <BehavioralHabitAI />
     </>
   );

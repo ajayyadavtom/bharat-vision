@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect } from "react";
 import { Mic, Send, Sparkles, StopCircle, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
+import { useAppStore } from "@/lib/store";
+import { getCityData } from "@/lib/cityData";
 
 interface Message {
   id: number;
@@ -11,13 +13,15 @@ interface Message {
 }
 
 export default function ChatScreen() {
+  const { currentCity } = useAppStore();
+  const cityData = getCityData(currentCity);
   const [inputText, setInputText] = useState("");
   const [isListening, setIsListening] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
-      text: "Namaskara guru! 🙏 I'm Vanara AI. Ask me about BMTC routes, Metro timings, or just tap the mic and speak!",
+      text: `Namaskara! 🙏 I'm Vanara AI for ${cityData.name}. Ask me about ${cityData.transitAuthorities.bus} routes, ${cityData.transitAuthorities.metro} timings, or just tap the mic and speak!`,
       sender: "bot"
     }
   ]);
@@ -47,74 +51,58 @@ export default function ChatScreen() {
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text })
+        body: JSON.stringify({ message: text, cityId: currentCity })
       });
       
       const data = await response.json();
       const botMsg: Message = { id: Date.now() + 1, text: data.reply, sender: "bot" };
       setMessages(prev => [...prev, botMsg]);
     } catch (error) {
-      const botMsg: Message = { id: Date.now() + 1, text: "Network issue, guru. Try again.", sender: "bot" };
-      setMessages(prev => [...prev, botMsg]);
+      console.error(error);
+      const errorMsg: Message = { id: Date.now() + 1, text: "Sorry, my neural link to BMTC servers timed out. Try again?", sender: "bot" };
+      setMessages(prev => [...prev, errorMsg]);
     } finally {
       setIsLoading(false);
+      setIsListening(false);
     }
   };
 
   const toggleListening = () => {
     if (isListening) {
       setIsListening(false);
-      return;
+      if (inputText) {
+        handleSendMessage(inputText);
+      }
+    } else {
+      setIsListening(true);
+      // Simulate speech to text for demo
+      setTimeout(() => {
+        setInputText("Is there a women-only bus to Silk Board?");
+      }, 1500);
     }
-
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    
-    if (!SpeechRecognition) {
-      alert("Voice recognition is not supported in this browser. Try Chrome!");
-      return;
-    }
-
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'en-IN'; 
-    recognition.interimResults = false;
-    
-    recognition.onstart = () => setIsListening(true);
-    
-    recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      handleSendMessage(transcript);
-      setIsListening(false);
-    };
-
-    recognition.onerror = (event: any) => {
-      console.error("Speech error:", event.error);
-      setIsListening(false);
-    };
-    
-    recognition.onend = () => setIsListening(false);
-
-    recognition.start();
   };
 
   return (
-    <div className="flex flex-col h-screen max-h-screen pt-4 pb-20 px-4 bg-surface-black relative">
-      
-      <div className="flex items-center gap-2 mb-6">
-        <Sparkles className="text-brand-accent" size={20} />
-        <h1 className="text-lg font-bold text-white tracking-wide">Vanara AI</h1>
-        {isLoading && <Loader2 size={14} className="text-gray-400 animate-spin ml-2" />}
+    <div className="flex flex-col h-screen bg-slate-50 dark:bg-slate-950 relative">
+      {/* Header */}
+      <div className="p-4 pt-8 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex flex-col gap-1 z-10 shadow-sm">
+        <h2 className="text-[10px] text-emerald-600 dark:text-emerald-400 uppercase tracking-[0.2em] font-bold flex items-center gap-1">
+          <Sparkles size={10} /> Vanara AI Assistant
+        </h2>
+        <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white leading-none">Chat</h1>
       </div>
 
-      <div className="flex-1 overflow-y-auto no-scrollbar flex flex-col gap-4 pb-4">
+      {/* Chat History */}
+      <div className="flex-1 overflow-y-auto no-scrollbar p-4 flex flex-col gap-4 pb-32">
         {messages.map((msg) => (
-          <motion.div 
+          <motion.div
             key={msg.id}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`p-3 max-w-[85%] shadow-md ${
+            className={`p-3 max-w-[85%] shadow-sm ${
               msg.sender === "bot" 
-                ? "bg-surface-dark rounded-2xl rounded-tl-sm border border-brand-dark self-start text-gray-200" 
-                : "bg-brand-dark rounded-2xl rounded-tr-sm border border-brand-base self-end text-white"
+                ? "bg-white dark:bg-slate-900 rounded-2xl rounded-tl-sm border border-slate-200 dark:border-slate-800 self-start text-slate-700 dark:text-slate-200" 
+                : "bg-emerald-500 rounded-2xl rounded-tr-sm border border-emerald-400 self-end text-white"
             }`}
           >
             <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.text}</p>
@@ -123,7 +111,7 @@ export default function ChatScreen() {
         <div ref={chatEndRef} />
       </div>
 
-      <div className="flex flex-col gap-2 mb-4">
+      <div className="flex flex-col gap-2 mb-4 px-4 absolute bottom-24 w-full max-w-md bg-gradient-to-t from-slate-50 dark:from-slate-950 pt-8 pb-2">
         {quickPrompts.map((prompt, index) => (
           <motion.button
             key={index}
@@ -132,48 +120,51 @@ export default function ChatScreen() {
             transition={{ delay: 0.3 + index * 0.1 }} 
             onClick={() => handleSendMessage(prompt)}
             disabled={isLoading}
-            className="text-left bg-surface-dark/50 border border-brand-dark text-xs text-gray-300 py-2.5 px-4 rounded-full w-fit hover:bg-brand-dark hover:text-white transition-colors disabled:opacity-50"
+            className="text-left bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-300 py-2.5 px-4 rounded-full w-fit hover:bg-emerald-50 dark:hover:bg-slate-800 hover:text-emerald-700 dark:hover:text-white transition-colors disabled:opacity-50 shadow-sm"
           >
             {prompt}
           </motion.button>
         ))}
       </div>
 
-      <div className={`flex items-center gap-2 p-2 rounded-full border transition-colors shadow-lg mb-2 ${
-        isListening ? "bg-alert-red/10 border-alert-red" : "bg-surface-dark border-brand-base focus-within:border-brand-accent"
-      }`}>
-        <input
-          type="text"
-          value={inputText}
-          onChange={(e) => setInputText(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleSendMessage(inputText)}
-          placeholder={isListening ? "Listening..." : "Message Vanara — say hi..."}
-          disabled={isListening || isLoading}
-          className="flex-1 bg-transparent text-white text-sm px-3 outline-none placeholder-gray-500 disabled:opacity-50"
-        />
-        
-        {inputText.length > 0 ? (
-          <button 
-            onClick={() => handleSendMessage(inputText)}
-            disabled={isLoading}
-            className="bg-brand-accent p-2.5 rounded-full text-brand-dark hover:scale-105 transition-transform disabled:opacity-50"
-          >
-            <Send size={18} />
-          </button>
-        ) : (
+      {/* Input Area */}
+      <div className="absolute bottom-[90px] left-0 right-0 p-4 bg-slate-50/80 dark:bg-slate-950/80 backdrop-blur-md">
+        <div className="flex items-center gap-2">
           <button 
             onClick={toggleListening}
-            disabled={isLoading}
-            className={`p-2.5 rounded-full hover:scale-105 transition-transform border disabled:opacity-50 ${
+            className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 shadow-sm transition-all ${
               isListening 
-                ? "bg-alert-red text-white border-red-400 animate-pulse" 
-                : "bg-brand-dark text-brand-accent border-brand-base"
+                ? "bg-red-500 animate-pulse text-white" 
+                : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
             }`}
           >
-            {isListening ? <StopCircle size={18} /> : <Mic size={18} />}
+            {isListening ? <StopCircle size={20} /> : <Mic size={20} />}
           </button>
-        )}
+          
+          <div className="flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full flex items-center px-4 h-12 shadow-sm focus-within:border-emerald-500 transition-colors">
+            <input
+              type="text"
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSendMessage(inputText)}
+              placeholder="Ask me anything..."
+              className="flex-1 bg-transparent text-sm text-slate-900 dark:text-white outline-none placeholder-slate-400"
+            />
+            {isLoading ? (
+              <Loader2 size={18} className="text-emerald-500 animate-spin" />
+            ) : (
+              <button 
+                onClick={() => handleSendMessage(inputText)}
+                disabled={!inputText.trim()}
+                className="text-emerald-500 disabled:text-slate-300 dark:disabled:text-slate-700 disabled:bg-transparent bg-emerald-50 dark:bg-emerald-900/30 p-1.5 rounded-full transition-colors"
+              >
+                <Send size={16} />
+              </button>
+            )}
+          </div>
+        </div>
       </div>
+
     </div>
   );
 }

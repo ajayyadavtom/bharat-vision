@@ -3,17 +3,24 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { ShieldCheck, Mail, Lock, Zap, User, Loader2, ArrowRight } from "lucide-react";
+import { ShieldCheck, Mail, Lock, Zap, User, Loader2, ArrowRight, Eye, EyeOff, Phone, KeyRound } from "lucide-react";
 import { supabase } from "../../src/lib/supabase";
+
+type LoginMode = "email" | "phone";
 
 export default function LoginScreen() {
   const router = useRouter();
+  const [loginMode, setLoginMode] = useState<LoginMode>("email");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [phone, setPhone] = useState("");
+  const [otp, setOtp] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [otpSent, setOtpSent] = useState(false);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,26 +28,59 @@ export default function LoginScreen() {
     setError(null);
 
     try {
-      if (isSignUp) {
-        const { data, error } = await supabase.auth.signUp({ email, password });
-        if (error) {
-          setError(error.message);
-          setLoading(false);
-          return;
-        }
-        if (data.user) {
-          alert("Commuter ID created! You can now sign in.");
-          setIsSignUp(false);
+      if (loginMode === "phone") {
+        if (!otpSent) {
+          // Send OTP
+          const { error } = await supabase.auth.signInWithOtp({
+            phone: phone,
+            options: { shouldCreateUser: true },
+          });
+          if (error) {
+            setError(error.message);
+            setLoading(false);
+            return;
+          }
+          setOtpSent(true);
+          setError(null);
+        } else {
+          // Verify OTP
+          const { data, error } = await supabase.auth.verifyOtp({
+            phone: phone,
+            token: otp,
+            type: "sms",
+          });
+          if (error) {
+            setError(error.message);
+            setLoading(false);
+            return;
+          }
+          if (data.user) {
+            router.push("/");
+          }
         }
       } else {
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) {
-          setError(error.message);
-          setLoading(false);
-          return;
-        }
-        if (data.user) {
-          router.push("/");
+        // Email login/signup
+        if (isSignUp) {
+          const { data, error } = await supabase.auth.signUp({ email, password });
+          if (error) {
+            setError(error.message);
+            setLoading(false);
+            return;
+          }
+          if (data.user) {
+            alert("Commuter ID created! You can now sign in.");
+            setIsSignUp(false);
+          }
+        } else {
+          const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+          if (error) {
+            setError(error.message);
+            setLoading(false);
+            return;
+          }
+          if (data.user) {
+            router.push("/");
+          }
         }
       }
     } catch (err: any) {
@@ -57,7 +97,9 @@ export default function LoginScreen() {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo: `${window.location.origin}/` },
+        options: {
+          redirectTo: `${window.location.origin}/`,
+        },
       });
 
       if (error) {
@@ -65,22 +107,41 @@ export default function LoginScreen() {
         setGoogleLoading(false);
       }
     } catch (err: any) {
-      setError("Google login not configured. Use email or Continue as Guest.");
+      setError("Google login failed. Try email or Continue as Guest.");
       setGoogleLoading(false);
     }
   };
 
-    const handleGuestLogin = () => {
+  const handleGuestLogin = () => {
     sessionStorage.setItem("bv-guest", "true");
     router.push("/");
   };
 
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setError("Enter your email first, then click Forgot Password.");
+      return;
+    }
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/login`,
+      });
+      if (error) {
+        setError(error.message);
+      } else {
+        alert("Password reset link sent to your email!");
+      }
+    } catch (err: any) {
+      setError("Could not send reset email. Try again later.");
+    }
+  };
 
   return (
-    <div className="flex flex-col h-screen overflow-y-auto bg-surface-black px-6 py-12 justify-center relative">
+    <div className="flex flex-col min-h-screen bg-surface-black px-6 py-12 justify-center relative">
       <div className="absolute top-10 left-1/2 -translate-x-1/2 w-64 h-64 bg-brand-accent/10 rounded-full blur-3xl pointer-events-none" />
 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-sm mx-auto relative z-10">
+        {/* Logo */}
         <div className="flex flex-col items-center mb-8 text-center">
           <div className="w-16 h-16 bg-gradient-to-br from-brand-base to-brand-dark rounded-2xl shadow-[0_0_30px_rgba(20,184,166,0.3)] flex items-center justify-center mb-4 border border-brand-light/20 relative overflow-hidden">
             <Zap size={32} className="text-white relative z-10" fill="currentColor" />
@@ -93,48 +154,136 @@ export default function LoginScreen() {
           </p>
         </div>
 
+        {/* Error box */}
         {error && (
           <div className="bg-red-500/10 border border-red-500/50 text-red-400 text-xs p-3 rounded-xl mb-4 text-center font-medium">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleAuth} className="flex flex-col gap-4">
-          <div className="relative group">
-            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-              <Mail size={18} className="text-gray-500 group-focus-within:text-brand-light transition-colors" />
-            </div>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full bg-surface-dark/80 backdrop-blur-md text-white rounded-2xl py-4 pl-12 pr-4 outline-none border border-surface-dark focus:border-brand-base transition-all shadow-md placeholder-gray-500 text-sm"
-              placeholder="Commuter Email"
-            />
-          </div>
-
-          <div className="relative group">
-            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-              <Lock size={18} className="text-gray-500 group-focus-within:text-brand-light transition-colors" />
-            </div>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full bg-surface-dark/80 backdrop-blur-md text-white rounded-2xl py-4 pl-12 pr-4 outline-none border border-surface-dark focus:border-brand-base transition-all shadow-md placeholder-gray-500 text-sm"
-              placeholder="Password"
-            />
-          </div>
-
+        {/* Mode Toggle — Email vs Phone */}
+        <div className="flex bg-surface-dark p-1 rounded-xl mb-6 border border-brand-dark">
           <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-brand-accent text-brand-dark font-black py-4 rounded-2xl shadow-[0_5px_20px_rgba(20,184,166,0.3)] active:scale-95 transition-transform mt-2 disabled:opacity-50 flex items-center justify-center gap-2"
+            type="button"
+            onClick={() => { setLoginMode("email"); setError(null); setOtpSent(false); }}
+            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 ${loginMode === "email" ? "bg-brand-dark text-white shadow-md" : "text-gray-400"}`}
           >
-            {loading ? <Loader2 size={18} className="animate-spin" /> : <>{isSignUp ? "Create Commuter ID" : "Secure Login"} <ArrowRight size={18} /></>}
+            <Mail size={14} /> Email
           </button>
+          <button
+            type="button"
+            onClick={() => { setLoginMode("phone"); setError(null); setOtpSent(false); }}
+            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 ${loginMode === "phone" ? "bg-brand-dark text-white shadow-md" : "text-gray-400"}`}
+          >
+            <Phone size={14} /> Mobile
+          </button>
+        </div>
+
+        <form onSubmit={handleAuth} className="flex flex-col gap-4">
+          {loginMode === "email" ? (
+            <>
+              {/* Email field */}
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                  <Mail size={18} className="text-gray-500 group-focus-within:text-brand-light transition-colors" />
+                </div>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="w-full bg-surface-dark/80 backdrop-blur-md text-white rounded-2xl py-4 pl-12 pr-4 outline-none border border-surface-dark focus:border-brand-base transition-all shadow-md placeholder-gray-500 text-sm"
+                  placeholder="Commuter Email"
+                />
+              </div>
+
+              {/* Password field with eye icon */}
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                  <Lock size={18} className="text-gray-500 group-focus-within:text-brand-light transition-colors" />
+                </div>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="w-full bg-surface-dark/80 backdrop-blur-md text-white rounded-2xl py-4 pl-12 pr-12 outline-none border border-surface-dark focus:border-brand-base transition-all shadow-md placeholder-gray-500 text-sm"
+                  placeholder="Password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-4 flex items-center text-gray-500 hover:text-brand-light transition-colors"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+
+              {/* Forgot Password */}
+              {!isSignUp && (
+                <div className="text-right -mt-2">
+                  <button
+                    type="button"
+                    onClick={handleForgotPassword}
+                    className="text-xs text-brand-light hover:text-brand-accent transition-colors font-semibold"
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-brand-accent text-brand-dark font-black py-4 rounded-2xl shadow-[0_5px_20px_rgba(20,184,166,0.3)] active:scale-95 transition-transform mt-1 disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {loading ? <Loader2 size={18} className="animate-spin" /> : <>{isSignUp ? "Create Commuter ID" : "Secure Login"} <ArrowRight size={18} /></>}
+              </button>
+            </>
+          ) : (
+            <>
+              {/* Phone field */}
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                  <Phone size={18} className="text-gray-500 group-focus-within:text-brand-light transition-colors" />
+                </div>
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  required
+                  disabled={otpSent}
+                  className="w-full bg-surface-dark/80 backdrop-blur-md text-white rounded-2xl py-4 pl-12 pr-4 outline-none border border-surface-dark focus:border-brand-base transition-all shadow-md placeholder-gray-500 text-sm disabled:opacity-50"
+                  placeholder="+91 98765 43210"
+                />
+              </div>
+
+              {otpSent && (
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                    <KeyRound size={18} className="text-gray-500 group-focus-within:text-brand-light transition-colors" />
+                  </div>
+                  <input
+                    type="text"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    required
+                    maxLength={6}
+                    className="w-full bg-surface-dark/80 backdrop-blur-md text-white rounded-2xl py-4 pl-12 pr-4 outline-none border border-surface-dark focus:border-brand-base transition-all shadow-md placeholder-gray-500 text-sm text-center tracking-[0.5em] font-bold"
+                    placeholder="Enter 6-digit OTP"
+                  />
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-brand-accent text-brand-dark font-black py-4 rounded-2xl shadow-[0_5px_20px_rgba(20,184,166,0.3)] active:scale-95 transition-transform mt-1 disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {loading ? <Loader2 size={18} className="animate-spin" /> : <>{otpSent ? "Verify OTP & Login" : "Send OTP"} <ArrowRight size={18} /></>}
+              </button>
+            </>
+          )}
         </form>
 
         <div className="flex items-center gap-4 my-6">
@@ -173,13 +322,11 @@ export default function LoginScreen() {
           Continue as Guest
         </button>
 
+        {/* Register toggle */}
         <div className="mt-6 text-center">
           <button
             type="button"
-            onClick={() => {
-              setIsSignUp(!isSignUp);
-              setError(null);
-            }}
+            onClick={() => { setIsSignUp(!isSignUp); setError(null); setOtpSent(false); }}
             className="text-xs text-gray-400 hover:text-white transition-colors font-semibold"
           >
             {isSignUp ? "Already have an ID? Sign In" : "Need a Commuter ID? Register"}

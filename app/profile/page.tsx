@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { User, MapPin, ShieldCheck, Leaf, Medal, Receipt, ChevronRight, ScanFace, Upload, CheckCircle2, Loader2, X } from "lucide-react";
+import { User, MapPin, ShieldCheck, Leaf, Medal, Receipt, ChevronRight, ScanFace, Upload, CheckCircle2, Loader2, X, Settings, Moon, Bell, Shield, LogOut, Terminal, Globe } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
 import { useAppStore } from "@/lib/store";
 
 export default function ProfileScreen() {
@@ -35,12 +36,17 @@ export default function ProfileScreen() {
     <div className="flex flex-col h-screen overflow-y-auto no-scrollbar pb-[120px] bg-surface-black px-4 pt-8 [&>*]:shrink-0">
       
       {/* Header */}
-      <div className="mb-6 flex items-center gap-3">
-        <User size={28} className="text-white" />
-        <div>
-          <h2 className="text-3xl font-extrabold text-white">My Profile</h2>
-          <p className="text-xs text-gray-400">Manage identity, passes, and transit impact</p>
+      <div className="mb-6 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <User size={28} className="text-slate-900 dark:text-white" />
+          <div>
+            <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white">My Profile</h2>
+            <p className="text-xs text-slate-500 dark:text-gray-400">Manage identity, passes, and transit impact</p>
+          </div>
         </div>
+        <Link href="/settings" className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full">
+          <Settings size={20} className="text-slate-600 dark:text-slate-300" />
+        </Link>
       </div>
 
       {/* Identity Card */}
@@ -124,6 +130,54 @@ export default function ProfileScreen() {
             <span className="text-sm font-bold text-white">Ride History & Receipts</span>
           </div>
           <ChevronRight size={16} className="text-gray-500" />
+        </button>
+      </div>
+
+      {/* App Settings List */}
+      <h3 className="text-lg font-bold text-white mb-3 mt-4">App Settings</h3>
+      <div className="flex flex-col gap-3 mb-6">
+        <button className="bg-surface-dark border border-surface-dark hover:border-brand-dark p-4 rounded-2xl flex items-center justify-between transition-colors">
+          <div className="flex items-center gap-3">
+            <Terminal size={18} className="text-gray-400" />
+            <span className="text-sm font-bold text-white">Developer Terminal</span>
+          </div>
+          <ChevronRight size={16} className="text-gray-500" />
+        </button>
+        <button className="bg-surface-dark border border-surface-dark hover:border-brand-dark p-4 rounded-2xl flex items-center justify-between transition-colors">
+          <div className="flex items-center gap-3">
+            <Moon size={18} className="text-gray-400" />
+            <span className="text-sm font-bold text-white">Dark Mode (Default)</span>
+          </div>
+          <div className="w-10 h-6 bg-brand-accent rounded-full flex items-center p-1 justify-end">
+             <div className="w-4 h-4 bg-surface-black rounded-full shadow-md"></div>
+          </div>
+        </button>
+        <button className="bg-surface-dark border border-surface-dark hover:border-brand-dark p-4 rounded-2xl flex items-center justify-between transition-colors">
+          <div className="flex items-center gap-3">
+            <Bell size={18} className="text-gray-400" />
+            <span className="text-sm font-bold text-white">Push Notifications</span>
+          </div>
+          <ChevronRight size={16} className="text-gray-500" />
+        </button>
+        <button className="bg-surface-dark border border-surface-dark hover:border-brand-dark p-4 rounded-2xl flex items-center justify-between transition-colors">
+          <div className="flex items-center gap-3">
+            <Shield size={18} className="text-gray-400" />
+            <span className="text-sm font-bold text-white">Privacy & Security</span>
+          </div>
+          <ChevronRight size={16} className="text-gray-500" />
+        </button>
+        <button className="bg-surface-dark border border-surface-dark hover:border-brand-dark p-4 rounded-2xl flex items-center justify-between transition-colors">
+          <div className="flex items-center gap-3">
+            <Globe size={18} className="text-gray-400" />
+            <span className="text-sm font-bold text-white">Language (English)</span>
+          </div>
+          <ChevronRight size={16} className="text-gray-500" />
+        </button>
+        <button className="bg-red-900/20 border border-red-900/50 hover:bg-red-900/40 p-4 rounded-2xl flex items-center justify-between transition-colors mt-2">
+          <div className="flex items-center gap-3">
+            <LogOut size={18} className="text-red-500" />
+            <span className="text-sm font-bold text-red-500">Log Out</span>
+          </div>
         </button>
       </div>
 

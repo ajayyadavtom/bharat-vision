@@ -1,6 +1,7 @@
 "use client";
 
-import { Navigation, Clock, Map as MapIcon, Zap, MapPin } from "lucide-react";
+import { useState } from "react";
+import { Navigation, Clock, Map as MapIcon, Zap, MapPin, AlertTriangle } from "lucide-react";
 import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
 
@@ -11,6 +12,8 @@ import ProximityChime from "../../components/ProximityChime";
 import SmartBoardingCard from "../../components/SmartBoardingCard";
 
 export default function TrackScreen() {
+  const [triggerAnomaly, setTriggerAnomaly] = useState(false);
+
   const smartRoutes = [
     {
       id: "r1",
@@ -29,17 +32,27 @@ export default function TrackScreen() {
   ];
 
   return (
-    <div className="flex flex-col h-screen overflow-y-auto no-scrollbar pb-24 bg-surface-black relative">
-      <div className="p-4 pt-8 bg-gradient-to-b from-brand-dark/50 to-transparent">
-        <h2 className="text-[10px] text-brand-accent uppercase tracking-[0.2em] font-bold mb-1 flex items-center gap-1">
-          <Zap size={10} fill="currentColor" /> Vanara Sena
-        </h2>
-        <h1 className="text-3xl font-extrabold text-white mb-2">Live Tracking</h1>
-        <p className="text-xs text-gray-400">80 buses · 120 stops · updated 2s ago</p>
+    <div className="flex flex-col h-screen overflow-y-auto no-scrollbar pb-24 bg-slate-50 dark:bg-slate-950 relative">
+      <div className="p-4 pt-8 bg-gradient-to-b from-white dark:from-slate-900 to-transparent flex justify-between items-start">
+        <div>
+          <h2 className="text-[10px] text-emerald-600 dark:text-emerald-400 uppercase tracking-[0.2em] font-bold mb-1 flex items-center gap-1">
+            <Zap size={10} fill="currentColor" /> Vanara Sena AI
+          </h2>
+          <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white mb-2">Live Tracking</h1>
+          <p className="text-xs text-slate-500 dark:text-gray-400">80 buses · 120 stops · updated 2s ago</p>
+        </div>
+        
+        <button 
+          onClick={() => setTriggerAnomaly(true)}
+          className="bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-700 p-2 rounded-xl flex items-center justify-center shadow-sm hover:scale-105 active:scale-95 transition-all"
+          title="Simulate Route Deviation Anomaly"
+        >
+          <AlertTriangle size={18} />
+        </button>
       </div>
 
       {/* Route Deviation AI Anomaly Engine */}
-      <RouteDeviationAI />
+      <RouteDeviationAI externalTrigger={triggerAnomaly} resetTrigger={() => setTriggerAnomaly(false)} />
 
       {/* Proximity Deboarding Chime Engine */}
       <div className="px-4">
@@ -48,7 +61,7 @@ export default function TrackScreen() {
 
       {/* The Live Interactive Map */}
       <div className="px-4 mb-6 mt-2">
-        <div className="w-full h-64 bg-surface-dark border border-brand-dark rounded-3xl relative overflow-hidden shadow-lg">
+        <div className="w-full h-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl relative overflow-hidden shadow-sm">
           <LiveMap />
         </div>
       </div>
@@ -59,30 +72,30 @@ export default function TrackScreen() {
       </div>
 
       <div className="px-4 mb-6 mt-2">
-        <div className="bg-surface-dark p-5 rounded-3xl border border-surface-dark shadow-md">
-          <h3 className="text-sm font-bold text-white flex items-center gap-2 mb-4">
-            <Navigation size={16} className="text-brand-light" /> Plan your trip
+        <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
+          <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-4">
+            <Navigation size={16} className="text-emerald-500" /> Plan your trip
           </h3>
           <div className="relative flex flex-col gap-4">
-            <div className="absolute left-2.5 top-3.5 bottom-3.5 w-0.5 bg-brand-dark rounded-full"></div>
+            <div className="absolute left-2.5 top-3.5 bottom-3.5 w-0.5 bg-slate-200 dark:bg-slate-800 rounded-full"></div>
             <div className="flex items-center gap-3 relative z-10">
-              <div className="w-5 h-5 rounded-full bg-surface-black border-2 border-brand-light flex items-center justify-center">
-                <div className="w-1.5 h-1.5 rounded-full bg-brand-light"></div>
+              <div className="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 border-2 border-emerald-500 flex items-center justify-center">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
               </div>
-              <input type="text" value="Yelahanka, Bengaluru" readOnly className="flex-1 bg-transparent text-sm text-gray-300 outline-none" />
+              <input type="text" value="Yelahanka, Bengaluru" readOnly className="flex-1 bg-transparent text-sm text-slate-700 dark:text-slate-300 outline-none" />
             </div>
             <div className="flex items-center gap-3 relative z-10">
-              <div className="w-5 h-5 rounded-full bg-brand-light flex items-center justify-center shadow-[0_0_8px_rgba(20,184,166,0.5)]">
-                <MapPin size={12} className="text-brand-dark" />
+              <div className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center shadow-md">
+                <MapPin size={12} className="text-white" />
               </div>
-              <input type="text" placeholder="Where to?" className="flex-1 bg-transparent text-sm text-white outline-none placeholder-gray-500" />
+              <input type="text" placeholder="Where to?" className="flex-1 bg-transparent text-sm text-slate-900 dark:text-white outline-none placeholder-slate-400" />
             </div>
           </div>
         </div>
       </div>
 
       <div className="px-4">
-        <h3 className="text-lg font-bold text-white mb-3">Smart Routes</h3>
+        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-3">Smart Routes</h3>
         <div className="flex flex-col gap-3">
           {smartRoutes.map((route, index) => (
             <motion.div
@@ -90,16 +103,16 @@ export default function TrackScreen() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.15 }}
-              className="bg-surface-dark p-4 rounded-2xl border border-surface-dark shadow-sm flex flex-col gap-3"
+              className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-3"
             >
               <div className="flex justify-between items-start">
                 <div>
-                  <h4 className="text-sm font-bold text-white mb-1">{route.name}</h4>
-                  <div className="flex items-center gap-3 text-xs text-gray-400">
+                  <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-1">{route.name}</h4>
+                  <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
                     <span className="flex items-center gap-1">
-                      <Clock size={12} className="text-brand-accent"/> {route.totalTime} mins
+                      <Clock size={12} className="text-emerald-500"/> {route.totalTime} mins
                     </span>
-                    <span className="font-bold text-gray-300">₹{route.totalFare}</span>
+                    <span className="font-bold text-slate-700 dark:text-slate-300">₹{route.totalFare}</span>
                   </div>
                 </div>
               </div>
@@ -107,13 +120,13 @@ export default function TrackScreen() {
                 {route.segments.map((seg, i) => (
                   <div key={i} className="flex items-center gap-2">
                     <span className={`text-[10px] px-2 py-1 rounded font-bold uppercase ${
-                      seg.mode === 'AUTO_ONDC' ? 'bg-amber-500/20 text-amber-500' :
-                      seg.mode === 'BUS_BMTC' ? 'bg-brand-dark text-brand-accent' :
-                      'bg-surface-black text-gray-400 border border-surface-dark'
+                      seg.mode === 'AUTO_ONDC' ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-500' :
+                      seg.mode === 'BUS_BMTC' ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400' :
+                      'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700'
                     }`}>
                       {seg.mode.replace('_ONDC', '').replace('_BMTC', '')}
                     </span>
-                    {i < route.segments.length - 1 && <span className="text-gray-600 text-xs">&rarr;</span>}
+                    {i < route.segments.length - 1 && <span className="text-slate-400 text-xs">&rarr;</span>}
                   </div>
                 ))}
               </div>

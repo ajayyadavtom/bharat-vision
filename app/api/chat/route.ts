@@ -3,9 +3,10 @@ import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   try {
-    const { message } = await req.json();
-    const apiKey = process.env.GEMINI_API_KEY;
+    const { message, cityId } = await req.json();
 
+    const apiKey = process.env.GEMINI_API_KEY || '';
+    
     if (!apiKey) {
       return NextResponse.json({
         reply: "Vanara AI is in offline mode. GEMINI_API_KEY is not set in Vercel Environment Variables."
@@ -13,21 +14,30 @@ export async function POST(req: Request) {
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-3.6-flash" });
+    const model = genAI.getGenerativeModel({ model: 'gemini-3.6-flash' });
 
-    const currentTime = new Date().toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata" });
+    // 1. DYNAMIC CONTEXT: Giving the AI the real-world time and the user's active city
+    const currentTime = new Date().toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata' });
+    
+    // Resolve city data
+    let userCityName = "Bengaluru";
+    let primaryLanguage = "Kannada";
+    if (cityId === "delhi") {
+        userCityName = "Delhi NCR";
+        primaryLanguage = "Hindi";
+    }
 
-    const prompt = `You are Vanara AI, a highly advanced transit assistant for the 'Bharat Vision' app in Bengaluru.
+    // 2. THE MASTER PROMPT: Unleashing Gemini's true intelligence with language auto-detection
+    const prompt = `You are Vanara AI, a highly advanced transit mastermind for the 'Bharat Vision' app in ${userCityName}. 
+    The current time is ${currentTime}. The local language is ${primaryLanguage}.
 
-The current time in Bengaluru is ${currentTime}.
-
-YOUR RULES:
-1. Give structured, step-by-step route instructions (exact BMTC bus numbers like 500D or 335E, Namma Metro lines, estimated fares, transfer points).
-2. When asked about traffic, explain actual geographic reasons (Silk Board choke points, ORR tech park shifts, Peenya bottlenecks).
-3. Use emojis and clean line breaks. Do NOT use markdown asterisks like **bold**.
-4. Keep your authentic Bengaluru flavor (maga, guru, macha, Namaskara) but be a true local mobility expert.
-
-User says: ${message}`;
+    YOUR MISSION:
+    1. AUTOMATIC LANGUAGE DETECTION: You MUST reply in the exact language the user speaks to you (e.g., if they speak Hindi, reply in Hindi. If they speak English/Kanglish, reply in that). If ambiguous, default to a friendly mix of English and the local language (${primaryLanguage}).
+    2. Be deeply intelligent. When asked for routes in ${userCityName}, give structured, step-by-step instructions (Exact Bus numbers, Metro lines, estimated fares, and transfer points).
+    3. When asked about traffic or delays, explain the actual geographic reasons for ${userCityName}.
+    4. Format your response beautifully using emojis, clean line breaks, and lists. (Do NOT use Markdown asterisks like **bold**, as our UI is plain text).
+    
+    User says: ${message}`;
 
     const result = await model.generateContent(prompt);
     const reply = result.response.text();

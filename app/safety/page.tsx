@@ -52,25 +52,17 @@ export default function SafetyScreen() {
   };
 
   return (
-   <div className="flex flex-col h-screen overflow-y-auto no-scrollbar pb-[120px] bg-surface-black px-4 pt-8 [&>*]:shrink-0">
-      {/* Header */}
-      <div className="mb-6 flex justify-between items-start">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <ShieldAlert size={14} className="text-red-500" />
-            <h1 className="text-[10px] uppercase tracking-widest text-red-400 font-bold">SafeKeep Protocol</h1>
-          </div>
-          <h2 className="text-3xl font-extrabold text-white">Emergency & Safety</h2>
-        </div>
-        <div className="bg-surface-dark border border-red-950 px-3 py-1.5 rounded-xl shadow-md text-right">
-          <span className="text-[10px] text-gray-400 font-bold uppercase block">Mesh Status</span>
-          <span className="text-emerald-400 font-black text-xs flex items-center gap-1">
-            <ShieldCheck size={12} /> Offline SMS Ready
-          </span>
-        </div>
-      </div>
+    <div className="flex flex-col h-screen overflow-y-auto no-scrollbar pb-24 bg-slate-50 dark:bg-slate-950 px-4 pt-8 [&>*]:shrink-0 relative">
+      {/* Background Pulse Effect when SOS is active */}
+      {sosActive && (
+        <motion.div
+          animate={{ opacity: [0.1, 0.3, 0.1] }}
+          transition={{ duration: 1, repeat: Infinity }}
+          className="absolute inset-0 bg-red-500 pointer-events-none z-0"
+        />
+      )}
 
-      {/* SOS Panic Button */}
+      {/* Header */}
       <div className="bg-gradient-to-br from-red-950/40 via-surface-dark to-surface-black border-2 border-red-500/50 p-6 rounded-3xl shadow-[0_0_30px_rgba(239,68,68,0.2)] mb-6 flex flex-col items-center text-center relative overflow-hidden">
         <div className="absolute inset-0 bg-red-500/5 animate-pulse pointer-events-none"></div>
 

@@ -4,23 +4,16 @@ import { useState, useEffect } from "react";
 import { TrainFront, MapPin, Clock, CreditCard, ArrowRightLeft, Sparkles, CheckCircle2, Ticket, Wallet } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAppStore } from "../../src/lib/store";
-
-const STATIONS = [
-  { id: "s1", name: "Yelahanka Hub", line: "Green" },
-  { id: "s2", name: "Nagasandra", line: "Green" },
-  { id: "s3", name: "Yeshwanthpur", line: "Green" },
-  { id: "s4", name: "Majestic (Interchange)", line: "Both" },
-  { id: "s5", name: "MG Road", line: "Purple" },
-  { id: "s6", name: "Indiranagar", line: "Purple" },
-  { id: "s7", name: "Whitefield", line: "Purple" },
-  { id: "s8", name: "Kengeri", line: "Purple" },
-];
+import { getCityData } from "@/lib/cityData";
 
 export default function MetroScreen() {
-  const { walletBalance, addMoney, fetchUserData } = useAppStore();
-  const [origin, setOrigin] = useState("s1"); 
-  const [destination, setDestination] = useState("s5"); 
-  const [activeTab, setActiveTab] = useState<"Purple" | "Green">("Green");
+  const { walletBalance, addMoney, fetchUserData, currentCity } = useAppStore();
+  const cityData = getCityData(currentCity);
+  const STATIONS = cityData.metroStations;
+
+  const [origin, setOrigin] = useState(STATIONS[0]?.id || ""); 
+  const [destination, setDestination] = useState(STATIONS[1]?.id || ""); 
+  const [activeTab, setActiveTab] = useState<string>("Line 1");
   const [bookedToken, setBookedToken] = useState<string | null>(null);
 
   // FIX: Fetch wallet data from cloud on page load/reload
@@ -63,10 +56,10 @@ export default function MetroScreen() {
       <div className="mb-6 flex justify-between items-start">
         <div>
           <h2 className="text-[10px] text-brand-accent uppercase tracking-[0.2em] font-bold mb-1 flex items-center gap-1">
-            <Sparkles size={12} /> BMRCL Official Partner
+            <Sparkles size={12} /> {cityData.transitAuthorities.metro} Official Partner
           </h2>
           <h1 className="text-3xl font-extrabold text-white flex items-center gap-2">
-            <TrainFront className="text-brand-accent" size={28} /> Namma Metro
+            <TrainFront className="text-brand-accent" size={28} /> {cityData.transitAuthorities.metro}
           </h1>
         </div>
 
@@ -77,23 +70,23 @@ export default function MetroScreen() {
         </div>
       </div>
 
-      {/* Line Toggle Tabs */}
+      {/* Line Toggle Tabs - Now generalized */}
       <div className="flex bg-surface-dark p-1 rounded-2xl border border-surface-dark mb-6">
         <button
-          onClick={() => setActiveTab("Green")}
+          onClick={() => setActiveTab("Line 1")}
           className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
-            activeTab === "Green" ? "bg-emerald-600 text-white shadow-md" : "text-gray-400 hover:text-white"
+            activeTab === "Line 1" ? "bg-emerald-600 text-white shadow-md" : "text-gray-400 hover:text-white"
           }`}
         >
-          <div className="w-2.5 h-2.5 rounded-full bg-emerald-400"></div> Green Line
+          <div className="w-2.5 h-2.5 rounded-full bg-emerald-400"></div> Metro Line 1
         </button>
         <button
-          onClick={() => setActiveTab("Purple")}
+          onClick={() => setActiveTab("Line 2")}
           className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
-            activeTab === "Purple" ? "bg-purple-600 text-white shadow-md" : "text-gray-400 hover:text-white"
+            activeTab === "Line 2" ? "bg-purple-600 text-white shadow-md" : "text-gray-400 hover:text-white"
           }`}
         >
-          <div className="w-2.5 h-2.5 rounded-full bg-purple-400"></div> Purple Line
+          <div className="w-2.5 h-2.5 rounded-full bg-purple-400"></div> Metro Line 2
         </button>
       </div>
 
@@ -176,7 +169,7 @@ export default function MetroScreen() {
 
           {trip.interchange && (
             <div className="bg-amber-500/10 border border-amber-500/30 p-3 rounded-xl text-amber-400 text-xs font-semibold flex items-center gap-2">
-              <Sparkles size={14} /> Switch lines at Nadaprabhu Kempegowda Station (Majestic)
+              <Sparkles size={14} /> Switch lines at the Interchange Station
             </div>
           )}
 
