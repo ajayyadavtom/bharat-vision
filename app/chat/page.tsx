@@ -7,7 +7,7 @@ import { useAppStore, ChatMessage } from "@/lib/store";
 import { getCityData } from "@/lib/cityData";
 
 export default function ChatScreen() {
-  const { currentCity, chatMessages, addChatMessage } = useAppStore();
+  const { appLang, currentCity, chatMessages, addChatMessage } = useAppStore();
   const cityData = getCityData(currentCity);
   const [inputText, setInputText] = useState("");
   const [isListening, setIsListening] = useState(false);
@@ -18,7 +18,7 @@ export default function ChatScreen() {
     if (chatMessages.length === 0) {
       addChatMessage({
         id: Date.now(),
-        text: `Namaskara! 🙏 I'm Vanara AI for ${cityData.name}. Ask me about ${cityData.transitAuthorities.bus} routes, ${cityData.transitAuthorities.metro} timings, or just tap the mic and speak!`,
+        text: `Namaskara! 🙏 I'm Vanara AI. Ask me about transit routes, timings, or just tap the mic and speak!`,
         sender: "bot"
       });
     }
@@ -49,7 +49,7 @@ export default function ChatScreen() {
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text, cityId: currentCity })
+        body: JSON.stringify({ message: text, cityId: currentCity, appLang })
       });
       
       const data = await response.json();

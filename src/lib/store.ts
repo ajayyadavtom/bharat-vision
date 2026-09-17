@@ -11,6 +11,8 @@ export interface ChatMessage {
 }
 
 interface AppState {
+  appLang: string;
+  setAppLang: (lang: string) => void;
   userName: string;
   walletBalance: number;
   karmaPoints: number;
@@ -24,7 +26,12 @@ interface AppState {
   rideHistory: any[];
   profilePictureUrl: string | null;
   
+  // Settings
+  privacyLiveLocation: boolean;
+  privacyCamera: boolean;
+  
   addMoney: (amount: number) => Promise<void>;
+  deductBalance: (amount: number) => Promise<void>;
   addKarma: (points: number) => Promise<void>;
   setCurrentCity: (cityId: string) => void;
   fetchUserData: () => Promise<void>;
@@ -33,6 +40,8 @@ interface AppState {
   addChatMessage: (msg: ChatMessage) => void;
   setBookedRide: (ride: any | null) => void;
   setProfilePictureUrl: (url: string) => void;
+  setPrivacyLiveLocation: (val: boolean) => void;
+  setPrivacyCamera: (val: boolean) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -49,6 +58,11 @@ export const useAppStore = create<AppState>()(
       bookedRide: null,
       rideHistory: [],
       profilePictureUrl: null,
+      
+      privacyLiveLocation: true,
+      privacyCamera: true,
+      appLang: "en",
+      setAppLang: (lang: string) => set({ appLang: lang }),
       
       setCurrentCity: (cityId: string) => {
         set({ currentCity: cityId });
@@ -74,10 +88,31 @@ export const useAppStore = create<AppState>()(
       setProfilePictureUrl: (url: string) => {
         set({ profilePictureUrl: url });
       },
+      
+      setPrivacyLiveLocation: (val: boolean) => {
+        set({ privacyLiveLocation: val });
+      },
+      
+      setPrivacyCamera: (val: boolean) => {
+        set({ privacyCamera: val });
+      },
 
       // 1. SYNCED WALLET: Updates local state and instantly pushes to Supabase PostgreSQL
       addMoney: async (amount: number) => {
         set((state) => ({ walletBalance: state.walletBalance + amount }));
+        
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const newBalance = get().walletBalance;
+          await supabase
+            .from('commuter_profiles')
+            .update({ wallet_balance: newBalance })
+            .eq('id', user.id);
+        }
+      },
+
+      deductBalance: async (amount: number) => {
+        set((state) => ({ walletBalance: Math.max(0, state.walletBalance - amount) }));
         
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
@@ -141,7 +176,12 @@ export const useAppStore = create<AppState>()(
               });
             }
           } else {
-            set({ userName: "Guest", walletBalance: 0, karmaPoints: 0, carbonSavedGrams: 0 });
+            // Guest User: DO NOT wipe their locally earned karma points or wallet balance!
+            // Only set userName to Guest if it's not already set.
+            const currentState = get();
+            if (!currentState.userName || currentState.userName === "") {
+              set({ userName: "Guest" });
+            }
           }
         } catch (error) {
           console.error("Supabase Fetch Error:", error);
@@ -152,14 +192,19 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: 'bharat-vision-storage',
-      // We only want to persist the UI state like chat messages and booked rides. 
-      // User profile data is fetched from Supabase anyway.
       partialize: (state) => ({ 
         chatMessages: state.chatMessages, 
         bookedRide: state.bookedRide,
         rideHistory: state.rideHistory,
         profilePictureUrl: state.profilePictureUrl,
-        currentCity: state.currentCity 
+        privacyLiveLocation: state.privacyLiveLocation,
+        privacyCamera: state.privacyCamera,
+        currentCity: state.currentCity,
+        karmaPoints: state.karmaPoints,
+        walletBalance: state.walletBalance,
+        carbonSavedGrams: state.carbonSavedGrams,
+        userName: state.userName,
+        appLang: state.appLang
       }),
     }
   )

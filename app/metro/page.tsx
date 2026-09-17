@@ -7,7 +7,7 @@ import { useAppStore } from "../../src/lib/store";
 import { getCityData } from "@/lib/cityData";
 
 export default function MetroScreen() {
-  const { walletBalance, addMoney, fetchUserData, currentCity } = useAppStore();
+  const { walletBalance, deductBalance, fetchUserData, currentCity } = useAppStore();
   const cityData = getCityData(currentCity);
   const STATIONS = cityData.metroStations;
 
@@ -45,7 +45,7 @@ export default function MetroScreen() {
       return;
     }
     // Deduct fare and sync to database
-    addMoney(-trip.fare);
+    deductBalance(trip.fare);
     setBookedToken(`NMM-${Math.floor(100000 + Math.random() * 900000)}`);
   };
 

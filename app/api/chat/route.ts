@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   try {
-    const { message, cityId } = await req.json();
+    const { message, cityId, appLang } = await req.json();
 
     const apiKey = process.env.GEMINI_API_KEY || '';
     
@@ -32,9 +32,9 @@ export async function POST(req: Request) {
     The current time is ${currentTime}. The local language is ${primaryLanguage}.
 
     YOUR MISSION:
-    1. AUTOMATIC LANGUAGE DETECTION: You MUST reply in the exact language the user speaks to you (e.g., if they speak Hindi, reply in Hindi. If they speak English/Kanglish, reply in that). If ambiguous, default to a friendly mix of English and the local language (${primaryLanguage}).
-    2. Be deeply intelligent. When asked for routes in ${userCityName}, give structured, step-by-step instructions (Exact Bus numbers, Metro lines, estimated fares, and transfer points).
-    3. When asked about traffic or delays, explain the actual geographic reasons for ${userCityName}.
+    1. AUTOMATIC LANGUAGE ENFORCEMENT: You MUST reply ENTIRELY in ${appLang === 'kn' ? 'Kannada' : appLang === 'hi' ? 'Hindi' : 'English'}. No matter what language the user speaks, translate your answer and provide the final response ONLY in ${appLang === 'kn' ? 'Kannada' : appLang === 'hi' ? 'Hindi' : 'English'}.
+    2. Be deeply intelligent. When asked for routes in ${userCityName}, give structured, step-by-step instructions.
+    3. When asked about traffic or delays, explain the actual geographic reasons.
     4. Format your response beautifully using emojis, clean line breaks, and lists. (Do NOT use Markdown asterisks like **bold**, as our UI is plain text).
     
     User says: ${message}`;

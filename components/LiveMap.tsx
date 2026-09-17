@@ -90,7 +90,31 @@ function SmoothBusMarker({ bus, icon }: { bus: BusTelemetry, icon: L.DivIcon }) 
   );
 }
 
-export default function LiveMap() {
+import { useMap } from "react-leaflet";
+
+function MapController({ center, zoom, bounds }: { center?: [number, number], zoom?: number, bounds?: L.LatLngBoundsExpression }) {
+  const map = useMap();
+  useEffect(() => {
+    if (bounds) {
+      map.fitBounds(bounds, { padding: [50, 50], animate: true });
+    } else if (center) {
+      map.flyTo(center, zoom || map.getZoom(), { animate: true, duration: 1.5 });
+    }
+  }, [center, zoom, bounds, map]);
+  return null;
+}
+
+export default function LiveMap({ 
+  busCode = "", 
+  destination = "", 
+  userLocation = null,
+  routePath = null
+}: { 
+  busCode?: string, 
+  destination?: string, 
+  userLocation?: [number, number] | null,
+  routePath?: [number, number][] | null
+}) {
   const { currentCity } = useAppStore();
   const cityData = getCityData(currentCity);
 
@@ -101,6 +125,21 @@ export default function LiveMap() {
   ]);
 
   const [wsConnected, setWsConnected] = useState(false);
+  
+  // If busCode is provided, filter. Otherwise show all buses.
+  const activeBuses = busCode ? buses.filter(b => b.route.toLowerCase().includes(busCode.toLowerCase())) : buses;
+  
+  // Calculate dynamic map center
+  let mapCenter: [number, number] = cityData.coordinates;
+  let mapBounds: L.LatLngBoundsExpression | undefined = undefined;
+
+  if (routePath && routePath.length > 0) {
+    mapBounds = L.latLngBounds(routePath);
+  } else if (busCode && activeBuses.length > 0) {
+    mapCenter = [activeBuses[0].lat, activeBuses[0].lng];
+  } else if (userLocation) {
+    mapCenter = userLocation;
+  }
 
   // Establish WebSockets / Server-Sent Events (SSE) Real-time pipeline
   useEffect(() => {
@@ -180,27 +219,37 @@ export default function LiveMap() {
         className="w-full h-full bg-[#09090b] z-0"
         zoomControl={false}
       >
+        <MapController center={mapCenter} bounds={mapBounds} />
+        
         <TileLayer
           attribution='&copy; CARTO'
           url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
         />
 
-        {buses.map(bus => (
+        {userLocation && (
+          <Marker position={userLocation} icon={L.divIcon({
+            className: "custom-user-marker",
+            html: `<div style="background-color: #3b82f6; width: 16px; height: 16px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(59,130,246,0.8);"></div>`,
+            iconSize: [16, 16],
+            iconAnchor: [8, 8],
+          })}>
+            <Popup>You are here</Popup>
+          </Marker>
+        )}
+
+        {activeBuses.map(bus => (
           <SmoothBusMarker key={bus.id} bus={bus} icon={busIcon} />
         ))}
 
-        <Polyline 
-          positions={[
-            [13.1000, 77.5963], 
-            [13.0358, 77.5970], 
-            [12.9716, 77.5946], 
-            [12.9250, 77.6840]  
-          ]} 
-          color="#14b8a6" 
-          weight={5} 
-          opacity={0.8} 
-          dashArray="8, 8"
-        />
+        {routePath && routePath.length > 0 && (
+          <Polyline 
+            positions={routePath} 
+            color="#3b82f6" 
+            weight={5} 
+            opacity={0.8} 
+            dashArray="1, 8"
+          />
+        )}
       </MapContainer>
     </div>
   );

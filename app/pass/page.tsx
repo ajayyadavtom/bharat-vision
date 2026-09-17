@@ -4,14 +4,19 @@ import { useState, useEffect } from "react";
 import { CreditCard, WifiOff, Ticket, AlertTriangle, Clock, ShieldCheck, RefreshCcw, Smartphone } from "lucide-react";
 import QRCode from "react-qr-code";
 import { motion } from "framer-motion";
+import UpiGateway from "@/components/UpiGateway";
 
 import { useAppStore } from "@/lib/store"; 
 import { getCityData } from "@/lib/cityData";
 
 export default function PassScreen() {
-  const { walletBalance, userName, currentCity } = useAppStore();
+  const { walletBalance, userName, currentCity, deductBalance } = useAppStore();
   const cityData = getCityData(currentCity);
   const [activeTab, setActiveTab] = useState("digital");
+  const [hasActivePass, setHasActivePass] = useState(false);
+  const [activePassName, setActivePassName] = useState("");
+  const [showUpi, setShowUpi] = useState(false);
+  const [pendingAmount, setPendingAmount] = useState(0);
   
   const [mounted, setMounted] = useState(false);
   const [time, setTime] = useState(new Date());
@@ -122,62 +127,31 @@ export default function PassScreen() {
         </div>
       </div>
 
-      {/* HOLOGRAPHIC ANTI-FRAUD PASS CONTAINER */}
-        <div 
-          onMouseMove={handleMouseMove}
-          className="mb-8 relative rounded-3xl overflow-hidden shadow-2xl border border-brand-base"
-        >
-          {/* Dynamic Holographic Foil Overlay */}
-          <div 
-            className="absolute inset-0 pointer-events-none z-30 opacity-30 mix-blend-color-dodge transition-opacity duration-300"
-            style={{
-              background: `radial-gradient(circle at ${tilt.x}% ${tilt.y}%, rgba(20,184,166,0.8) 0%, rgba(59,130,246,0.4) 30%, transparent 70%)`
-            }}
-          />
-
-          {/* Moving Anti-Piracy Watermark */}
-          <div className="absolute inset-0 pointer-events-none z-20 flex items-center justify-center overflow-hidden opacity-5">
-            <p className="text-slate-900 dark:text-white font-black text-4xl rotate-[-30deg] uppercase tracking-widest whitespace-nowrap">
-              BHARAT VISION VERIFIED • {userName || "COMMUTER"} •
-            </p>
+      {hasActivePass ? (
+        <div className="mb-8 relative rounded-3xl overflow-hidden shadow-2xl border border-brand-base bg-white dark:bg-slate-900 p-6 flex flex-col items-center justify-center">
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2 text-center">{activePassName || "BMTC Verified Pass"}</h2>
+          <div className="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full mb-6 flex items-center gap-1">
+            <ShieldCheck size={14} /> Active & Valid
           </div>
-
-          <div className="bg-surface-dark p-6 relative z-10 flex flex-col items-center justify-center">
-            <div className="absolute inset-0 bg-gradient-to-br from-brand-base/20 to-white dark:to-surface-black opacity-50"></div>
-            
-            <div className="relative z-10 flex flex-col items-center w-full">
-              
-              <div className="flex items-center justify-between w-full mb-4">
-                <div className={`flex items-center gap-2 px-3 py-1 rounded-full border ${isOnline ? 'bg-emerald-900/40 border-emerald-500 text-emerald-400' : 'bg-brand-dark border-brand-base text-brand-accent'}`}>
-                  {isOnline ? <ShieldCheck size={12} /> : <WifiOff size={12} />}
-                  <span className="text-[10px] font-bold tracking-wider uppercase">
-                    {isOnline ? "SHA-256 TOTP Active" : "Offline Cryptographic Trust"}
-                  </span>
-                </div>
-                
-                <span className="text-[9px] font-mono text-slate-500 dark:text-gray-400 flex items-center gap-1">
-                  <Smartphone size={10} /> {deviceFingerprint}
-                </span>
-              </div>
-
-              <div className="bg-white p-4 rounded-2xl mb-4 w-full flex justify-center items-center h-[232px] shadow-inner">
-                {qrPayload ? (
-                  <QRCode value={qrPayload} size={200} level="H" />
-                ) : (
-                  <RefreshCcw className="animate-spin text-slate-600 dark:text-gray-300" size={32} />
-                )}
-              </div>
-              
-              <div className="w-full flex justify-between items-center bg-surface-black p-3 rounded-xl border border-slate-200 dark:border-surface-dark">
-                <span className="text-xs font-bold text-slate-600 dark:text-gray-300 uppercase">{userName || "Commuter"}</span>
-                <span className="text-xs font-mono text-brand-accent tabular-nums">
-                  {time.toLocaleTimeString('en-IN', { hour12: true })}
-                </span>
-              </div>
-              
-            </div>
+          <div className="bg-white p-2 rounded-2xl mb-4 w-full flex justify-center items-center h-[232px] border-4 border-slate-100 shadow-inner">
+            {qrPayload ? (
+              <QRCode value={qrPayload} size={200} level="H" />
+            ) : (
+              <RefreshCcw className="animate-spin text-slate-400" size={32} />
+            )}
+          </div>
+          <div className="text-center w-full mt-2">
+            <p className="text-sm font-bold text-slate-700 dark:text-slate-300">Valid until: {new Date(time.getTime() + 24*60*60*1000).toLocaleDateString()}</p>
+            <p className="text-[10px] text-slate-500 mt-1 uppercase tracking-widest font-mono">ID: {deviceFingerprint.split('-').pop()}</p>
           </div>
         </div>
+      ) : (
+        <div className="mb-8 bg-surface-dark rounded-3xl p-8 border border-slate-200 dark:border-surface-dark text-center flex flex-col items-center justify-center shadow-inner">
+          <Ticket size={48} className="text-slate-400 dark:text-gray-600 mb-4 opacity-50" />
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white">No Active Tickets</h3>
+          <p className="text-xs text-slate-500">Select a pass below to generate your QR ticket.</p>
+        </div>
+      )}
 
       <div className="flex bg-surface-dark p-1 rounded-xl mb-6 border border-slate-200 dark:border-brand-dark">
         <button 
@@ -221,7 +195,18 @@ export default function PassScreen() {
         <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-3">Buy Passes</h3>
         <div className="flex flex-col gap-3">
           {passCatalog.map((pass, index) => (
-            <div key={index} className="flex justify-between items-center bg-surface-dark p-4 rounded-2xl border border-slate-200 dark:border-surface-dark hover:border-brand-base transition-colors cursor-pointer group">
+            <div key={index} onClick={() => {
+              const amt = parseInt(pass.price.replace(/[^0-9]/g, ''));
+              if (walletBalance >= amt) {
+                deductBalance(amt);
+                setActivePassName(pass.name);
+                setHasActivePass(true);
+              } else {
+                setPendingAmount(amt);
+                setActivePassName(pass.name);
+                setShowUpi(true);
+              }
+            }} className="flex justify-between items-center bg-surface-dark p-4 rounded-2xl border border-slate-200 dark:border-surface-dark hover:border-brand-base transition-colors cursor-pointer group">
               <div className="flex items-center gap-3">
                 <div className="bg-surface-black p-2 rounded-lg border border-slate-200 dark:border-brand-dark group-hover:border-brand-base transition-colors">
                   <Ticket size={20} className={pass.color} />
@@ -239,6 +224,15 @@ export default function PassScreen() {
         </div>
       </div>
 
+      <UpiGateway 
+        isOpen={showUpi}
+        amount={pendingAmount}
+        onCancel={() => setShowUpi(false)}
+        onSuccess={() => {
+          setShowUpi(false);
+          setHasActivePass(true);
+        }}
+      />
     </div>
   );
 }

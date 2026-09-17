@@ -7,7 +7,7 @@ import { useAppStore } from "@/lib/store";
 import { getCityData } from "@/lib/cityData";
 
 export default function AutoCabBooking() {
-  const { currentCity, walletBalance, addMoney, bookedRide, setBookedRide } = useAppStore();
+  const { currentCity, walletBalance, deductBalance, bookedRide, setBookedRide } = useAppStore();
   const cityData = getCityData(currentCity);
   
   const [pickup, setPickup] = useState("Current Location");
@@ -35,7 +35,7 @@ export default function AutoCabBooking() {
       alert(`Insufficient Bharat Wallet balance. Fare is ₹${ride.fare}.`);
       return;
     }
-    addMoney(-ride.fare);
+    deductBalance(ride.fare);
     
     // Generate PIN once and save to the ride object
     const rideWithPin = {

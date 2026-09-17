@@ -7,14 +7,115 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Moon, Sun, Bell, Globe, Shield, User, ChevronRight, Terminal, LogOut, X, Activity, Server, Code } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { useAppStore } from "@/lib/store";
 
 export default function SettingsScreen() {
   const router = useRouter();
   const { theme, setTheme, systemTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const { privacyLiveLocation, setPrivacyLiveLocation, privacyCamera, setPrivacyCamera } = useAppStore();
   
   // Modals state
   const [activeModal, setActiveModal] = useState<"terminal" | "notifications" | "language" | "privacy" | null>(null);
+  
+  // Settings state
+  const [notifSettings, setNotifSettings] = useState({ proximity: true, deviations: true, marketing: false });
+  const { appLang, setAppLang } = useAppStore();
+  const lang = appLang;
+
+  const t = {
+    en: {
+      settings: 'Settings',
+      profile: 'Profile & Account',
+      manageId: 'Manage your identity',
+      appearance: 'Appearance',
+      theme: 'Dark/Light Theme',
+      notifications: 'Notifications',
+      alerts: 'Alerts, Chimes & Offers',
+      appLang: 'App Language',
+      english: 'English',
+      privacy: 'Privacy & Data',
+      security: 'Security & Telemetry',
+      devConsole: 'Developer Console',
+      advDebug: 'Advanced debugging',
+      signOut: 'Sign Out',
+      proximity: 'Proximity Chimes',
+      proxDesc: 'Vibrate when bus is near',
+      deviations: 'Route Deviations',
+      devDesc: 'Alert me if bus takes detour',
+      marketing: 'Marketing Offers',
+      markDesc: 'Pass discounts & promos',
+      dataSecured: 'Your data is secured with AES-256 encryption.',
+      liveLoc: 'Live Location Telemetry',
+      liveLocDesc: 'Used for crowd-sourcing ETAs',
+      camAccess: 'Camera Access',
+      camDesc: 'Required for OCR uploads',
+      delAcc: 'Delete My Account & Data',
+      kannada: 'ಕನ್ನಡ (Kannada)',
+      hindi: 'हिन्दी (Hindi)'
+    },
+    kn: {
+      settings: 'ಸೆಟ್ಟಿಂಗ್‌ಗಳು',
+      profile: 'ಪ್ರೊಫೈಲ್ ಮತ್ತು ಖಾತೆ',
+      manageId: 'ನಿಮ್ಮ ಗುರುತನ್ನು ನಿರ್ವಹಿಸಿ',
+      appearance: 'ಗೋಚರತೆ',
+      theme: 'ಡಾರ್ಕ್/ಲೈಟ್ ಥೀಮ್',
+      notifications: 'ಅಧಿಸೂಚನೆಗಳು',
+      alerts: 'ಎಚ್ಚರಿಕೆಗಳು, ಕೊಡುಗೆಗಳು',
+      appLang: 'ಅಪ್ಲಿಕೇಶನ್ ಭಾಷೆ',
+      english: 'ಆಂಗ್ಲ',
+      privacy: 'ಗೌಪ್ಯತೆ ಮತ್ತು ಡೇಟಾ',
+      security: 'ಭದ್ರತೆ ಮತ್ತು ಟೆಲಿಮೆಟ್ರಿ',
+      devConsole: 'ಡೆವಲಪರ್ ಕನ್ಸೋಲ್',
+      advDebug: 'ಸುಧಾರಿತ ಡಿಬಗ್ಗಿಂಗ್',
+      signOut: 'ಸೈನ್ ಔಟ್',
+      proximity: 'ಸಾಮೀಪ್ಯ ಚೈಮ್ಸ್',
+      proxDesc: 'ಬಸ್ ಹತ್ತಿರವಿರುವಾಗ ಕಂಪಿಸಿ',
+      deviations: 'ಮಾರ್ಗ ವಿಚಲನಗಳು',
+      devDesc: 'ಬಸ್ ಮಾರ್ಗ ಬದಲಿಸಿದರೆ ಎಚ್ಚರಿಸಿ',
+      marketing: 'ಮಾರ್ಕೆಟಿಂಗ್ ಕೊಡುಗೆಗಳು',
+      markDesc: 'ಪಾಸ್ ರಿಯಾಯಿತಿಗಳು',
+      dataSecured: 'ನಿಮ್ಮ ಡೇಟಾವನ್ನು ಸುರಕ್ಷಿತಗೊಳಿಸಲಾಗಿದೆ.',
+      liveLoc: 'ಲೈವ್ ಸ್ಥಳ',
+      liveLocDesc: 'ETA ಗಳಿಗಾಗಿ ಬಳಸಲಾಗುತ್ತದೆ',
+      camAccess: 'ಕ್ಯಾಮೆರಾ ಪ್ರವೇಶ',
+      camDesc: 'OCR ಗಾಗಿ ಅಗತ್ಯವಿದೆ',
+      delAcc: 'ನನ್ನ ಖಾತೆಯನ್ನು ಅಳಿಸಿ',
+      kannada: 'ಕನ್ನಡ (Kannada)',
+      hindi: 'ಹಿಂದಿ (Hindi)'
+    },
+    hi: {
+      settings: 'सेटिंग्स',
+      profile: 'प्रोफ़ाइल और खाता',
+      manageId: 'अपनी पहचान प्रबंधित करें',
+      appearance: 'दिखावट',
+      theme: 'डार्क/लाइट थीम',
+      notifications: 'सूचनाएं',
+      alerts: 'अलर्ट, चाइम्स और ऑफ़र',
+      appLang: 'ऐप की भाषा',
+      english: 'अंग्रेज़ी',
+      privacy: 'गोपनीयता और डेटा',
+      security: 'सुरक्षा और टेलीमेट्री',
+      devConsole: 'डेवलपर कंसोल',
+      advDebug: 'उन्नत डिबगिंग',
+      signOut: 'साइन आउट',
+      proximity: 'प्रॉक्सिमिटी चाइम्स',
+      proxDesc: 'बस पास होने पर वाइब्रेट करें',
+      deviations: 'रूट विचलन',
+      devDesc: 'बस के रास्ता बदलने पर अलर्ट करें',
+      marketing: 'मार्केटिंग ऑफ़र',
+      markDesc: 'पास छूट और प्रोमो',
+      dataSecured: 'आपका डेटा सुरक्षित है।',
+      liveLoc: 'लाइव लोकेशन',
+      liveLocDesc: 'ईटीए के लिए उपयोग किया जाता है',
+      camAccess: 'कैमरा एक्सेस',
+      camDesc: 'ओसीआर के लिए आवश्यक',
+      delAcc: 'मेरा खाता हटाएं',
+      kannada: 'कन्नड़ (Kannada)',
+      hindi: 'हिन्दी (Hindi)'
+    }
+  };
+
 
   // Prevent hydration mismatch
   useEffect(() => {
@@ -45,13 +146,13 @@ export default function SettingsScreen() {
         <Link href="/profile" className="p-2 bg-white dark:bg-slate-900 rounded-full shadow-sm border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300">
           <ArrowLeft size={20} />
         </Link>
-        <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white">Settings</h1>
+        <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white">{t[lang as keyof typeof t].settings}</h1>
       </div>
 
       <div className="space-y-6">
         {/* Appearance Settings */}
         <section>
-          <h2 className="text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-3 px-2">Appearance</h2>
+          <h2 className="text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-3 px-2">{t[lang as keyof typeof t].appearance}</h2>
           <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
             
             <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800">
@@ -143,7 +244,7 @@ export default function SettingsScreen() {
                   <Shield size={18} />
                 </div>
                 <div className="text-left">
-                  <p className="text-sm font-bold text-slate-900 dark:text-white">Privacy & Data</p>
+                  <p className="text-sm font-bold text-slate-900 dark:text-white">{t[lang as keyof typeof t].privacy}</p>
                   <p className="text-xs text-slate-500">Location tracking, Waze telemetry</p>
                 </div>
               </div>
@@ -220,35 +321,49 @@ export default function SettingsScreen() {
               {/* NOTIFICATIONS MODAL */}
               {activeModal === "notifications" && (
                 <div className="h-full flex flex-col">
-                  <h3 className="text-xl font-black text-slate-900 dark:text-white mb-6">Notifications</h3>
+                  <h3 className="text-xl font-black text-slate-900 dark:text-white mb-6">{t[lang as keyof typeof t].notifications}</h3>
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <button 
+                      onClick={() => {
+                        setNotifSettings(prev => ({...prev, proximity: !prev.proximity}));
+                        if (!notifSettings.proximity && typeof window !== 'undefined' && 'vibrate' in navigator) {
+                          navigator.vibrate([200, 100, 200]);
+                        }
+                      }}
+                      className="w-full text-left flex items-center justify-between bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 active:scale-95 transition-transform"
+                    >
                       <div>
-                        <p className="font-bold text-sm text-slate-900 dark:text-white">Proximity Chimes</p>
-                        <p className="text-xs text-slate-500">Vibrate when bus is near</p>
+                        <p className="font-bold text-sm text-slate-900 dark:text-white">{t[lang as keyof typeof t].proximity}</p>
+                        <p className="text-xs text-slate-500">{t[lang as keyof typeof t].proxDesc}</p>
                       </div>
-                      <div className="w-10 h-6 bg-emerald-500 rounded-full flex items-center p-1 justify-end">
+                      <div className={`w-10 h-6 rounded-full flex items-center p-1 transition-colors ${notifSettings.proximity ? 'bg-emerald-500 justify-end' : 'bg-slate-300 dark:bg-slate-600 justify-start'}`}>
                          <div className="w-4 h-4 bg-white rounded-full shadow-md"></div>
                       </div>
-                    </div>
-                    <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                    </button>
+                    <button 
+                      onClick={() => setNotifSettings(prev => ({...prev, deviations: !prev.deviations}))}
+                      className="w-full text-left flex items-center justify-between bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 active:scale-95 transition-transform"
+                    >
                       <div>
-                        <p className="font-bold text-sm text-slate-900 dark:text-white">Route Deviations</p>
-                        <p className="text-xs text-slate-500">Alert me if bus takes detour</p>
+                        <p className="font-bold text-sm text-slate-900 dark:text-white">{t[lang as keyof typeof t].deviations}</p>
+                        <p className="text-xs text-slate-500">{t[lang as keyof typeof t].devDesc}</p>
                       </div>
-                      <div className="w-10 h-6 bg-emerald-500 rounded-full flex items-center p-1 justify-end">
+                      <div className={`w-10 h-6 rounded-full flex items-center p-1 transition-colors ${notifSettings.deviations ? 'bg-emerald-500 justify-end' : 'bg-slate-300 dark:bg-slate-600 justify-start'}`}>
                          <div className="w-4 h-4 bg-white rounded-full shadow-md"></div>
                       </div>
-                    </div>
-                    <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                    </button>
+                    <button 
+                      onClick={() => setNotifSettings(prev => ({...prev, marketing: !prev.marketing}))}
+                      className="w-full text-left flex items-center justify-between bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 active:scale-95 transition-transform"
+                    >
                       <div>
-                        <p className="font-bold text-sm text-slate-900 dark:text-white">Marketing Offers</p>
-                        <p className="text-xs text-slate-500">Pass discounts & promos</p>
+                        <p className="font-bold text-sm text-slate-900 dark:text-white">{t[lang as keyof typeof t].marketing}</p>
+                        <p className="text-xs text-slate-500">{t[lang as keyof typeof t].markDesc}</p>
                       </div>
-                      <div className="w-10 h-6 bg-slate-300 dark:bg-slate-600 rounded-full flex items-center p-1 justify-start">
+                      <div className={`w-10 h-6 rounded-full flex items-center p-1 transition-colors ${notifSettings.marketing ? 'bg-emerald-500 justify-end' : 'bg-slate-300 dark:bg-slate-600 justify-start'}`}>
                          <div className="w-4 h-4 bg-white rounded-full shadow-md"></div>
                       </div>
-                    </div>
+                    </button>
                   </div>
                 </div>
               )}
@@ -256,17 +371,28 @@ export default function SettingsScreen() {
               {/* LANGUAGE MODAL */}
               {activeModal === "language" && (
                 <div className="h-full flex flex-col">
-                  <h3 className="text-xl font-black text-slate-900 dark:text-white mb-6">App Language</h3>
+                  <h3 className="text-xl font-black text-slate-900 dark:text-white mb-6">{t[lang as keyof typeof t].appLang}</h3>
                   <div className="space-y-3">
-                    <button className="w-full text-left bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-500/50 p-4 rounded-xl font-bold text-emerald-700 dark:text-emerald-400 flex justify-between items-center">
+                    <button 
+                      onClick={() => setAppLang("en")}
+                      className={`w-full text-left p-4 rounded-xl font-bold flex justify-between items-center transition-colors ${lang === 'en' ? 'bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-500/50 text-emerald-700 dark:text-emerald-400' : 'bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'}`}
+                    >
                       English
-                      <div className="w-4 h-4 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-900 shadow-sm"></div>
+                      {lang === 'en' && <div className="w-4 h-4 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-900 shadow-sm"></div>}
                     </button>
-                    <button className="w-full text-left bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-4 rounded-xl font-bold text-slate-600 dark:text-slate-300">
+                    <button 
+                      onClick={() => setAppLang("kn")}
+                      className={`w-full text-left p-4 rounded-xl font-bold flex justify-between items-center transition-colors ${lang === 'kn' ? 'bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-500/50 text-emerald-700 dark:text-emerald-400' : 'bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'}`}
+                    >
                       ಕನ್ನಡ (Kannada)
+                      {lang === 'kn' && <div className="w-4 h-4 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-900 shadow-sm"></div>}
                     </button>
-                    <button className="w-full text-left bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-4 rounded-xl font-bold text-slate-600 dark:text-slate-300">
+                    <button 
+                      onClick={() => setAppLang("hi")}
+                      className={`w-full text-left p-4 rounded-xl font-bold flex justify-between items-center transition-colors ${lang === 'hi' ? 'bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-500/50 text-emerald-700 dark:text-emerald-400' : 'bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'}`}
+                    >
                       हिन्दी (Hindi)
+                      {lang === 'hi' && <div className="w-4 h-4 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-900 shadow-sm"></div>}
                     </button>
                   </div>
                 </div>
@@ -275,30 +401,44 @@ export default function SettingsScreen() {
               {/* PRIVACY MODAL */}
               {activeModal === "privacy" && (
                 <div className="h-full flex flex-col">
-                  <h3 className="text-xl font-black text-slate-900 dark:text-white mb-6">Privacy & Data</h3>
+                  <h3 className="text-xl font-black text-slate-900 dark:text-white mb-6">{t[lang as keyof typeof t].privacy}</h3>
                   <div className="space-y-4">
                     <div className="flex items-center gap-3 mb-2">
                       <Shield size={24} className="text-indigo-500" />
-                      <p className="text-sm font-bold text-slate-900 dark:text-white">Your data is secured with AES-256 encryption.</p>
+                      <p className="text-sm font-bold text-slate-900 dark:text-white">{t[lang as keyof typeof t].dataSecured}</p>
                     </div>
                     
                     <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
                       <div>
-                        <p className="font-bold text-sm text-slate-900 dark:text-white">Live Location Telemetry</p>
-                        <p className="text-xs text-slate-500">Used for crowd-sourcing ETAs</p>
+                        <p className="font-bold text-sm text-slate-900 dark:text-white">{t[lang as keyof typeof t].liveLoc}</p>
+                        <p className="text-xs text-slate-500">{t[lang as keyof typeof t].liveLocDesc}</p>
                       </div>
-                      <div className="w-10 h-6 bg-emerald-500 rounded-full flex items-center p-1 justify-end">
+                      <button 
+                        onClick={() => {
+                        setPrivacyLiveLocation(!privacyLiveLocation);
+                        if (!privacyLiveLocation && typeof window !== 'undefined' && 'geolocation' in navigator) {
+                          navigator.geolocation.getCurrentPosition(
+                            (pos) => console.log('Location accessed:', pos),
+                            (err) => console.error('Location error:', err)
+                          );
+                        }
+                      }}
+                        className={`w-10 h-6 rounded-full flex items-center p-1 transition-colors ${privacyLiveLocation ? 'bg-emerald-500 justify-end' : 'bg-slate-300 dark:bg-slate-600 justify-start'}`}
+                      >
                          <div className="w-4 h-4 bg-white rounded-full shadow-md"></div>
-                      </div>
+                      </button>
                     </div>
                     <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
                       <div>
-                        <p className="font-bold text-sm text-slate-900 dark:text-white">Camera Access</p>
-                        <p className="text-xs text-slate-500">Required for OCR uploads</p>
+                        <p className="font-bold text-sm text-slate-900 dark:text-white">{t[lang as keyof typeof t].camAccess}</p>
+                        <p className="text-xs text-slate-500">{t[lang as keyof typeof t].camDesc}</p>
                       </div>
-                      <div className="w-10 h-6 bg-emerald-500 rounded-full flex items-center p-1 justify-end">
+                      <button 
+                        onClick={() => setPrivacyCamera(!privacyCamera)}
+                        className={`w-10 h-6 rounded-full flex items-center p-1 transition-colors ${privacyCamera ? 'bg-emerald-500 justify-end' : 'bg-slate-300 dark:bg-slate-600 justify-start'}`}
+                      >
                          <div className="w-4 h-4 bg-white rounded-full shadow-md"></div>
-                      </div>
+                      </button>
                     </div>
                     
                     <button className="mt-4 w-full text-center py-3 text-red-500 font-bold text-sm hover:underline">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Navigation, Clock, Map as MapIcon, Zap, MapPin, AlertTriangle } from "lucide-react";
 import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
@@ -13,6 +13,19 @@ import SmartBoardingCard from "../../components/SmartBoardingCard";
 
 export default function TrackScreen() {
   const [triggerAnomaly, setTriggerAnomaly] = useState(false);
+  const [busCode, setBusCode] = useState("");
+  const [destination, setDestination] = useState("");
+  const [userLoc, setUserLoc] = useState<[number, number] | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => setUserLoc([pos.coords.latitude, pos.coords.longitude]),
+        (err) => console.log('Loc error', err)
+      );
+    }
+  }, []);
+
 
   const smartRoutes = [
     {
@@ -60,9 +73,24 @@ export default function TrackScreen() {
       </div>
 
       {/* The Live Interactive Map */}
-      <div className="px-4 mb-6 mt-2">
-        <div className="w-full h-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl relative overflow-hidden shadow-sm">
-          <LiveMap />
+      
+<div className="px-4 mb-4">
+  <div className="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3">
+    <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
+      <span className="text-indigo-600 dark:text-indigo-400 text-xs">🚌</span>
+    </div>
+    <input 
+      type="text" 
+      value={busCode} 
+      onChange={(e) => setBusCode(e.target.value.toUpperCase())} 
+      placeholder="Enter Bus Code (e.g. 500D) to track..." 
+      className="flex-1 bg-transparent text-sm text-slate-900 dark:text-white outline-none font-bold placeholder-slate-400" 
+    />
+  </div>
+</div>
+<div className="px-4 mb-6 mt-2">
+  <div className="w-full h-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl relative overflow-hidden shadow-sm">
+          <LiveMap busCode={busCode} destination={destination} userLocation={userLoc} />
         </div>
       </div>
 
@@ -88,7 +116,9 @@ export default function TrackScreen() {
               <div className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center shadow-md">
                 <MapPin size={12} className="text-slate-900 dark:text-white" />
               </div>
-              <input type="text" placeholder="Where to?" className="flex-1 bg-transparent text-sm text-slate-900 dark:text-white outline-none placeholder-slate-400" />
+              
+<input type="text" value={destination} onChange={(e) => setDestination(e.target.value)} placeholder="Where to? (e.g. Majestic)" className="flex-1 bg-transparent text-sm text-slate-900 dark:text-white outline-none placeholder-slate-400" />
+
             </div>
           </div>
         </div>

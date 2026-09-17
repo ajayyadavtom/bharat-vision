@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Leaf, Ticket, TrainFront, CreditCard, ShieldAlert, Zap, CloudRain, Sun, Cloud, User, MapPin } from "lucide-react";
+import { Search, Leaf, Ticket, TrainFront, CreditCard, ShieldAlert, Zap, CloudRain, Sun, Cloud, User, MapPin, Medal } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -13,13 +13,61 @@ import BehavioralHabitAI from "../components/BehavioralHabitAI";
 
 export default function VisionHome() {
   const router = useRouter();
-  const { userName, walletBalance, carbonSavedGrams, addMoney, fetchUserData, currentCity, setCurrentCity } = useAppStore();
+  const { appLang, userName, walletBalance, carbonSavedGrams, karmaPoints, currentCity, setCurrentCity, addMoney, fetchUserData, profilePictureUrl } = useAppStore();
   const cityData = getCityData(currentCity);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
 
   // Compute greeting dynamically
   const hour = new Date().getHours();
-  const greeting = hour < 12 ? "Good Morning" : hour < 18 ? "Good Afternoon" : "Good Evening";
+  
+  const tHome = {
+    en: {
+      greeting: hour < 12 ? "Good Morning" : hour < 18 ? "Good Afternoon" : "Good Evening",
+      whereTo: "Where to?",
+      searchP: "Search routes, stops...",
+      quickActions: "Quick Actions",
+      bookTickets: "Book Tickets",
+      trackBus: "Track Bus",
+      scanPass: "Scan Pass",
+      metroMap: "Metro Map",
+      myWallet: "My Wallet",
+      addMoney: "Add Money",
+      environmentalImpact: "Environmental Impact",
+      co2Saved: "CO₂ Saved",
+      karma: "Karma"
+    },
+    kn: {
+      greeting: hour < 12 ? "ಶುಭೋದಯ" : hour < 18 ? "ಶುಭ ಮಧ್ಯಾಹ್ನ" : "ಶುಭ ಸಂಜೆ",
+      whereTo: "ಎಲ್ಲಿಗೆ ಹೋಗಬೇಕು?",
+      searchP: "ಮಾರ್ಗಗಳನ್ನು ಹುಡುಕಿ...",
+      quickActions: "ತ್ವರಿತ ಕ್ರಿಯೆಗಳು",
+      bookTickets: "ಟಿಕೆಟ್ ಕಾಯ್ದಿರಿಸಿ",
+      trackBus: "ಬಸ್ ಟ್ರ್ಯಾಕ್ ಮಾಡಿ",
+      scanPass: "ಪಾಸ್ ಸ್ಕ್ಯಾನ್ ಮಾಡಿ",
+      metroMap: "ಮೆಟ್ರೋ ನಕ್ಷೆ",
+      myWallet: "ನನ್ನ ವಾಲೆಟ್",
+      addMoney: "ಹಣ ಸೇರಿಸಿ",
+      environmentalImpact: "ಪರಿಸರ ಪ್ರಭಾವ",
+      co2Saved: "CO₂ ಉಳಿತಾಯ",
+      karma: "ಕರ್ಮ"
+    },
+    hi: {
+      greeting: hour < 12 ? "सुप्रभात" : hour < 18 ? "शुभ दोपहर" : "शुभ संध्या",
+      whereTo: "कहाँ जाना है?",
+      searchP: "मार्ग खोजें...",
+      quickActions: "त्वरित कार्य",
+      bookTickets: "टिकट बुक करें",
+      trackBus: "बस ट्रैक करें",
+      scanPass: "पास स्कैन करें",
+      metroMap: "मेट्रो मैप",
+      myWallet: "मेरा वॉलेट",
+      addMoney: "पैसे डालें",
+      environmentalImpact: "पर्यावरणीय प्रभाव",
+      co2Saved: "CO₂ बचत",
+      karma: "कर्म"
+    }
+  };
+  
 
   const weather = {
     temperature: 22,
@@ -73,16 +121,26 @@ export default function VisionHome() {
               ))}
             </select>
             <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white">
-              {greeting}, {userName ? userName.split(" ")[0] : "Ajay"}
+              {tHome[appLang as keyof typeof tHome]?.greeting || tHome.en.greeting}, {userName ? userName.split(" ")[0] : "Ajay"}
             </h2>
           </div>
           <div className="flex flex-col items-end gap-2">
-            <Link href="/profile" className="w-10 h-10 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full flex items-center justify-center shadow-sm active:scale-95 transition-transform hover:bg-slate-50 dark:hover:bg-slate-800">
-              <User size={18} className="text-slate-600 dark:text-slate-300" />
+            <Link href="/profile" className="w-10 h-10 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full flex items-center justify-center shadow-sm active:scale-95 transition-transform hover:bg-slate-50 dark:hover:bg-slate-800 overflow-hidden">
+              {profilePictureUrl ? (
+                <img src={profilePictureUrl} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                <User size={18} className="text-slate-600 dark:text-slate-300" />
+              )}
             </Link>
-            <div className="flex items-center gap-1.5 bg-emerald-100 dark:bg-emerald-900/30 px-3 py-1.5 rounded-full border border-emerald-200 dark:border-emerald-800 shadow-sm cursor-default">
-              <Leaf size={14} className="text-emerald-600 dark:text-emerald-400" />
-              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">{carbonSavedGrams || 0} g saved</span>
+            <div className="flex flex-col gap-1 items-end">
+              <div className="flex items-center gap-1.5 bg-emerald-100 dark:bg-emerald-900/30 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-800 shadow-sm cursor-default">
+                <Leaf size={12} className="text-emerald-600 dark:text-emerald-400" />
+                <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">{carbonSavedGrams || 0}g</span>
+              </div>
+              <div className="flex items-center gap-1.5 bg-amber-100 dark:bg-amber-900/30 px-3 py-1 rounded-full border border-amber-200 dark:border-amber-800 shadow-sm cursor-default">
+                <Medal size={12} className="text-amber-600 dark:text-amber-400" />
+                <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold">{karmaPoints || 0} pts</span>
+              </div>
             </div>
           </div>
         </motion.div>
