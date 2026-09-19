@@ -37,7 +37,7 @@ YOUR MISSION & CAPABILITIES:
     const model = genAI.getGenerativeModel({ 
       model: 'gemini-3.5-flash',
       systemInstruction,
-      tools: [{ googleSearch: {} }] // Enable dynamic internet searching!
+      tools: [{ googleSearchRetrieval: {} } as any] // Cast as any just in case it doesn't match perfectly, though it should
     });
 
     const chat = model.startChat({
