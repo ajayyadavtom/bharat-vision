@@ -8,6 +8,14 @@ export interface ChatMessage {
   id: number;
   text: string;
   sender: "user" | "bot";
+  image?: string; // Base64 image data
+}
+
+export interface ChatSession {
+  id: string;
+  title: string;
+  updatedAt: number;
+  messages: ChatMessage[];
 }
 
 interface AppState {
@@ -22,6 +30,8 @@ interface AppState {
   
   // Persisted local UI state
   chatMessages: ChatMessage[];
+  chatSessions: ChatSession[];
+  activeChatId: string | null;
   bookedRide: any | null;
   rideHistory: any[];
   profilePictureUrl: string | null;
@@ -38,10 +48,17 @@ interface AppState {
   
   // UI State setters
   addChatMessage: (msg: ChatMessage) => void;
+  startNewChat: () => void;
+  loadChatSession: (sessionId: string) => void;
+  deleteChatSession: (sessionId: string) => void;
   setBookedRide: (ride: any | null) => void;
   setProfilePictureUrl: (url: string) => void;
   setPrivacyLiveLocation: (val: boolean) => void;
   setPrivacyCamera: (val: boolean) => void;
+  activePass: { name: string; boundDeviceId: string; expiry: number; lastMigratedAt: number | null } | null;
+  setActivePass: (pass: any) => void;
+  mockDeviceToggle: boolean;
+  setMockDeviceToggle: (val: boolean) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -55,12 +72,18 @@ export const useAppStore = create<AppState>()(
       currentCity: "bengaluru",
       
       chatMessages: [],
+      chatSessions: [],
+      activeChatId: null,
       bookedRide: null,
       rideHistory: [],
       profilePictureUrl: null,
       
       privacyLiveLocation: true,
       privacyCamera: true,
+      activePass: null,
+      setActivePass: (pass) => set({ activePass: pass }),
+      mockDeviceToggle: false,
+      setMockDeviceToggle: (val) => set({ mockDeviceToggle: val }),
       appLang: "en",
       setAppLang: (lang: string) => set({ appLang: lang }),
       
@@ -68,9 +91,75 @@ export const useAppStore = create<AppState>()(
         set({ currentCity: cityId });
       },
 
-      addChatMessage: (msg: ChatMessage) => {
-        set((state) => ({ chatMessages: [...state.chatMessages, msg] }));
-      },
+      addChatMessage: (msg: ChatMessage) => set((state) => {
+        const newMessages = [...state.chatMessages, msg];
+        
+        let newSessions = [...state.chatSessions];
+        let activeId = state.activeChatId;
+        
+        // If this is the first real message (not a bot welcome), generate a session
+        if (!activeId && newMessages.length > 1) {
+          activeId = Date.now().toString();
+          // Use first user message as title, or fallback
+          const userMsgs = newMessages.filter(m => m.sender === 'user');
+          const title = userMsgs.length > 0 ? userMsgs[0].text.substring(0, 30) + '...' : 'New Chat';
+          
+          newSessions.unshift({
+            id: activeId,
+            title,
+            updatedAt: Date.now(),
+            messages: newMessages
+          });
+        } else if (activeId) {
+          // Update existing session
+          const sessionIndex = newSessions.findIndex(s => s.id === activeId);
+          if (sessionIndex >= 0) {
+            newSessions[sessionIndex] = {
+              ...newSessions[sessionIndex],
+              updatedAt: Date.now(),
+              messages: newMessages
+            };
+            // Move to top
+            const updatedSession = newSessions.splice(sessionIndex, 1)[0];
+            newSessions.unshift(updatedSession);
+          }
+        }
+        
+        return { chatMessages: newMessages, chatSessions: newSessions, activeChatId: activeId };
+      }),
+      
+      startNewChat: () => set((state) => ({
+        activeChatId: null,
+        chatMessages: [{
+          id: Date.now(),
+          text: `Namaskara! 🙏 I'm Vanara AI. Ask me about transit routes, timings, or just tap the mic and speak!`,
+          sender: "bot"
+        }]
+      })),
+      
+      loadChatSession: (sessionId: string) => set((state) => {
+        const session = state.chatSessions.find(s => s.id === sessionId);
+        if (session) {
+          return { activeChatId: sessionId, chatMessages: session.messages };
+        }
+        return state;
+      }),
+
+      deleteChatSession: (sessionId: string) => set((state) => {
+        const newSessions = state.chatSessions.filter(s => s.id !== sessionId);
+        if (state.activeChatId === sessionId) {
+          return {
+            chatSessions: newSessions,
+            activeChatId: null,
+            chatMessages: [{
+              id: Date.now(),
+              text: `Namaskara! 🙏 I'm Vanara AI. Ask me about transit routes, timings, or just tap the mic and speak!`,
+              sender: "bot"
+            }]
+          };
+        }
+        return { chatSessions: newSessions };
+      }),
       
       setBookedRide: (ride: any | null) => {
         set((state) => {
@@ -194,6 +283,8 @@ export const useAppStore = create<AppState>()(
       name: 'bharat-vision-storage',
       partialize: (state) => ({ 
         chatMessages: state.chatMessages, 
+        chatSessions: state.chatSessions,
+        activeChatId: state.activeChatId,
         bookedRide: state.bookedRide,
         rideHistory: state.rideHistory,
         profilePictureUrl: state.profilePictureUrl,
@@ -204,7 +295,8 @@ export const useAppStore = create<AppState>()(
         walletBalance: state.walletBalance,
         carbonSavedGrams: state.carbonSavedGrams,
         userName: state.userName,
-        appLang: state.appLang
+        appLang: state.appLang,
+        activePass: state.activePass
       }),
     }
   )

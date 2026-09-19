@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Search, Navigation, Bus, TrainFront, Car, Leaf, Clock, ArrowRight, ShieldCheck, Zap, Mic, Waves, CloudRain, Umbrella, CheckCircle2, MapPin } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import WeatherWidget from "@/components/WeatherWidget";
 import dynamic from "next/dynamic";
 
 const LiveMap = dynamic(() => import("../../components/LiveMap"), { ssr: false });
@@ -223,21 +224,8 @@ export default function RoutePlannerScreen() {
                 </motion.div>
               )}
 
-              {/* Rain-Safe Toggle */}
-              <div className="flex items-center justify-between bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm cursor-pointer mt-2" onClick={() => setIsRainSafe(!isRainSafe)}>
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-xl ${isRainSafe ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-500' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}>
-                    <Umbrella size={18} />
-                  </div>
-                  <div>
-                    <span className="text-sm font-bold text-slate-900 dark:text-white block">Rain-Safe Routing</span>
-                    <span className="text-[10px] text-slate-500">Prioritize covered transit and Metro</span>
-                  </div>
-                </div>
-                <div className={`w-12 h-6 rounded-full transition-colors relative p-1 flex items-center ${isRainSafe ? 'bg-blue-500' : 'bg-slate-300 dark:bg-slate-700'}`}>
-                  <div className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${isRainSafe ? 'translate-x-6' : 'translate-x-0'}`}></div>
-                </div>
-              </div>
+              {/* Real-time Weather & Rain-Safe Routing Widget */}
+              <WeatherWidget isRainSafe={isRainSafe} setIsRainSafe={setIsRainSafe} locationName={origin} />
 
               <button
                 onClick={() => handleSearchRoute()}
