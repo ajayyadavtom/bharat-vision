@@ -36,7 +36,9 @@ YOUR MISSION & CAPABILITIES:
     // Initialize model with System Instructions and Google Search Grounding
     const model = genAI.getGenerativeModel({ 
       model: 'gemini-3.5-flash',
+      
       systemInstruction,
+// @ts-ignore
       tools: [{ googleSearch: {} }] // Enable dynamic internet searching!
     });
 
