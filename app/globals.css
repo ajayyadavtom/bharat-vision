@@ -46,3 +46,19 @@ body {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
+
+/* Mobile Scroll Performance Optimizations */
+html, body {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  overscroll-behavior-y: none; /* Prevents pull-to-refresh lag */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Hardware acceleration for scroll containers */
+.overflow-y-auto, .overflow-x-auto, .no-scrollbar {
+  -webkit-overflow-scrolling: touch;
+  transform: translateZ(0); /* Force GPU acceleration */
+  will-change: transform, scroll-position;
+}

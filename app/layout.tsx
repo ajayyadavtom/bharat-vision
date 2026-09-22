@@ -40,7 +40,7 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <AuthGuard>
             <PwaRegistry />
-            <main className="max-w-md mx-auto min-h-screen relative pb-16 shadow-2xl bg-white dark:bg-slate-900 overflow-hidden">
+            <main className="max-w-md mx-auto h-[100dvh] relative pb-16 shadow-2xl bg-white dark:bg-slate-900 overflow-hidden">
               {children}
               <BottomNav />
             </main>

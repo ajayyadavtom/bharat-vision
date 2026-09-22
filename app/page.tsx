@@ -107,7 +107,8 @@ export default function VisionHome() {
         variants={dashboardVariants}
         initial="hidden"
         animate="show"
-        className="flex flex-col h-screen overflow-y-auto no-scrollbar gap-6 p-4 pt-8 pb-[120px] relative z-10 [&>*]:shrink-0"
+        className="flex flex-col h-[100dvh] overflow-y-auto no-scrollbar gap-6 p-4 pt-8 pb-[120px] relative z-10 [&>*]:shrink-0"
+        style={{ WebkitOverflowScrolling: 'touch', willChange: 'scroll-position' }}
       >
         <motion.div variants={itemVariants} className="flex justify-between items-start">
           <div>
