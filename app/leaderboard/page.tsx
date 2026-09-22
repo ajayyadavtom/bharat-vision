@@ -57,7 +57,7 @@ export default function LeaderboardScreen() {
   const userLevel = calculateLevel(karmaPoints);
 
   return (
-    <div className="flex flex-col min-h-screen h-full overflow-y-auto no-scrollbar pb-[120px] bg-surface-black px-4 pt-8 [&>*]:shrink-0">
+    <div className="flex flex-col min-h-[100dvh] h-full overflow-y-auto no-scrollbar pb-[120px] bg-surface-black px-4 pt-8 [&>*]:shrink-0">
       
       {/* Navigation Header */}
       <div className="flex items-center gap-3 mb-6">

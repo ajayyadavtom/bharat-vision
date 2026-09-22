@@ -107,7 +107,7 @@ export default function VisionHome() {
         variants={dashboardVariants}
         initial="hidden"
         animate="show"
-        className="flex flex-col h-screen overflow-y-auto no-scrollbar gap-6 p-4 pt-8 pb-[120px] relative z-10 [&>*]:shrink-0"
+        className="flex flex-col h-[100dvh] overflow-y-auto no-scrollbar gap-6 p-4 pt-8 pb-[120px] relative z-10 [&>*]:shrink-0"
       >
         <motion.div variants={itemVariants} className="flex justify-between items-start">
           <div>
@@ -121,7 +121,7 @@ export default function VisionHome() {
               ))}
             </select>
             <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white">
-              {tHome[appLang as keyof typeof tHome]?.greeting || tHome.en.greeting}, {userName ? userName.split(" ")[0] : "Ajay"}
+              {tHome[appLang as keyof typeof tHome]?.greeting || tHome.en.greeting}, {userName && userName !== "Guest" ? userName.split(" ")[0] : "JENNY"}
             </h2>
           </div>
           <div className="flex flex-col items-end gap-2">

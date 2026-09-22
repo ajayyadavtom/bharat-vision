@@ -22,6 +22,7 @@ interface AppState {
   appLang: string;
   setAppLang: (lang: string) => void;
   userName: string;
+  setUserName: (name: string) => void;
   walletBalance: number;
   karmaPoints: number;
   carbonSavedGrams: number;
@@ -65,6 +66,7 @@ export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
       userName: "Guest",
+      setUserName: (name: string) => set({ userName: name }),
       walletBalance: 0,
       karmaPoints: 0,
       carbonSavedGrams: 0,
@@ -250,7 +252,7 @@ export const useAppStore = create<AppState>()(
               // Profile row doesn't exist yet for this auth user, create it automatically
               const newProfile = {
                 id: user.id,
-                full_name: user.email?.split('@')[0] || "Ajay M.", 
+                full_name: user.email?.split('@')[0] || "JENNY", 
                 wallet_balance: 0,
                 karma_points: 0,
                 carbon_saved_grams: 0,
@@ -268,8 +270,8 @@ export const useAppStore = create<AppState>()(
             // Guest User: DO NOT wipe their locally earned karma points or wallet balance!
             // Only set userName to Guest if it's not already set.
             const currentState = get();
-            if (!currentState.userName || currentState.userName === "") {
-              set({ userName: "Guest" });
+            if (!currentState.userName || currentState.userName === "" || currentState.userName === "Guest") {
+              set({ userName: "JENNY" });
             }
           }
         } catch (error) {

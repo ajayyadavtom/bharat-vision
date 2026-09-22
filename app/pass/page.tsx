@@ -171,7 +171,7 @@ export default function PassScreen() {
   if (!mounted) return null;
 
   return (
-    <div className="flex flex-col h-screen overflow-y-auto no-scrollbar pb-[120px] bg-surface-black px-4 pt-8 select-none [&>*]:shrink-0">
+    <div className="flex flex-col h-[100dvh] overflow-y-auto no-scrollbar pb-[120px] bg-surface-black px-4 pt-8 select-none [&>*]:shrink-0">
       <div className="mb-6 flex justify-between items-start">
         <div>
           <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white mb-2">Smart Tickets</h1>

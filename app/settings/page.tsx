@@ -135,13 +135,13 @@ export default function SettingsScreen() {
   };
 
   if (!mounted) {
-    return <div className="h-screen bg-slate-50 dark:bg-slate-950" />;
+    return <div className="h-[100dvh] bg-slate-50 dark:bg-slate-950" />;
   }
 
   const currentTheme = theme === "system" ? systemTheme : theme;
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50 dark:bg-slate-950 px-4 pt-8 pb-[120px] relative">
+    <div className="flex flex-col min-h-[100dvh] bg-slate-50 dark:bg-slate-950 px-4 pt-8 pb-[120px] relative">
       <div className="flex items-center gap-3 mb-8">
         <Link href="/profile" className="p-2 bg-white dark:bg-slate-900 rounded-full shadow-sm border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300">
           <ArrowLeft size={20} />
@@ -304,7 +304,7 @@ export default function SettingsScreen() {
                   <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
                     <Terminal size={20} className="text-emerald-500" /> System Terminal
                   </h3>
-                  <div className="bg-slate-950 p-4 rounded-xl flex-1 overflow-y-auto text-xs text-emerald-400 leading-relaxed shadow-inner">
+                  <div className="bg-slate-950 p-4 rounded-xl flex-1 overflow-y-auto no-scrollbar text-xs text-emerald-400 leading-relaxed shadow-inner">
                     <p>{`> Initializing Bharat Vision v0.1.0`}</p>
                     <p>{`> Connecting to GTFS-RT Pipeline... OK`}</p>
                     <p>{`> Supabase Auth verified [User: ACTIVE]`}</p>

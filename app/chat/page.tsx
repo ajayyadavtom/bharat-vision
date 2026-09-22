@@ -134,7 +134,7 @@ export default function ChatScreen() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-slate-50 dark:bg-slate-950 relative overflow-hidden">
+    <div className="flex flex-col h-[100dvh] bg-slate-50 dark:bg-slate-950 relative overflow-hidden">
       
       <input 
         type="file" 
@@ -172,7 +172,7 @@ export default function ChatScreen() {
                   <PlusCircle size={18} /> New Conversation
                 </button>
               </div>
-              <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-2">
+              <div className="flex-1 overflow-y-auto no-scrollbar p-4 flex flex-col gap-2">
                 {chatSessions.length === 0 ? (
                   <p className="text-xs text-slate-400 text-center mt-4">No previous conversations.</p>
                 ) : (

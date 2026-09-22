@@ -52,7 +52,7 @@ export default function SafetyScreen() {
   };
 
   return (
-    <div className="flex flex-col h-screen overflow-y-auto no-scrollbar pb-24 bg-slate-50 dark:bg-slate-950 px-4 pt-8 [&>*]:shrink-0 relative">
+    <div className="flex flex-col h-[100dvh] overflow-y-auto no-scrollbar pb-24 bg-slate-50 dark:bg-slate-950 px-4 pt-8 [&>*]:shrink-0 relative">
       {/* Background Pulse Effect when SOS is active */}
       {sosActive && (
         <motion.div

@@ -45,7 +45,7 @@ export default function TrackScreen() {
   ];
 
   return (
-    <div className="flex flex-col h-screen overflow-y-auto no-scrollbar pb-24 bg-slate-50 dark:bg-slate-950 relative">
+    <div className="flex flex-col h-[100dvh] overflow-y-auto no-scrollbar pb-24 bg-slate-50 dark:bg-slate-950 relative">
       <div className="p-4 pt-8 bg-gradient-to-b from-white dark:from-slate-900 to-transparent flex justify-between items-start">
         <div>
           <h2 className="text-[10px] text-emerald-600 dark:text-emerald-400 uppercase tracking-[0.2em] font-bold mb-1 flex items-center gap-1">

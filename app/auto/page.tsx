@@ -47,7 +47,7 @@ export default function AutoCabBooking() {
   };
 
   return (
-    <div className="flex flex-col h-screen overflow-y-auto no-scrollbar pb-24 bg-surface-black px-4 pt-8">
+    <div className="flex flex-col h-[100dvh] overflow-y-auto no-scrollbar pb-24 bg-surface-black px-4 pt-8">
       {/* Header */}
       <div className="mb-6">
         <h2 className="text-[10px] text-amber-500 uppercase tracking-[0.2em] font-bold mb-1 flex items-center gap-1">
