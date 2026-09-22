@@ -12,8 +12,8 @@ export default function BehavioralHabitAI() {
   const [booked, setBooked] = useState(false);
 
   useEffect(() => {
-    // Only show AI habit predictions for logged-in users with history (not Guests)
-    if (userName === "Guest") return;
+    // Only show AI habit predictions for logged-in users with history (not Jennys)
+    if (userName === "Jenny") return;
 
     // Simulate the AI detecting a routine morning commute from past booking data
     const checkHabitPattern = () => {

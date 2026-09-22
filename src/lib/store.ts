@@ -64,7 +64,7 @@ interface AppState {
 export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
-      userName: "Guest",
+      userName: "Jenny",
       walletBalance: 0,
       karmaPoints: 0,
       carbonSavedGrams: 0,
@@ -265,11 +265,11 @@ export const useAppStore = create<AppState>()(
               });
             }
           } else {
-            // Guest User: DO NOT wipe their locally earned karma points or wallet balance!
-            // Only set userName to Guest if it's not already set.
+            // Jenny User: DO NOT wipe their locally earned karma points or wallet balance!
+            // Only set userName to Jenny if it's not already set.
             const currentState = get();
             if (!currentState.userName || currentState.userName === "") {
-              set({ userName: "Guest" });
+              set({ userName: "Jenny" });
             }
           }
         } catch (error) {

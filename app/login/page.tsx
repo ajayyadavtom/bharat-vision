@@ -84,7 +84,7 @@ export default function LoginScreen() {
         }
       }
     } catch (err: any) {
-      setError(err?.message || "Connection error. Try Continue as Guest.");
+      setError(err?.message || "Connection error. Try Continue as Jenny.");
     } finally {
       setLoading(false);
     }
@@ -107,7 +107,7 @@ export default function LoginScreen() {
         setGoogleLoading(false);
       }
     } catch (err: any) {
-      setError("Google login failed. Try email or Continue as Guest.");
+      setError("Google login failed. Try email or Continue as Jenny.");
       setGoogleLoading(false);
     }
   };
@@ -319,7 +319,7 @@ export default function LoginScreen() {
           className="w-full bg-surface-dark/80 backdrop-blur-md border border-slate-200 dark:border-brand-dark/50 hover:border-brand-base text-slate-900 dark:text-white font-bold py-4 rounded-2xl shadow-md active:scale-95 transition-all flex justify-center items-center gap-2"
         >
           <User size={18} className="text-slate-500 dark:text-gray-400" />
-          Continue as Guest
+          Continue as Jenny
         </button>
 
         {/* Register toggle */}

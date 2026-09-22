@@ -86,7 +86,7 @@ export default function ProfileScreen() {
         
         <div className="relative z-10">
           <h3 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
-            {userName || "Guest Commuter"} <ShieldCheck size={16} className="text-emerald-500" />
+            {(!userName || userName.toLowerCase() === "guest") ? "Jenny Commuter" : userName} <ShieldCheck size={16} className="text-emerald-500" />
           </h3>
           <p className="text-xs text-slate-500 flex items-center gap-1 mt-1">
             <MapPin size={12} className="text-emerald-500" /> Yelahanka, Bengaluru

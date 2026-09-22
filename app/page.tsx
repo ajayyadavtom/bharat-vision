@@ -121,7 +121,7 @@ export default function VisionHome() {
               ))}
             </select>
             <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white">
-              {tHome[appLang as keyof typeof tHome]?.greeting || tHome.en.greeting}, {userName ? userName.split(" ")[0] : "Ajay"}
+              {tHome[appLang as keyof typeof tHome]?.greeting || tHome.en.greeting}, {userName ? (userName.toLowerCase() === "guest" ? "Jenny" : userName.split(" ")[0]) : "Jenny"}
             </h2>
           </div>
           <div className="flex flex-col items-end gap-2">
