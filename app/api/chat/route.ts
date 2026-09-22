@@ -36,9 +36,8 @@ YOUR MISSION & CAPABILITIES:
     // Initialize model with System Instructions and Google Search Grounding
     const model = genAI.getGenerativeModel({ 
       model: 'gemini-3.5-flash',
-      // @ts-expect-error
-      systemIstruction,
-
+      systemInstruction,
+      // @ts-expect-error - Bypass TS error for googleSearch in older SDK versions
       tools: [{ googleSearch: {} }] // Enable dynamic internet searching!
     });
 
