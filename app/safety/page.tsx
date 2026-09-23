@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ShieldAlert, PhoneCall, MessageSquareWarning, MapPin, CheckCircle2, AlertTriangle, ShieldCheck } from "lucide-react";
+import { ShieldAlert, PhoneCall, MessageSquareWarning, MapPin, CheckCircle2, AlertTriangle, ShieldCheck, Volume2, PhoneIncoming } from "lucide-react";
 import { motion } from "framer-motion";
 
 // ABSOLUTE ALIAS PATHS
@@ -14,8 +14,84 @@ export default function SafetyScreen() {
   const [hazardCategory, setHazardCategory] = useState("Crowd Surge");
   const [hazardDescription, setHazardDescription] = useState("");
   const [hazardSubmitted, setHazardSubmitted] = useState(false);
+  const [holdProgress, setHoldProgress] = useState(0);
+  const [sirenActive, setSirenActive] = useState(false);
+  const [fakeCallStatus, setFakeCallStatus] = useState<"idle" | "waiting" | "ringing">("idle");
+  
+  // Timer references
+  const holdIntervalRef = React.useRef<NodeJS.Timeout | null>(null);
+  const fakeCallTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+  
+  import React, { useEffect } from "react";
+  
+  // Audio setup for Siren and Fake Call
+  const sirenAudio = React.useMemo(() => typeof window !== 'undefined' ? new Audio('https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg') : null, []);
+  const ringtoneAudio = React.useMemo(() => typeof window !== 'undefined' ? new Audio('https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg') : null, []);
+
+  useEffect(() => {
+    if (sirenAudio) sirenAudio.loop = true;
+    if (ringtoneAudio) ringtoneAudio.loop = true;
+    return () => {
+      if (sirenAudio) sirenAudio.pause();
+      if (ringtoneAudio) ringtoneAudio.pause();
+    };
+  }, [sirenAudio, ringtoneAudio]);
+
 
   // Trigger emergency SMS URI fallback with live GPS coordinates
+  
+  const handlePointerDown = () => {
+    setHoldProgress(0);
+    let progress = 0;
+    holdIntervalRef.current = setInterval(() => {
+      progress += 2; // 50 steps = 3 seconds roughly
+      setHoldProgress(progress);
+      if (progress >= 100) {
+        clearInterval(holdIntervalRef.current!);
+        triggerOfflineSos();
+        setHoldProgress(0);
+      }
+    }, 60);
+  };
+
+  const handlePointerUp = () => {
+    if (holdIntervalRef.current) {
+      clearInterval(holdIntervalRef.current);
+      if (holdProgress < 100) {
+        setHoldProgress(0);
+      }
+    }
+  };
+
+  const toggleSiren = () => {
+    if (!sirenActive) {
+      setSirenActive(true);
+      sirenAudio?.play().catch(e => console.log('Audio play failed', e));
+    } else {
+      setSirenActive(false);
+      sirenAudio?.pause();
+      if (sirenAudio) sirenAudio.currentTime = 0;
+    }
+  };
+
+  const triggerFakeCall = () => {
+    if (fakeCallStatus === "idle") {
+      setFakeCallStatus("waiting");
+      fakeCallTimeoutRef.current = setTimeout(() => {
+        setFakeCallStatus("ringing");
+        ringtoneAudio?.play().catch(e => console.log('Audio play failed', e));
+      }, 5000); // 5 seconds wait
+    } else if (fakeCallStatus === "ringing") {
+      setFakeCallStatus("idle");
+      ringtoneAudio?.pause();
+      if (ringtoneAudio) ringtoneAudio.currentTime = 0;
+    } else {
+      // cancel waiting
+      clearTimeout(fakeCallTimeoutRef.current!);
+      setFakeCallStatus("idle");
+    }
+  };
+
   const triggerOfflineSos = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -62,25 +138,51 @@ export default function SafetyScreen() {
         />
       )}
 
-      {/* Header */}
-      <div className="bg-gradient-to-br from-red-950/40 via-surface-dark to-white dark:to-surface-black border-2 border-red-500/50 p-6 rounded-3xl shadow-[0_0_30px_rgba(239,68,68,0.2)] mb-6 flex flex-col items-center text-center relative overflow-hidden">
+      {/* Header: Hold to SOS */}
+      <div className="bg-gradient-to-br from-red-950/40 via-surface-dark to-white dark:to-surface-black border-2 border-red-500/50 p-6 rounded-3xl shadow-[0_0_30px_rgba(239,68,68,0.2)] mb-4 flex flex-col items-center text-center relative overflow-hidden">
         <div className="absolute inset-0 bg-red-500/5 animate-pulse pointer-events-none"></div>
 
-        <div className="w-20 h-20 bg-red-600 rounded-full flex items-center justify-center mb-4 shadow-[0_0_40px_rgba(239,68,68,0.6)] border-4 border-red-400 relative z-10">
-          <ShieldAlert size={36} className="text-slate-900 dark:text-white animate-bounce" />
+        {/* Hold to SOS Button */}
+        <div className="relative mb-6">
+          <svg className="absolute -inset-4 w-[112px] h-[112px] rotate-[-90deg] pointer-events-none">
+            <circle cx="56" cy="56" r="50" stroke="rgba(239, 68, 68, 0.2)" strokeWidth="6" fill="none" />
+            <circle cx="56" cy="56" r="50" stroke="#ef4444" strokeWidth="6" fill="none" strokeDasharray="314" strokeDashoffset={314 - (314 * holdProgress) / 100} className="transition-all duration-75" />
+          </svg>
+          <motion.button
+            onPointerDown={handlePointerDown}
+            onPointerUp={handlePointerUp}
+            onPointerLeave={handlePointerUp}
+            whileTap={{ scale: 0.9 }}
+            className="w-20 h-20 bg-red-600 rounded-full flex items-center justify-center shadow-[0_0_40px_rgba(239,68,68,0.6)] border-4 border-red-400 relative z-10 touch-none select-none"
+          >
+            <ShieldAlert size={36} className="text-white animate-pulse" />
+          </motion.button>
         </div>
 
-        <h3 className="text-xl font-black text-slate-900 dark:text-white mb-1">Emergency SOS Panic Button</h3>
-        <p className="text-xs text-slate-600 dark:text-gray-300 mb-6 max-w-xs">
-          Instantly triggers zero-network SMS dispatch to 112 emergency response with your live GPS coordinates.
+        <h3 className="text-xl font-black text-slate-900 dark:text-white mb-1">Hold for SOS</h3>
+        <p className="text-xs text-slate-600 dark:text-gray-300 mb-2 max-w-xs">
+          Press and hold for 3 seconds to dispatch live GPS coordinates via SMS to 112.
         </p>
+      </div>
 
-        <button
-          onClick={triggerOfflineSos}
-          className="w-full bg-red-600 hover:bg-red-500 text-white font-black py-4 rounded-2xl text-sm shadow-[0_5px_25px_rgba(239,68,68,0.5)] active:scale-95 transition-transform flex items-center justify-center gap-2 relative z-10"
+      {/* Advanced Safety Tools */}
+      <div className="grid grid-cols-2 gap-3 mb-6">
+        <button 
+          onClick={toggleSiren}
+          className={`p-4 rounded-3xl border-2 flex flex-col items-center justify-center text-center transition-all ${sirenActive ? 'bg-red-600 border-red-500 text-white animate-pulse shadow-[0_0_30px_rgba(239,68,68,0.6)]' : 'bg-surface-dark border-slate-200 dark:border-brand-dark text-slate-900 dark:text-white'}`}
         >
-          <PhoneCall size={18} />
-          <span>Tap to Broadcast SOS via SMS</span>
+          <Volume2 size={28} className="mb-2" />
+          <span className="text-xs font-bold">{sirenActive ? "STOP SIREN" : "Loud Siren"}</span>
+        </button>
+
+        <button 
+          onClick={triggerFakeCall}
+          className={`p-4 rounded-3xl border-2 flex flex-col items-center justify-center text-center transition-all ${fakeCallStatus === 'ringing' ? 'bg-green-500 border-green-400 text-white animate-bounce' : fakeCallStatus === 'waiting' ? 'bg-amber-500 border-amber-400 text-white animate-pulse' : 'bg-surface-dark border-slate-200 dark:border-brand-dark text-slate-900 dark:text-white'}`}
+        >
+          <PhoneIncoming size={28} className="mb-2" />
+          <span className="text-xs font-bold">
+            {fakeCallStatus === 'ringing' ? "ANSWER CALL" : fakeCallStatus === 'waiting' ? "Calling in 5s..." : "Fake Call"}
+          </span>
         </button>
       </div>
 
