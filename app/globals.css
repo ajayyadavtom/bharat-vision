@@ -47,6 +47,7 @@ body {
   scrollbar-width: none;  /* Firefox */
 }
 
+<<<<<<< HEAD
 /* Mobile Scroll Performance Optimizations */
 html, body {
   -webkit-overflow-scrolling: touch;
@@ -61,4 +62,10 @@ html, body {
   -webkit-overflow-scrolling: touch;
   transform: translateZ(0); /* Force GPU acceleration */
   will-change: transform, scroll-position;
+=======
+/* Smooth touch scrolling for all scroll containers on mobile */
+.no-scrollbar {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+>>>>>>> b77b84636852b0f227c848e245f2889301091319
 }

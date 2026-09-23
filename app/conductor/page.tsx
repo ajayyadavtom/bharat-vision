@@ -59,7 +59,7 @@ export default function ConductorETMV2() {
   };
 
   return (
-    <div className="flex flex-col h-screen overflow-y-auto no-scrollbar pb-[120px] bg-surface-black px-4 pt-8 [&>*]:shrink-0">
+    <div className="flex flex-col h-[100dvh] overflow-y-auto no-scrollbar pb-[120px] bg-surface-black px-4 pt-8 [&>*]:shrink-0">
       
       {/* Header */}
       <div className="mb-6 flex justify-between items-start">

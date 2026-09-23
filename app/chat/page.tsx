@@ -28,11 +28,13 @@ export default function ChatScreen() {
     }
   }, [chatMessages.length, addChatMessage, cityData]);
 
-  const chatEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [chatMessages]);
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+    }
+  }, [chatMessages, isLoading]);
 
   const quickPrompts = [
     "Show me the route to Majestic",
@@ -134,7 +136,7 @@ export default function ChatScreen() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-slate-50 dark:bg-slate-950 relative overflow-hidden">
+    <div className="flex flex-col h-[100dvh] bg-slate-50 dark:bg-slate-950 relative overflow-hidden">
       
       <input 
         type="file" 
@@ -172,7 +174,7 @@ export default function ChatScreen() {
                   <PlusCircle size={18} /> New Conversation
                 </button>
               </div>
-              <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-2">
+              <div className="flex-1 overflow-y-auto no-scrollbar p-4 flex flex-col gap-2">
                 {chatSessions.length === 0 ? (
                   <p className="text-xs text-slate-400 text-center mt-4">No previous conversations.</p>
                 ) : (
@@ -219,7 +221,7 @@ export default function ChatScreen() {
       </div>
 
       {/* Chat Area */}
-      <div className="flex-1 overflow-y-auto no-scrollbar p-4 flex flex-col gap-4">
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto no-scrollbar p-4 flex flex-col gap-4 scroll-smooth">
         {chatMessages.map((msg) => (
           <motion.div
             key={msg.id}
@@ -243,7 +245,6 @@ export default function ChatScreen() {
             )}
           </motion.div>
         ))}
-        <div ref={chatEndRef} className="h-2" />
       </div>
 
       {/* Bottom Area: Quick Prompts + Input (Normal Flow, No Overlap) */}

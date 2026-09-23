@@ -1,17 +1,21 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { User, Terminal, Moon, Bell, Shield, Globe, LogOut, MapPin, ShieldCheck, Leaf, Medal, Receipt, ChevronRight, ScanFace, Upload, CheckCircle2, Loader2, X, Settings, Image as ImageIcon } from "lucide-react";
+import { User, Terminal, Moon, Bell, Shield, Globe, LogOut, MapPin, ShieldCheck, Leaf, Medal, Receipt, ChevronRight, ScanFace, Upload, CheckCircle2, Loader2, X, Settings, Image as ImageIcon, Pencil, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useAppStore } from "@/lib/store";
 
 export default function ProfileScreen() {
-  const { userName, carbonSavedGrams, karmaPoints, profilePictureUrl, setProfilePictureUrl, rideHistory } = useAppStore();
+  const { userName, setUserName, carbonSavedGrams, karmaPoints, profilePictureUrl, setProfilePictureUrl, rideHistory } = useAppStore();
   const [showScanner, setShowScanner] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
+  
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editName, setEditName] = useState("");
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Simulated AI OCR Data Extraction
@@ -41,7 +45,7 @@ export default function ProfileScreen() {
   };
 
   return (
-    <div className="flex flex-col h-screen overflow-y-auto no-scrollbar pb-[120px] bg-slate-50 dark:bg-slate-950 px-4 pt-8 [&>*]:shrink-0 relative">
+    <div className="flex flex-col h-[100dvh] overflow-y-auto no-scrollbar pb-[120px] bg-slate-50 dark:bg-slate-950 px-4 pt-8 [&>*]:shrink-0 relative">
       
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
@@ -84,10 +88,47 @@ export default function ProfileScreen() {
           className="hidden" 
         />
         
+<<<<<<< HEAD
         <div className="relative z-10">
           <h3 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
             {(!userName || userName.toLowerCase() === "guest") ? "Jenny Commuter" : userName} <ShieldCheck size={16} className="text-emerald-500" />
           </h3>
+=======
+        <div className="relative z-10 flex-1">
+          {isEditingName ? (
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    if (editName.trim()) setUserName(editName);
+                    setIsEditingName(false);
+                  }
+                }}
+                onBlur={() => {
+                  if (editName.trim()) setUserName(editName);
+                  setIsEditingName(false);
+                }}
+                autoFocus
+                className="bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white px-2 py-1 rounded border border-slate-300 dark:border-slate-700 outline-none w-full max-w-[150px] text-lg font-bold"
+              />
+            </div>
+          ) : (
+            <h3 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
+              <span>{userName || "Guest"}</span>
+              <button 
+                onClick={() => { setEditName(userName || "Guest"); setIsEditingName(true); }}
+                className="p-1.5 bg-slate-100 dark:bg-slate-800 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                title="Edit Name"
+              >
+                <Pencil size={14} className="text-slate-500 dark:text-slate-400" />
+              </button>
+              <ShieldCheck size={16} className="text-emerald-500 ml-1" />
+            </h3>
+          )}
+>>>>>>> b77b84636852b0f227c848e245f2889301091319
           <p className="text-xs text-slate-500 flex items-center gap-1 mt-1">
             <MapPin size={12} className="text-emerald-500" /> Yelahanka, Bengaluru
           </p>

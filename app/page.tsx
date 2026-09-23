@@ -108,7 +108,10 @@ export default function VisionHome() {
         initial="hidden"
         animate="show"
         className="flex flex-col h-[100dvh] overflow-y-auto no-scrollbar gap-6 p-4 pt-8 pb-[120px] relative z-10 [&>*]:shrink-0"
+<<<<<<< HEAD
         style={{ WebkitOverflowScrolling: 'touch', willChange: 'scroll-position' }}
+=======
+>>>>>>> b77b84636852b0f227c848e245f2889301091319
       >
         <motion.div variants={itemVariants} className="flex justify-between items-start">
           <div>
@@ -122,7 +125,11 @@ export default function VisionHome() {
               ))}
             </select>
             <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white">
+<<<<<<< HEAD
               {tHome[appLang as keyof typeof tHome]?.greeting || tHome.en.greeting}, {userName ? (userName.toLowerCase() === "guest" ? "Jenny" : userName.split(" ")[0]) : "Jenny"}
+=======
+              {tHome[appLang as keyof typeof tHome]?.greeting || tHome.en.greeting}, {userName ? userName.split(" ")[0] : "Guest"}
+>>>>>>> b77b84636852b0f227c848e245f2889301091319
             </h2>
           </div>
           <div className="flex flex-col items-end gap-2">

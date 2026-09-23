@@ -50,7 +50,7 @@ export default function MetroScreen() {
   };
 
   return (
-    <div className="flex flex-col h-screen overflow-y-auto no-scrollbar pb-24 bg-surface-black px-4 pt-8">
+    <div className="flex flex-col h-[100dvh] overflow-y-auto no-scrollbar pb-24 bg-surface-black px-4 pt-8">
       
       {/* Header & Live Wallet Display */}
       <div className="mb-6 flex justify-between items-start">

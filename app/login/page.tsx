@@ -137,7 +137,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-surface-black px-6 py-12 justify-center relative">
+    <div className="flex flex-col min-h-[100dvh] bg-surface-black px-6 py-12 justify-center relative">
       <div className="absolute top-10 left-1/2 -translate-x-1/2 w-64 h-64 bg-brand-accent/10 rounded-full blur-3xl pointer-events-none" />
 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-sm mx-auto relative z-10">

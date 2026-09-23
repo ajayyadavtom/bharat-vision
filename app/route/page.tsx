@@ -147,7 +147,7 @@ export default function RoutePlannerScreen() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-slate-100 dark:bg-[#09090b] relative overflow-hidden">
+    <div className="flex flex-col h-[100dvh] bg-slate-100 dark:bg-[#09090b] relative overflow-hidden">
       
       {/* Top Half: Live Map View */}
       <div className={`absolute top-0 left-0 right-0 transition-all duration-500 ease-in-out ${routeResult ? 'h-[40vh]' : 'h-[60vh]'} z-0`}>
@@ -159,13 +159,13 @@ export default function RoutePlannerScreen() {
       {/* Bottom Half: Interactive Sheet */}
       <motion.div 
         layout
-        className={`absolute bottom-0 left-0 right-0 bg-slate-100 dark:bg-[#09090b] rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)] dark:shadow-[0_-10px_40px_rgba(0,0,0,0.5)] z-20 flex flex-col transition-all duration-500 ease-in-out pb-[90px] ${routeResult ? 'h-[65vh]' : 'h-[45vh]'}`}
+        className={`absolute bottom-0 left-0 right-0 bg-slate-100 dark:bg-[#09090b] rounded-t-3xl shadow-[0_-15px_40px_rgba(0,0,0,0.2)] dark:shadow-[0_-15px_40px_rgba(0,0,0,0.6)] z-20 flex flex-col transition-all duration-500 ease-in-out pb-[85px] ${routeResult ? 'h-[75vh]' : 'h-[60vh]'}`}
       >
         <div className="w-full flex justify-center pt-3 pb-2 flex-shrink-0 cursor-grab">
           <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full"></div>
         </div>
 
-        <div className="flex-1 overflow-y-auto no-scrollbar px-5 pb-6">
+        <div className="flex-1 overflow-y-auto no-scrollbar px-5 pb-4" style={{ WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain' }}>
           {!routeResult ? (
             // Search Form View
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col gap-4 mt-2">
@@ -226,14 +226,6 @@ export default function RoutePlannerScreen() {
 
               {/* Real-time Weather & Rain-Safe Routing Widget */}
               <WeatherWidget isRainSafe={isRainSafe} setIsRainSafe={setIsRainSafe} locationName={origin} />
-
-              <button
-                onClick={() => handleSearchRoute()}
-                disabled={loading || isListening}
-                className="w-full bg-emerald-500 dark:bg-emerald-600 text-slate-900 dark:text-white font-bold py-4 rounded-2xl text-sm shadow-[0_0_20px_rgba(16,185,129,0.2)] active:scale-95 transition-transform mt-4 disabled:opacity-50 hover:bg-emerald-400"
-              >
-                {loading ? "Calculating Multi-Modal Matrix..." : "Find Optimal Route"}
-              </button>
             </motion.div>
           ) : (
             // Results Timeline View
@@ -298,15 +290,28 @@ export default function RoutePlannerScreen() {
                 </div>
               </div>
 
-              <button
-                onClick={() => { alert("Journey booked successfully! QR tokens loaded to Pass screen."); router.push("/pass"); }}
-                className="w-full bg-emerald-500 dark:bg-emerald-600 text-slate-900 dark:text-white font-black py-4 rounded-2xl text-sm shadow-[0_0_20px_rgba(16,185,129,0.3)] active:scale-95 transition-transform flex items-center justify-center gap-2 mb-4 hover:bg-emerald-400"
-              >
-                <ShieldCheck size={18} />
-                <span>Buy Complete Pass (₹{routeResult.totalFare})</span>
-              </button>
-
             </motion.div>
+          )}
+        </div>
+
+        {/* Fixed Footer for Buttons inside the sheet */}
+        <div className="px-5 pt-3 pb-6 bg-slate-100 dark:bg-[#09090b] border-t border-slate-200 dark:border-slate-800 shrink-0 z-50 shadow-[0_-10px_20px_rgba(0,0,0,0.02)]">
+          {!routeResult ? (
+            <button
+              onClick={() => handleSearchRoute()}
+              disabled={loading || isListening}
+              className="w-full bg-emerald-500 dark:bg-emerald-600 text-slate-900 dark:text-white font-bold py-4 rounded-2xl text-sm shadow-[0_0_20px_rgba(16,185,129,0.2)] active:scale-95 transition-transform disabled:opacity-50 hover:bg-emerald-400"
+            >
+              {loading ? "Calculating Multi-Modal Matrix..." : "Find Optimal Route"}
+            </button>
+          ) : (
+            <button
+              onClick={() => { alert("Journey booked successfully! QR tokens loaded to Pass screen."); router.push("/pass"); }}
+              className="w-full bg-emerald-500 dark:bg-emerald-600 text-slate-900 dark:text-white font-black py-4 rounded-2xl text-sm shadow-[0_0_20px_rgba(16,185,129,0.3)] active:scale-95 transition-transform flex items-center justify-center gap-2 hover:bg-emerald-400"
+            >
+              <ShieldCheck size={18} />
+              <span>Buy Complete Pass (₹{routeResult.totalFare})</span>
+            </button>
           )}
         </div>
       </motion.div>

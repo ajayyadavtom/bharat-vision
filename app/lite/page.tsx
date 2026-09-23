@@ -37,7 +37,7 @@ export default function UltraLiteModeScreen() {
   };
 
   return (
-    <div className="min-h-screen bg-black px-4 py-8 text-slate-900 dark:text-white font-mono flex flex-col gap-6 selection:bg-white selection:text-black">
+    <div className="min-h-[100dvh] bg-black px-4 py-8 text-slate-900 dark:text-white font-mono flex flex-col gap-6 selection:bg-white selection:text-black">
       
       {/* High-Contrast Header */}
       <div className="border-b-4 border-white pb-4 flex justify-between items-start">

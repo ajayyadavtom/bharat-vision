@@ -11,6 +11,26 @@ export default function WeatherWidget({ isRainSafe, setIsRainSafe, locationName 
     duration: 0.5 + Math.random() * 0.7
   }));
 
+  const [aqi, setAqi] = useState<number | null>(null);
+  const [aqiColor, setAqiColor] = useState("text-emerald-400");
+
+  useEffect(() => {
+    // Fetch Real AQI for Bengaluru without needing an API key (using Open-Meteo)
+    fetch("https://air-quality-api.open-meteo.com/v1/air-quality?latitude=12.9716&longitude=77.5946&current=us_aqi")
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.current && data.current.us_aqi) {
+          const val = data.current.us_aqi;
+          setAqi(val);
+          if (val <= 50) setAqiColor("text-emerald-400");
+          else if (val <= 100) setAqiColor("text-yellow-400");
+          else if (val <= 150) setAqiColor("text-orange-400");
+          else setAqiColor("text-red-500");
+        }
+      })
+      .catch(console.error);
+  }, []);
+
   return (
     <div className="relative overflow-hidden bg-gradient-to-br from-slate-800 to-slate-950 rounded-3xl p-5 shadow-lg border border-slate-700 mt-3 text-white">
       {/* Animated Rain Drops */}
@@ -44,7 +64,9 @@ export default function WeatherWidget({ isRainSafe, setIsRainSafe, locationName 
         </div>
         <div className="bg-white/10 backdrop-blur-sm p-2 rounded-2xl border border-white/10 text-center">
           <p className="text-[10px] uppercase text-blue-200 font-bold mb-1">AQI</p>
-          <p className="text-sm font-black text-emerald-400">42</p>
+          <p className={`text-sm font-black ${aqiColor}`}>
+            {aqi !== null ? aqi : "--"}
+          </p>
         </div>
       </div>
 
