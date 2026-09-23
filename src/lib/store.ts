@@ -252,7 +252,7 @@ export const useAppStore = create<AppState>()(
               // Profile row doesn't exist yet for this auth user, create it automatically
               const newProfile = {
                 id: user.id,
-                full_name: user.email?.split('@')[0] || "JENNY", 
+                full_name: user.email?.split('@')[0] || "Guest", 
                 wallet_balance: 0,
                 karma_points: 0,
                 carbon_saved_grams: 0,
@@ -270,8 +270,8 @@ export const useAppStore = create<AppState>()(
             // Guest User: DO NOT wipe their locally earned karma points or wallet balance!
             // Only set userName to Guest if it's not already set.
             const currentState = get();
-            if (!currentState.userName || currentState.userName === "" || currentState.userName === "Guest") {
-              set({ userName: "JENNY" });
+            if (!currentState.userName || currentState.userName === "" || currentState.userName === "JENNY") {
+              set({ userName: "Guest" });
             }
           }
         } catch (error) {

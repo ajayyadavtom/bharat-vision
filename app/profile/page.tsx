@@ -111,9 +111,9 @@ export default function ProfileScreen() {
             </div>
           ) : (
             <h3 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
-              <span>{userName || "JENNY"}</span>
+              <span>{userName || "Guest"}</span>
               <button 
-                onClick={() => { setEditName(userName || "JENNY"); setIsEditingName(true); }}
+                onClick={() => { setEditName(userName || "Guest"); setIsEditingName(true); }}
                 className="p-1.5 bg-slate-100 dark:bg-slate-800 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
                 title="Edit Name"
               >

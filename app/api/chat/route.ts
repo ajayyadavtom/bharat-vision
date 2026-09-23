@@ -103,10 +103,10 @@ YOUR MISSION & CAPABILITIES:
         : "The 500D bus is delayed by 15 minutes due to heavy traffic on the Ring Road. Please check the Live Map for exact tracking.";
     } else {
       mockReply = appLang === 'kn'
-        ? "ನಮಸ್ಕಾರ! ನನ್ನ ಮುಖ್ಯ ಸರ್ವರ್‌ಗಳು ಡೌನ್ ಆಗಿವೆ, ಆದರೆ ನಾನು ಸಾಮಾನ್ಯ ಪ್ರಶ್ನೆಗಳಿಗೆ ಉತ್ತರಿಸಬಲ್ಲೆ. ಮೆಜೆಸ್ಟಿಕ್ ಬಗ್ಗೆ ಕೇಳಿ!"
+        ? "ನಮಸ್ಕಾರ! ನಿಮ್ಮ Gemini API ಕೀ ಅವಧಿ ಮುಗಿದಿದೆ (ಅಥವಾ ಅಮಾನ್ಯವಾಗಿದೆ). ದಯವಿಟ್ಟು ಹೊಸ ಕೀಲಿ ಸೇರಿಸಿ. (ಆಫ್‌ಲೈನ್ ಮೋಡ್ ಸಕ್ರಿಯವಾಗಿದೆ)"
         : appLang === 'hi'
-        ? "नमस्ते! मेरे मुख्य सर्वर अभी डाउन हैं, लेकिन मैं सामान्य सवालों के जवाब दे सकता हूँ। मजेस्टिक के बारे में पूछें!"
-        : "Namaskara! My main brain is offline due to heavy traffic, but my local backup is running. You can ask me about 'Majestic' or '500D delay'!";
+        ? "नमस्ते! आपकी Gemini API कुंजी अमान्य या समाप्त हो गई है। कृपया नई कुंजी अपडेट करें। (ऑफ़लाइन मोड सक्रिय)"
+        : "Namaskara! Your Gemini API key is invalid or revoked (401 Unauthorized). Please update `.env.local` with a new key from Google AI Studio. (Running in Offline Mode)";
     }
 
     return NextResponse.json({ reply: mockReply });
