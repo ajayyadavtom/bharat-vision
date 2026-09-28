@@ -86,10 +86,26 @@ export default function ChatScreen() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Compress image to avoid UI freeze and 413 Payload Too Large
+    const img = new Image();
     const reader = new FileReader();
+    
     reader.onload = (event) => {
-      const base64 = event.target?.result as string;
-      handleSendMessage("Where am I? What should I do next?", base64);
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const MAX_WIDTH = 800;
+        const scaleSize = MAX_WIDTH / img.width;
+        canvas.width = MAX_WIDTH;
+        canvas.height = img.height * scaleSize;
+        
+        const ctx = canvas.getContext("2d");
+        ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+        
+        // Convert back to base64 with lower quality (0.7)
+        const compressedBase64 = canvas.toDataURL("image/jpeg", 0.7);
+        handleSendMessage("Where am I? What should I do next?", compressedBase64);
+      };
     };
     reader.readAsDataURL(file);
     if (fileInputRef.current) fileInputRef.current.value = "";
