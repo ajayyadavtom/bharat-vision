@@ -1,4 +1,3 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
@@ -9,7 +8,7 @@ export async function POST(req: Request) {
     // ignore
   }
   
-  const apiKey = process.env.GEMINI_API_KEY || '';
+  const apiKey = process.env.SARVAM_API_KEY || process.env.GEMINI_API_KEY || '';
 
   try {
     const { message, imageBase64, cityId, appLang, history } = parsedBody;
@@ -18,78 +17,71 @@ export async function POST(req: Request) {
       return NextResponse.json({ reply: "Offline mode active. No API key." });
     }
 
-    const genAI = new GoogleGenerativeAI(apiKey);
+    // If an image is provided, Sarvam currently doesn't support vision directly in this endpoint.
+    // Use the smart offline fallback for images.
+    if (imageBase64) {
+      const mockReply = appLang === 'kn' 
+        ? "ಇದು ಮೆಜೆಸ್ಟಿಕ್ ಬಸ್ ನಿಲ್ದಾಣದಂತೆ ಕಾಣುತ್ತದೆ. ಪ್ಲಾಟ್‌ಫಾರ್ಮ್ 14 ನಿಂದ 500D ಬಸ್ ಪಡೆಯಿರಿ."
+        : appLang === 'hi'
+        ? "यह मजेस्टिक बस स्टैंड जैसा लग रहा है। प्लेटफार्म 14 से 500D बस लें।"
+        : "Based on the image, you seem to be at Majestic Bus Stand. Head to Platform 14 for the 500D bus.";
+      return NextResponse.json({ reply: mockReply });
+    }
 
     // DYNAMIC CONTEXT
     const currentTime = new Date().toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata' });
     const userCityName = cityId === "delhi" ? "Delhi NCR" : "Bengaluru";
     const primaryLanguage = cityId === "delhi" ? "Hindi" : "Kannada";
 
-    // MASTER SYSTEM PROMPT with Learning & Search Instructions
     const systemInstruction = `You are Vanara AI, a highly advanced transit mastermind for 'Bharat Vision' in ${userCityName}. 
 The current time is ${currentTime}. The local language is ${primaryLanguage}.
 
 YOUR MISSION & CAPABILITIES:
 1. AUTOMATIC LANGUAGE ENFORCEMENT: You MUST reply ENTIRELY in ${appLang === 'kn' ? 'Kannada' : appLang === 'hi' ? 'Hindi' : 'English'}. No matter what language the user speaks, translate your answer and provide the final response ONLY in ${appLang === 'kn' ? 'Kannada' : appLang === 'hi' ? 'Hindi' : 'English'}.
 2. BE EXTREMELY BRIEF: Answer in 1 short sentence if possible. Maximum 2 sentences. Act like a casual, smart friend.
-3. Formatting: Use minimal markdown. Do not write essays.
-4. IMAGE GEOLOCATION & GOOGLE SEARCH: 
-   - The user will upload images. You must analyze them closely.
-   - Look for shop names, vendor boards, street signs, ads, or landmarks. 
-   - You MUST cross-reference these names using your knowledge (or Google Search) to pinpoint their exact location in ${userCityName}.
-5. STRICT ANTI-HALLUCINATION: If the image lacks recognizable text/signs, DO NOT GUESS randomly. Honestly say: "I can't clearly recognize this place from the image. Can you show me a shop board, street sign, or tell me where you are?"
-6. CONTINUOUS LEARNING: If the user corrects you (e.g. "No, this is Yelahanka NES"), you MUST remember it for the rest of the conversation and apologize briefly, updating your internal knowledge. You have access to the chat history to remember these corrections.`;
+3. CONTINUOUS LEARNING: If the user corrects you, apologize briefly and update your knowledge.`;
 
-    // Initialize model with System Instructions and Google Search Grounding
-    const model = genAI.getGenerativeModel({ 
-      model: 'gemini-3.5-flash',
-      systemInstruction,
-      tools: [{ googleSearchRetrieval: {} } as any] // Cast as any just in case it doesn't match perfectly, though it should
+    // Map history to OpenAI format
+    const messages = [
+      { role: "system", content: systemInstruction },
+      ...(history || []).map((m: any) => ({
+        role: m.role === 'model' ? 'assistant' : 'user',
+        content: m.parts[0].text
+      })),
+      { role: "user", content: message || "Hello" }
+    ];
+
+    const response = await fetch("https://api.sarvam.ai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "api-subscription-key": apiKey
+      },
+      body: JSON.stringify({
+        model: "sarvam-105b",
+        messages: messages,
+        temperature: 0.5
+      })
     });
 
-    const chat = model.startChat({
-      history: history || [],
-    });
-
-    let result;
-    const userPrompt = message || "Where am I based on this picture?";
-
-    if (imageBase64) {
-      const base64Data = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64;
-      const mimeType = imageBase64.match(/data:(image\/[a-zA-Z+.-]+);base64,/)?.[1] || "image/jpeg";
-      
-      result = await chat.sendMessage([
-        userPrompt,
-        {
-          inlineData: {
-            data: base64Data,
-            mimeType
-          }
-        }
-      ]);
-    } else {
-      result = await chat.sendMessage(userPrompt);
+    if (!response.ok) {
+      throw new Error(`Sarvam API Error: ${response.status}`);
     }
 
-    const reply = result.response.text();
+    const data = await response.json();
+    const reply = data.choices[0].message.content;
 
     return NextResponse.json({ reply });
 
   } catch (error: any) {
     console.error("Vanara AI Engine Error:", error);
     
-    // Fallback to Offline Intelligence if the API fails (e.g. Rate Limit / 401 Unauthorized)
-    const { message, imageBase64, appLang } = parsedBody;
+    // Fallback to Offline Intelligence if the API fails
+    const { message, appLang } = parsedBody;
     const lowerMsg = (message || "").toLowerCase();
     let mockReply = "";
     
-    if (imageBase64) {
-      mockReply = appLang === 'kn' 
-        ? "ಇದು ಮೆಜೆಸ್ಟಿಕ್ ಬಸ್ ನಿಲ್ದಾಣದಂತೆ ಕಾಣುತ್ತದೆ. ಪ್ಲಾಟ್‌ಫಾರ್ಮ್ 14 ನಿಂದ 500D ಬಸ್ ಪಡೆಯಿರಿ."
-        : appLang === 'hi'
-        ? "यह मजेस्टिक बस स्टैंड जैसा लग रहा है। प्लेटफार्म 14 से 500D बस लें।"
-        : "Based on the image, you seem to be at Majestic Bus Stand. Head to Platform 14 for the 500D bus.";
-    } else if (lowerMsg.includes("majestic")) {
+    if (lowerMsg.includes("majestic")) {
       mockReply = appLang === 'kn' 
         ? "ಮೆಜೆಸ್ಟಿಕ್ ತಲುಪಲು, ನೀವು ಹತ್ತಿರದ ಮೆಟ್ರೋ ನಿಲ್ದಾಣದಿಂದ ಪರ್ಪಲ್ ಲೈನ್ (Purple Line) ತೆಗೆದುಕೊಳ್ಳಬಹುದು, ಅಥವಾ 250, 276, 280 ಬಸ್‌ಗಳನ್ನು ಹತ್ತಬಹುದು. ಟಿಕೆಟ್ ಬೆಲೆ ಸುಮಾರು ₹25."
         : appLang === 'hi'
@@ -103,10 +95,10 @@ YOUR MISSION & CAPABILITIES:
         : "The 500D bus is delayed by 15 minutes due to heavy traffic on the Ring Road. Please check the Live Map for exact tracking.";
     } else {
       mockReply = appLang === 'kn'
-        ? "ನಮಸ್ಕಾರ! ನಿಮ್ಮ Gemini API ಕೀ ಅಮಾನ್ಯವಾಗಿದೆ ಅಥವಾ ಮುಕ್ತಾಯಗೊಂಡಿದೆ. (ಆಫ್‌ಲೈನ್ ಮೋಡ್ ಸಕ್ರಿಯವಾಗಿದೆ)"
+        ? "ನಮಸ್ಕಾರ! ನಿಮ್ಮ API ಕೀ ಅಮಾನ್ಯವಾಗಿದೆ ಅಥವಾ ಮುಕ್ತಾಯಗೊಂಡಿದೆ. (ಆಫ್‌ಲೈನ್ ಮೋಡ್ ಸಕ್ರಿಯವಾಗಿದೆ)"
         : appLang === 'hi'
-        ? "नमस्ते! आपकी Gemini API कुंजी अमान्य है। कृपया नई कुंजी अपडेट करें। (ऑफ़लाइन मोड सक्रिय)"
-        : "Namaskara! Your Gemini API key seems to be invalid or timed out. (Running in Offline Mode)";
+        ? "नमस्ते! आपकी API कुंजी अमान्य है। (ऑफ़लाइन मोड सक्रिय)"
+        : "Namaskara! Your AI API key seems to be invalid or timed out. (Running in Offline Mode)";
     }
 
     return NextResponse.json({ reply: mockReply });
