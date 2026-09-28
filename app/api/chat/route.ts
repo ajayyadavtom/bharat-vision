@@ -8,11 +8,11 @@ export async function POST(req: Request) {
   } catch (e) {
     // ignore
   }
+  
+  const apiKey = process.env.GEMINI_API_KEY || '';
 
   try {
     const { message, imageBase64, cityId, appLang, history } = parsedBody;
-
-    const apiKey = process.env.GEMINI_API_KEY || '';
     
     if (!apiKey) {
       return NextResponse.json({ reply: "Offline mode active. No API key." });
