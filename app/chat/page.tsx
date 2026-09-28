@@ -245,6 +245,32 @@ export default function ChatScreen() {
             )}
           </motion.div>
         ))}
+        
+        {isLoading && (
+          <motion.div
+            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            className="max-w-[85%] rounded-2xl p-4 shadow-sm border bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-800/30 self-start rounded-bl-sm"
+          >
+            <div className="flex items-center gap-1.5 h-5">
+              <motion.div 
+                animate={{ y: [0, -5, 0] }} 
+                transition={{ repeat: Infinity, duration: 0.6, delay: 0 }}
+                className="w-2 h-2 bg-emerald-500 rounded-full"
+              />
+              <motion.div 
+                animate={{ y: [0, -5, 0] }} 
+                transition={{ repeat: Infinity, duration: 0.6, delay: 0.2 }}
+                className="w-2 h-2 bg-emerald-500 rounded-full"
+              />
+              <motion.div 
+                animate={{ y: [0, -5, 0] }} 
+                transition={{ repeat: Infinity, duration: 0.6, delay: 0.4 }}
+                className="w-2 h-2 bg-emerald-500 rounded-full"
+              />
+            </div>
+          </motion.div>
+        )}
       </div>
 
       {/* Bottom Area: Quick Prompts + Input (Normal Flow, No Overlap) */}
