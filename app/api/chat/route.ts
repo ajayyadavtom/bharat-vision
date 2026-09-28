@@ -8,7 +8,7 @@ export async function POST(req: Request) {
     // ignore
   }
   
-  const apiKey = process.env.SARVAM_API_KEY || process.env.GEMINI_API_KEY || '';
+  const apiKey = process.env.SARVAM_API_KEY || '';
 
   try {
     const { message, imageBase64, cityId, appLang, history } = parsedBody;
