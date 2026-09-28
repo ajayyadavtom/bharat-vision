@@ -1,15 +1,18 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Umbrella, CloudRain, MapPin, Thermometer } from "lucide-react";
 
 export default function WeatherWidget({ isRainSafe, setIsRainSafe, locationName = "Bengaluru" }: { isRainSafe: boolean, setIsRainSafe: (val: boolean) => void, locationName?: string }) {
-  // Generate random rain drops
-  const drops = Array.from({ length: 30 }).map((_, i) => ({
-    id: i,
-    x: Math.random() * 100,
-    delay: Math.random() * 1,
-    duration: 0.5 + Math.random() * 0.7
-  }));
+  const [drops, setDrops] = useState<any[]>([]);
+
+  useEffect(() => {
+    setDrops(Array.from({ length: 30 }).map((_, i) => ({
+      id: i,
+      x: Math.random() * 100,
+      delay: Math.random() * 1,
+      duration: 0.5 + Math.random() * 0.7
+    })));
+  }, []);
 
   const [aqi, setAqi] = useState<number | null>(null);
   const [aqiColor, setAqiColor] = useState("text-emerald-400");

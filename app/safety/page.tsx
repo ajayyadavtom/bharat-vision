@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ShieldAlert, PhoneCall, MessageSquareWarning, MapPin, CheckCircle2, AlertTriangle, ShieldCheck, Volume2, PhoneIncoming } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -22,7 +22,7 @@ export default function SafetyScreen() {
   const holdIntervalRef = React.useRef<NodeJS.Timeout | null>(null);
   const fakeCallTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
   
-  import React, { useEffect } from "react";
+  // inline import removed
   
   // Audio setup for Siren and Fake Call
   const sirenAudio = React.useMemo(() => typeof window !== 'undefined' ? new Audio('https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg') : null, []);

@@ -22,8 +22,8 @@ export async function POST(req: Request) {
 
     // DYNAMIC CONTEXT
     const currentTime = new Date().toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata' });
-    let userCityName = cityId === "delhi" ? "Delhi NCR" : "Bengaluru";
-    let primaryLanguage = cityId === "delhi" ? "Hindi" : "Kannada";
+    const userCityName = cityId === "delhi" ? "Delhi NCR" : "Bengaluru";
+    const primaryLanguage = cityId === "delhi" ? "Hindi" : "Kannada";
 
     // MASTER SYSTEM PROMPT with Learning & Search Instructions
     const systemInstruction = `You are Vanara AI, a highly advanced transit mastermind for 'Bharat Vision' in ${userCityName}. 

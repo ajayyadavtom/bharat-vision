@@ -180,7 +180,7 @@ export default function LiveMap({
       
       const generatePayload = (route_id: string, baseLat: number, baseLng: number, baseOcc: number): LiveFleetUpdate => {
         // Retrieve current state to drift from, or start fresh
-        let currentV = fleetUpdates[route_id]?.vehicles[0];
+        const currentV = fleetUpdates[route_id]?.vehicles[0];
         
         const lat = currentV ? currentV.lat + (Math.random() - 0.5) * 0.002 : baseLat;
         const lng = currentV ? currentV.lng + (Math.random() - 0.5) * 0.002 : baseLng;

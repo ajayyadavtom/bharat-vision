@@ -96,7 +96,7 @@ export const useAppStore = create<AppState>()(
       addChatMessage: (msg: ChatMessage) => set((state) => {
         const newMessages = [...state.chatMessages, msg];
         
-        let newSessions = [...state.chatSessions];
+        const newSessions = [...state.chatSessions];
         let activeId = state.activeChatId;
         
         // If this is the first real message (not a bot welcome), generate a session

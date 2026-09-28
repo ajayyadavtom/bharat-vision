@@ -28,6 +28,7 @@ export async function POST(request: Request) {
       validFor: 10,
     });
   } catch (err) {
+    console.error("TOTP Error:", err);
     return NextResponse.json({ error: "Server TOTP generation failed" }, { status: 500 });
   }
 }
