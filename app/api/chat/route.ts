@@ -102,16 +102,11 @@ YOUR MISSION & CAPABILITIES:
         ? "ट्रैफिक जाम के कारण 500D बस 15 मिनट लेट है। कृपया लाइव मैप पर ट्रैक करें।"
         : "The 500D bus is delayed by 15 minutes due to heavy traffic on the Ring Road. Please check the Live Map for exact tracking.";
     } else {
-      const isInvalidKeyFormat = !apiKey.startsWith('AIza');
-      const errorMsg = isInvalidKeyFormat 
-        ? "Namaskara! The key in your `.env.local` is NOT a valid Google Gemini API Key (Valid keys always start with 'AIza'). Please generate a real key from aistudio.google.com! (Offline Mode Active)"
-        : "Namaskara! Your Gemini API key is invalid or revoked. Please update `.env.local` with a new key from Google AI Studio. (Running in Offline Mode)";
-        
       mockReply = appLang === 'kn'
-        ? "ನಮಸ್ಕಾರ! ನಿಮ್ಮ Gemini API ಕೀ ಅಮಾನ್ಯವಾಗಿದೆ. ದಯವಿಟ್ಟು ಹೊಸ ಕೀಲಿ ಸೇರಿಸಿ. (ಆಫ್‌ಲೈನ್ ಮೋಡ್ ಸಕ್ರಿಯವಾಗಿದೆ)"
+        ? "ನಮಸ್ಕಾರ! ನಿಮ್ಮ Gemini API ಕೀ ಅಮಾನ್ಯವಾಗಿದೆ ಅಥವಾ ಮುಕ್ತಾಯಗೊಂಡಿದೆ. (ಆಫ್‌ಲೈನ್ ಮೋಡ್ ಸಕ್ರಿಯವಾಗಿದೆ)"
         : appLang === 'hi'
         ? "नमस्ते! आपकी Gemini API कुंजी अमान्य है। कृपया नई कुंजी अपडेट करें। (ऑफ़लाइन मोड सक्रिय)"
-        : errorMsg;
+        : "Namaskara! Your Gemini API key seems to be invalid or timed out. (Running in Offline Mode)";
     }
 
     return NextResponse.json({ reply: mockReply });
