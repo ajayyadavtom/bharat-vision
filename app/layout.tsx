@@ -19,6 +19,15 @@ export const metadata: Metadata = {
   title: "Bharat Vision | Namma Bengaluru",
   description: "Next-generation civic transit platform for Bengaluru.",
   manifest: "/manifest.json",
+  icons: {
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/icon.png", type: "image/png" },
+    ],
+    apple: [
+      { url: "/apple-icon.png" },
+    ],
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
