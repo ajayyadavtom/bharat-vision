@@ -18,6 +18,13 @@ export interface ChatSession {
   messages: ChatMessage[];
 }
 
+export interface EmergencyContact {
+  id: string;
+  name: string;
+  phone: string;
+  relation: string;
+}
+
 interface AppState {
   appLang: string;
   setAppLang: (lang: string) => void;
@@ -60,6 +67,12 @@ interface AppState {
   setActivePass: (pass: any) => void;
   mockDeviceToggle: boolean;
   setMockDeviceToggle: (val: boolean) => void;
+  
+  // Emergency Contacts
+  emergencyContacts: EmergencyContact[];
+  addEmergencyContact: (contact: Omit<EmergencyContact, "id">) => void;
+  removeEmergencyContact: (id: string) => void;
+  updateEmergencyContact: (contact: EmergencyContact) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -88,6 +101,20 @@ export const useAppStore = create<AppState>()(
       setMockDeviceToggle: (val) => set({ mockDeviceToggle: val }),
       appLang: "en",
       setAppLang: (lang: string) => set({ appLang: lang }),
+      
+      emergencyContacts: [
+        { id: "default-1", name: "Family Guardian", phone: "9876543210", relation: "Family" },
+        { id: "default-2", name: "Women Helpline", phone: "1091", relation: "Safety Helpline" }
+      ],
+      addEmergencyContact: (contact) => set((state) => ({
+        emergencyContacts: [...state.emergencyContacts, { ...contact, id: Date.now().toString() }]
+      })),
+      removeEmergencyContact: (id) => set((state) => ({
+        emergencyContacts: state.emergencyContacts.filter((c) => c.id !== id)
+      })),
+      updateEmergencyContact: (contact) => set((state) => ({
+        emergencyContacts: state.emergencyContacts.map((c) => c.id === contact.id ? contact : c)
+      })),
       
       setCurrentCity: (cityId: string) => {
         set({ currentCity: cityId });
