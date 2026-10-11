@@ -105,9 +105,10 @@ YOUR MISSION & CAPABILITIES:
         "api-subscription-key": apiKey
       },
       body: JSON.stringify({
-        model: "sarvam-105b",
+        model: "sarvam-105b-conversations",
         messages: messages,
-        temperature: 0.5
+        temperature: 0.5,
+        max_tokens: 300
       })
     });
 
@@ -116,7 +117,7 @@ YOUR MISSION & CAPABILITIES:
     }
 
     const data = await response.json();
-    const reply = data.choices[0].message.content;
+    const reply = data.choices?.[0]?.message?.content || "Namaskara! How can I help you with your transit journey today?";
 
     return NextResponse.json({ reply });
 
