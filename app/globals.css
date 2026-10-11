@@ -47,8 +47,17 @@ body {
   scrollbar-width: none;  /* Firefox */
 }
 
-/* Smooth touch scrolling for all scroll containers on mobile */
-.no-scrollbar {
+/* Smooth touch scrolling and hardware acceleration for mobile */
+html, body {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.no-scrollbar, .overflow-y-auto, .overflow-x-auto {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
+  transform: translateZ(0);
+  will-change: transform, scroll-position;
 }

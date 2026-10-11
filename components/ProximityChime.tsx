@@ -59,7 +59,7 @@ export default function ProximityChime() {
 
   if (!isTracking && !hasTriggered) {
     return (
-      <div className="bg-surface-dark border border-slate-200 dark:border-brand-dark p-4 rounded-3xl shadow-lg mt-6">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-3xl shadow-sm mt-6">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <BellRing size={18} className="text-slate-500 dark:text-gray-400" />
@@ -71,7 +71,7 @@ export default function ProximityChime() {
         </p>
         <button
           onClick={enableTracking}
-          className="w-full bg-brand-dark hover:bg-brand-base border border-brand-base text-brand-light font-bold py-3 rounded-xl text-xs active:scale-95 transition-all flex items-center justify-center gap-2"
+          className="w-full bg-teal-600 hover:bg-teal-700 dark:bg-brand-dark dark:hover:bg-brand-base border border-teal-600 dark:border-brand-base text-white dark:text-brand-light font-bold py-3 rounded-xl text-xs active:scale-95 transition-all flex items-center justify-center gap-2 shadow-xs"
         >
           <MapPin size={16} /> Set Alarm for {targetStop}
         </button>
@@ -87,30 +87,30 @@ export default function ProximityChime() {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 1.05 }}
-          className="bg-surface-dark border border-brand-base p-4 rounded-3xl shadow-[0_5px_20px_rgba(20,184,166,0.1)] mt-6 relative overflow-hidden"
+          className="bg-white dark:bg-slate-900 border border-teal-500/50 dark:border-brand-base p-4 rounded-3xl shadow-sm mt-6 relative overflow-hidden"
         >
           {/* Radar Sweep Animation */}
-          <div className="absolute inset-0 bg-brand-accent/5 animate-[pulse_2s_infinite] pointer-events-none"></div>
+          <div className="absolute inset-0 bg-teal-500/5 animate-[pulse_2s_infinite] pointer-events-none"></div>
 
           <div className="flex justify-between items-center relative z-10">
             <div className="flex items-center gap-3">
-              <div className="bg-surface-black p-2 rounded-full border border-slate-200 dark:border-brand-dark">
-                <Bus size={20} className="text-brand-accent" />
+              <div className="bg-slate-100 dark:bg-slate-800 p-2 rounded-full border border-slate-200 dark:border-slate-700">
+                <Bus size={20} className="text-teal-600 dark:text-teal-400" />
               </div>
               <div>
-                <p className="text-[10px] uppercase tracking-widest text-brand-light font-bold mb-0.5">Live Distance</p>
+                <p className="text-[10px] uppercase tracking-widest text-teal-600 dark:text-teal-400 font-bold mb-0.5">Live Distance</p>
                 <p className="text-xl font-black text-slate-900 dark:text-white">{distance} <span className="text-xs text-slate-500 dark:text-gray-400 font-semibold">meters</span></p>
               </div>
             </div>
             
             <div className="text-right flex flex-col items-end">
-              <Volume2 size={16} className="text-brand-accent mb-1 animate-pulse" />
+              <Volume2 size={16} className="text-teal-600 dark:text-teal-400 mb-1 animate-pulse" />
               <p className="text-[10px] text-slate-500 dark:text-gray-400 font-bold uppercase tracking-wider">Alarm Armed</p>
             </div>
           </div>
           
           {/* Progress Bar */}
-          <div className="w-full bg-surface-black h-2 rounded-full mt-4 overflow-hidden border border-slate-200 dark:border-surface-dark relative z-10">
+          <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full mt-4 overflow-hidden border border-slate-200 dark:border-slate-700 relative z-10">
             <motion.div 
               className="h-full bg-brand-accent"
               initial={{ width: "0%" }}
