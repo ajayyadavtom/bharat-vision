@@ -95,8 +95,8 @@ export default function ChatScreen() {
       img.onload = () => {
         const canvas = document.createElement("canvas");
         const MAX_WIDTH = 800;
-        const scaleSize = MAX_WIDTH / img.width;
-        canvas.width = MAX_WIDTH;
+        const scaleSize = img.width > MAX_WIDTH ? MAX_WIDTH / img.width : 1;
+        canvas.width = img.width * scaleSize;
         canvas.height = img.height * scaleSize;
         
         const ctx = canvas.getContext("2d");
