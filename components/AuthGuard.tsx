@@ -27,20 +27,26 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
       if (typeof window !== "undefined") {
         const hash = window.location.hash;
         const search = window.location.search;
-        if (hash.includes("access_token") || search.includes("code")) {
-          try {
-            const { data } = await supabase.auth.getSession();
-            if (data.session?.user) {
-              sessionStorage.setItem("bv-auth", "true");
-              if (data.session.user.email) {
-                setUserName(data.session.user.user_metadata?.full_name || data.session.user.email.split("@")[0]);
+        if (hash.includes("access_token") || search.includes("code") || hash.includes("refresh_token")) {
+          // Allow Supabase OAuth client to parse tokens without interrupting
+          for (let attempt = 0; attempt < 5; attempt++) {
+            try {
+              const { data } = await supabase.auth.getSession();
+              if (data.session?.user) {
+                sessionStorage.setItem("bv-auth", "true");
+                const userObj = data.session.user;
+                const displayName = userObj.user_metadata?.full_name || 
+                                    userObj.user_metadata?.name || 
+                                    (userObj.email ? userObj.email.split("@")[0] : "Commuter");
+                setUserName(displayName);
+                setIsAuthorized(true);
+                setShowSplash(false);
+                return;
               }
-              setIsAuthorized(true);
-              setShowSplash(false);
-              return;
+            } catch (e) {
+              console.warn("OAuth session parsing check:", e);
             }
-          } catch (e) {
-            console.warn("OAuth session parsing check:", e);
+            await new Promise(r => setTimeout(r, 300));
           }
         }
       }
@@ -50,9 +56,11 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
         const { data } = await supabase.auth.getSession();
         if (data.session?.user) {
           sessionStorage.setItem("bv-auth", "true");
-          if (data.session.user.email) {
-            setUserName(data.session.user.user_metadata?.full_name || data.session.user.email.split("@")[0]);
-          }
+          const userObj = data.session.user;
+          const displayName = userObj.user_metadata?.full_name || 
+                              userObj.user_metadata?.name || 
+                              (userObj.email ? userObj.email.split("@")[0] : "Commuter");
+          setUserName(displayName);
           setIsAuthorized(true);
           setShowSplash(false);
           return;
@@ -93,9 +101,11 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       if (session?.user) {
         sessionStorage.setItem("bv-auth", "true");
-        if (session.user.email) {
-          setUserName(session.user.user_metadata?.full_name || session.user.email.split("@")[0]);
-        }
+        const userObj = session.user;
+        const displayName = userObj.user_metadata?.full_name || 
+                            userObj.user_metadata?.name || 
+                            (userObj.email ? userObj.email.split("@")[0] : "Commuter");
+        setUserName(displayName);
         setIsAuthorized(true);
         setShowSplash(false);
       } else if (event === "SIGNED_OUT") {
