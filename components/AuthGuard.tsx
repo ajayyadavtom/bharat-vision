@@ -4,44 +4,130 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Zap } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { supabase } from "@/lib/supabase";
+import { useAppStore } from "@/lib/store";
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
+  const { setUserName } = useAppStore();
 
   useEffect(() => {
-    // Check if on login page
+    // If already on the login page, allow rendering immediately
     if (pathname === "/login") {
       setIsAuthorized(true);
       setShowSplash(false);
       return;
     }
 
-    const hasSeenSplash = sessionStorage.getItem("bv-splash-seen");
-    const checkAuth = () => {
-      const isAuthenticated = sessionStorage.getItem("bv-auth") || sessionStorage.getItem("bv-guest");
-      if (!isAuthenticated) {
-        router.replace("/login");
-      } else {
-        setIsAuthorized(true);
+    const checkAuth = async () => {
+      // 1. Check if OAuth redirect tokens exist in URL hash or query params
+      if (typeof window !== "undefined") {
+        const hash = window.location.hash;
+        const search = window.location.search;
+        if (hash.includes("access_token") || search.includes("code")) {
+          try {
+            const { data } = await supabase.auth.getSession();
+            if (data.session?.user) {
+              sessionStorage.setItem("bv-auth", "true");
+              if (data.session.user.email) {
+                setUserName(data.session.user.user_metadata?.full_name || data.session.user.email.split("@")[0]);
+              }
+              setIsAuthorized(true);
+              setShowSplash(false);
+              return;
+            }
+          } catch (e) {
+            console.warn("OAuth session parsing check:", e);
+          }
+        }
       }
+
+      // 2. Check active Supabase session
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (data.session?.user) {
+          sessionStorage.setItem("bv-auth", "true");
+          if (data.session.user.email) {
+            setUserName(data.session.user.user_metadata?.full_name || data.session.user.email.split("@")[0]);
+          }
+          setIsAuthorized(true);
+          setShowSplash(false);
+          return;
+        }
+      } catch (e) {
+        console.warn("Supabase getSession failed:", e);
+      }
+
+      // 3. Check sessionStorage authentication flags
+      const isSessionAuth = sessionStorage.getItem("bv-auth") || sessionStorage.getItem("bv-guest");
+      if (isSessionAuth) {
+        setIsAuthorized(true);
+        setShowSplash(false);
+        return;
+      }
+
+      // 4. Check persistent local storage from Zustand
+      try {
+        const localStore = localStorage.getItem("bharat-vision-storage");
+        if (localStore) {
+          const parsed = JSON.parse(localStore);
+          if (parsed?.state?.userName && parsed.state.userName !== "Guest") {
+            sessionStorage.setItem("bv-auth", "true");
+            setIsAuthorized(true);
+            setShowSplash(false);
+            return;
+          }
+        }
+      } catch (e) {
+        // ignore
+      }
+
+      // If not authenticated, redirect to /login
+      router.replace("/login");
     };
 
+    // Real-time Supabase auth state change listener
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user) {
+        sessionStorage.setItem("bv-auth", "true");
+        if (session.user.email) {
+          setUserName(session.user.user_metadata?.full_name || session.user.email.split("@")[0]);
+        }
+        setIsAuthorized(true);
+        setShowSplash(false);
+      } else if (event === "SIGNED_OUT") {
+        sessionStorage.removeItem("bv-auth");
+        sessionStorage.removeItem("bv-guest");
+        if (pathname !== "/login") {
+          setIsAuthorized(false);
+          router.replace("/login");
+        }
+      }
+    });
+
+    const hasSeenSplash = sessionStorage.getItem("bv-splash-seen");
     if (!hasSeenSplash && pathname === "/") {
-      // First visit splash screen
       const timer = setTimeout(() => {
         sessionStorage.setItem("bv-splash-seen", "true");
         setShowSplash(false);
         checkAuth();
-      }, 2500);
-      return () => clearTimeout(timer);
+      }, 1800);
+      return () => {
+        clearTimeout(timer);
+        authListener?.subscription.unsubscribe();
+      };
     } else {
       setShowSplash(false);
       checkAuth();
     }
-  }, [pathname, router]);
+
+    return () => {
+      authListener?.subscription.unsubscribe();
+    };
+  }, [pathname, router, setUserName]);
 
   if (showSplash && pathname === "/") {
     return (
@@ -49,7 +135,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
         <motion.div
           initial={{ opacity: 1 }}
           exit={{ opacity: 0, scale: 1.05, filter: "blur(10px)" }}
-          transition={{ duration: 0.6, ease: "easeInOut" }}
+          transition={{ duration: 0.5, ease: "easeInOut" }}
           className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950"
         >
           <motion.div className="flex flex-col items-center">
@@ -68,7 +154,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // If not authorized and not on login, don't render children to prevent flash
+  // Prevent flash of unauthorized content
   if (!isAuthorized && pathname !== "/login") {
     return <div className="min-h-screen bg-slate-50 dark:bg-slate-950" />;
   }
