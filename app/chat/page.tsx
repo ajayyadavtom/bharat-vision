@@ -193,7 +193,7 @@ export default function ChatScreen() {
               <div className="p-4 border-b border-slate-200 dark:border-slate-800">
                 <button 
                   onClick={() => { startNewChat(); setIsSidebarOpen(false); }}
-                  className="w-full flex items-center justify-center gap-2 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 rounded-xl py-3 font-bold text-sm active:scale-95 transition-all"
+                  className="w-full flex items-center justify-center gap-2 bg-slate-900 text-white dark:bg-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 rounded-xl py-3 font-bold text-sm active:scale-95 transition-all shadow-sm"
                 >
                   <PlusCircle size={18} /> New Conversation
                 </button>
@@ -233,18 +233,18 @@ export default function ChatScreen() {
       <div className="p-4 pt-8 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center z-10 shadow-sm">
         <div className="flex items-center gap-3">
           <div className="relative">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-500/10 via-teal-500/10 to-slate-100 dark:from-emerald-950/40 dark:via-slate-800 dark:to-slate-900 border border-emerald-500/30 flex items-center justify-center p-2 shadow-sm">
+            <div className="w-10 h-10 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 flex items-center justify-center p-2 shadow-xs">
               <img src="/vanara-logo.png" alt="Vanara AI" className="w-full h-full object-contain dark:invert" />
             </div>
-            <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full animate-pulse" />
+            <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full animate-pulse" />
           </div>
           <div className="flex flex-col">
             <div className="flex items-center gap-1.5">
               <h1 className="text-base font-black tracking-tight text-slate-900 dark:text-white">Vanara AI</h1>
-              <span className="px-1.5 py-0.5 text-[9px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-full border border-emerald-500/20 uppercase tracking-wider">Assistant</span>
+              <span className="px-1.5 py-0.5 text-[9px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-full border border-slate-200 dark:border-slate-700 uppercase tracking-wider">Assistant</span>
             </div>
             <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1">
-              <Sparkles size={10} className="text-emerald-500" /> Transit Intelligence • Active
+              <Sparkles size={10} className="text-emerald-500" /> Transit Intelligence • Online
             </p>
           </div>
         </div>
@@ -258,27 +258,27 @@ export default function ChatScreen() {
         {chatMessages.map((msg) => (
           <div
             key={msg.id}
-            className={`flex gap-2 items-end ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
+            className={`flex gap-2.5 items-end ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
           >
             {msg.sender === "bot" && (
-              <div className="w-7 h-7 rounded-xl bg-white dark:bg-slate-800 border border-emerald-500/30 flex items-center justify-center p-1.5 shrink-0 mb-0.5 shadow-xs">
+              <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 flex items-center justify-center p-1.5 shrink-0 mb-0.5 shadow-xs">
                 <img src="/vanara-logo.png" alt="Vanara AI" className="w-full h-full object-contain dark:invert" />
               </div>
             )}
             <motion.div
               initial={{ opacity: 0, y: 10, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              className={`max-w-[82%] rounded-2xl p-4 shadow-sm border ${
+              className={`max-w-[84%] rounded-2xl p-4 shadow-xs border transition-colors ${
                 msg.sender === "user" 
-                  ? "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-br-sm" 
-                  : "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-800/30 text-emerald-900 dark:text-emerald-100 rounded-bl-sm"
+                  ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 border-slate-900 dark:border-slate-100 rounded-br-sm" 
+                  : "bg-white dark:bg-slate-900 border-slate-200/90 dark:border-slate-800 text-slate-800 dark:text-slate-100 rounded-bl-sm"
               }`}
             >
               {msg.image && (
-                <img src={msg.image} alt="User upload" className="w-full rounded-xl mb-3 border border-slate-200 dark:border-slate-700" />
+                <img src={msg.image} alt="User upload" className="w-full rounded-xl mb-3 border border-slate-200 dark:border-slate-700 object-cover max-h-60" />
               )}
               {msg.sender === "bot" ? (
-                <div className="prose prose-sm dark:prose-invert max-w-none prose-p:leading-relaxed prose-pre:bg-slate-100 dark:prose-pre:bg-slate-800 prose-pre:border prose-pre:border-slate-200 dark:prose-pre:border-slate-700">
+                <div className="prose prose-sm max-w-none text-slate-800 dark:text-slate-200 prose-p:leading-relaxed prose-p:text-slate-800 dark:prose-p:text-slate-200 prose-headings:text-slate-900 dark:prose-headings:text-white prose-strong:text-slate-900 dark:prose-strong:text-white prose-code:text-emerald-700 dark:prose-code:text-emerald-400 prose-code:bg-slate-100 dark:prose-code:bg-slate-800/80 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md prose-code:text-xs prose-pre:bg-slate-900 prose-pre:text-slate-100 dark:prose-pre:bg-slate-950 prose-pre:border prose-pre:border-slate-800">
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.text}</ReactMarkdown>
                 </div>
               ) : (
@@ -289,30 +289,30 @@ export default function ChatScreen() {
         ))}
         
         {isLoading && (
-          <div className="flex gap-2 items-end justify-start">
-            <div className="w-7 h-7 rounded-xl bg-white dark:bg-slate-800 border border-emerald-500/30 flex items-center justify-center p-1.5 shrink-0 mb-0.5 shadow-xs">
+          <div className="flex gap-2.5 items-end justify-start">
+            <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 flex items-center justify-center p-1.5 shrink-0 mb-0.5 shadow-xs">
               <img src="/vanara-logo.png" alt="Vanara AI" className="w-full h-full object-contain dark:invert animate-pulse" />
             </div>
             <motion.div
               initial={{ opacity: 0, y: 10, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              className="max-w-[82%] rounded-2xl p-4 shadow-sm border bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-800/30 self-start rounded-bl-sm"
+              className="max-w-[84%] rounded-2xl p-3.5 px-4 shadow-xs border bg-white dark:bg-slate-900 border-slate-200/90 dark:border-slate-800 self-start rounded-bl-sm"
             >
               <div className="flex items-center gap-1.5 h-5">
                 <motion.div 
                   animate={{ y: [0, -5, 0] }} 
                   transition={{ repeat: Infinity, duration: 0.6, delay: 0 }}
-                  className="w-2 h-2 bg-emerald-500 rounded-full"
+                  className="w-2 h-2 bg-slate-400 dark:bg-slate-500 rounded-full"
                 />
                 <motion.div 
                   animate={{ y: [0, -5, 0] }} 
                   transition={{ repeat: Infinity, duration: 0.6, delay: 0.2 }}
-                  className="w-2 h-2 bg-emerald-500 rounded-full"
+                  className="w-2 h-2 bg-slate-400 dark:bg-slate-500 rounded-full"
                 />
                 <motion.div 
                   animate={{ y: [0, -5, 0] }} 
                   transition={{ repeat: Infinity, duration: 0.6, delay: 0.4 }}
-                  className="w-2 h-2 bg-emerald-500 rounded-full"
+                  className="w-2 h-2 bg-slate-400 dark:bg-slate-500 rounded-full"
                 />
               </div>
             </motion.div>
@@ -333,7 +333,7 @@ export default function ChatScreen() {
               transition={{ delay: 0.3 + index * 0.1 }} 
               onClick={() => handleSendMessage(prompt)}
               disabled={isLoading}
-              className="whitespace-nowrap shrink-0 text-left bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-medium text-slate-600 dark:text-slate-300 py-2 px-4 rounded-full hover:bg-emerald-50 dark:hover:bg-slate-800 hover:text-emerald-700 dark:hover:text-white transition-colors disabled:opacity-50 shadow-sm"
+              className="whitespace-nowrap shrink-0 text-left bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-medium text-slate-700 dark:text-slate-300 py-2 px-3.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white hover:border-slate-300 dark:hover:border-slate-700 transition-all disabled:opacity-50 shadow-xs"
             >
               {prompt}
             </motion.button>
@@ -346,23 +346,23 @@ export default function ChatScreen() {
             <button 
               onClick={() => fileInputRef.current?.click()}
               disabled={isLoading}
-              className="w-12 h-12 rounded-full flex items-center justify-center shrink-0 shadow-sm transition-all bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50"
+              className="w-12 h-12 rounded-full flex items-center justify-center shrink-0 shadow-xs transition-all bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white disabled:opacity-50"
             >
               <Camera size={20} />
             </button>
             <button 
               onClick={toggleListening}
               disabled={isLoading}
-              className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 shadow-sm transition-all disabled:opacity-50 ${
+              className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 shadow-xs transition-all disabled:opacity-50 ${
                 isListening 
-                  ? "bg-red-500 animate-pulse text-slate-900 dark:text-white" 
-                  : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+                  ? "bg-red-500 animate-pulse text-white" 
+                  : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
               {isListening ? <StopCircle size={20} /> : <Mic size={20} />}
             </button>
             
-            <div className="flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[24px] flex items-center px-4 min-h-[48px] shadow-sm focus-within:border-emerald-500 transition-colors">
+            <div className="flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full flex items-center px-4 min-h-[48px] shadow-xs focus-within:border-slate-400 dark:focus-within:border-slate-600 focus-within:ring-2 focus-within:ring-slate-100 dark:focus-within:ring-slate-800 transition-all">
               <input
                 type="text"
                 value={inputText}
@@ -377,9 +377,9 @@ export default function ChatScreen() {
                 <button 
                   onClick={() => handleSendMessage(inputText)}
                   disabled={!inputText.trim()}
-                  className="text-emerald-500 disabled:text-slate-300 dark:disabled:text-slate-700 disabled:bg-transparent bg-emerald-50 dark:bg-emerald-900/30 p-1.5 rounded-full transition-colors shrink-0 ml-2"
+                  className="w-8 h-8 rounded-full bg-slate-900 text-white dark:bg-white dark:text-slate-900 disabled:opacity-30 disabled:pointer-events-none flex items-center justify-center transition-all shrink-0 ml-2 shadow-xs hover:scale-105 active:scale-95"
                 >
-                  <Send size={16} />
+                  <Send size={14} className="translate-x-[0.5px]" />
                 </button>
               )}
             </div>
