@@ -141,6 +141,9 @@ export default function LiveMap({
 
   const [fleetUpdates, setFleetUpdates] = useState<Record<string, LiveFleetUpdate>>({});
   const [wsConnected, setWsConnected] = useState(false);
+  const [mapLayer, setMapLayer] = useState<"carto" | "mappls">("carto");
+  const [mapplsError, setMapplsError] = useState(false);
+  const mapplsKey = process.env.NEXT_PUBLIC_MAPPLS_KEY || "lhvxctxtboznvhqkwtgkawgxjakfvxlmlfhu";
   
   // Calculate dynamic map center
   let mapCenter: [number, number] = cityData.coordinates;
@@ -225,6 +228,26 @@ export default function LiveMap({
   return (
     <div className="w-full h-full relative z-0 bg-surface-black">
       
+      {/* Map Layer Switcher Button Overlay */}
+      <div className="absolute top-3 left-3 z-[400] flex items-center gap-1.5 bg-surface-black/90 backdrop-blur-md px-3 py-1.5 rounded-full border border-slate-200 dark:border-brand-dark shadow-2xl">
+        <button
+          type="button"
+          onClick={() => {
+            setMapplsError(false);
+            setMapLayer(prev => prev === "carto" ? "mappls" : "carto");
+          }}
+          className="text-[10px] font-bold text-slate-700 dark:text-slate-200 hover:text-brand flex items-center gap-1.5 transition-colors cursor-pointer"
+        >
+          <span>🗺️</span>
+          <span>{mapLayer === "mappls" ? "Mappls MapmyIndia" : "CARTO Dark"}</span>
+        </button>
+        {mapplsError && (
+          <span className="text-[8px] text-amber-500 font-bold uppercase tracking-wider pl-1.5 border-l border-slate-700">
+            Fallback
+          </span>
+        )}
+      </div>
+
       {/* WebSocket Status Badge Overlay */}
       <div className="absolute top-3 right-3 z-[400] bg-surface-black/90 backdrop-blur-md px-3 py-1.5 rounded-full border border-slate-200 dark:border-brand-dark flex items-center gap-2 shadow-2xl">
         <span className={`w-2.5 h-2.5 rounded-full ${wsConnected ? "bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]" : "bg-amber-400"}`}></span>
@@ -249,10 +272,25 @@ export default function LiveMap({
       >
         <MapController center={mapCenter} bounds={mapBounds} />
         
-        <TileLayer
-          attribution='&copy; CARTO'
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-        />
+        {mapLayer === "mappls" && !mapplsError ? (
+          <TileLayer
+            key="mappls-tile-layer"
+            attribution='&copy; <a href="https://www.mappls.com" target="_blank" rel="noreferrer">Mappls</a>'
+            url={`https://tile.mappls.com/raster_tiles/{z}/{x}/{y}.png?access_token=${mapplsKey}`}
+            eventHandlers={{
+              tileerror: () => {
+                setMapplsError(true);
+                setMapLayer("carto");
+              }
+            }}
+          />
+        ) : (
+          <TileLayer
+            key="carto-tile-layer"
+            attribution='&copy; CARTO'
+            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          />
+        )}
 
         {userLocation && (
           <Marker position={userLocation} icon={L.divIcon({
