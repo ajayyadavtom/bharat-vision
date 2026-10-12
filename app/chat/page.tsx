@@ -177,8 +177,16 @@ export default function ChatScreen() {
               className="absolute top-0 bottom-0 left-0 w-3/4 max-w-sm bg-white dark:bg-slate-900 shadow-2xl z-50 flex flex-col border-r border-slate-200 dark:border-slate-800"
             >
               <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
-                <h2 className="text-lg font-black text-slate-900 dark:text-white">Chat History</h2>
-                <button onClick={() => setIsSidebarOpen(false)} className="text-slate-500 hover:text-slate-900 dark:hover:text-white">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-1.5 flex items-center justify-center shadow-xs">
+                    <img src="/vanara-logo.png" alt="Vanara AI" className="w-full h-full object-contain dark:invert" />
+                  </div>
+                  <div>
+                    <h2 className="text-base font-black text-slate-900 dark:text-white leading-tight">Vanara AI</h2>
+                    <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider">Conversations</p>
+                  </div>
+                </div>
+                <button onClick={() => setIsSidebarOpen(false)} className="text-slate-500 hover:text-slate-900 dark:hover:text-white p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
                   <X size={20} />
                 </button>
               </div>
@@ -223,12 +231,21 @@ export default function ChatScreen() {
 
       {/* Header */}
       <div className="p-4 pt-8 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center z-10 shadow-sm">
-        <div className="flex flex-col gap-1">
-          <h2 className="text-[10px] text-emerald-600 dark:text-emerald-400 uppercase tracking-[0.2em] font-bold flex items-center gap-1">
-            <Sparkles size={10} /> Vanara AI Assistant
-          </h2>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-black tracking-tight text-slate-900 dark:text-white">Ask Anything</h1>
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-500/10 via-teal-500/10 to-slate-100 dark:from-emerald-950/40 dark:via-slate-800 dark:to-slate-900 border border-emerald-500/30 flex items-center justify-center p-2 shadow-sm">
+              <img src="/vanara-logo.png" alt="Vanara AI" className="w-full h-full object-contain dark:invert" />
+            </div>
+            <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full animate-pulse" />
+          </div>
+          <div className="flex flex-col">
+            <div className="flex items-center gap-1.5">
+              <h1 className="text-base font-black tracking-tight text-slate-900 dark:text-white">Vanara AI</h1>
+              <span className="px-1.5 py-0.5 text-[9px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-full border border-emerald-500/20 uppercase tracking-wider">Assistant</span>
+            </div>
+            <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1">
+              <Sparkles size={10} className="text-emerald-500" /> Transit Intelligence • Active
+            </p>
           </div>
         </div>
         <button onClick={() => setIsSidebarOpen(true)} className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors shadow-inner">
@@ -239,53 +256,67 @@ export default function ChatScreen() {
       {/* Chat Area */}
       <div ref={scrollContainerRef} className="flex-1 overflow-y-auto no-scrollbar p-4 flex flex-col gap-4 scroll-smooth">
         {chatMessages.map((msg) => (
-          <motion.div
+          <div
             key={msg.id}
-            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            className={`max-w-[85%] rounded-2xl p-4 shadow-sm border ${
-              msg.sender === "user" 
-                ? "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 self-end text-slate-900 dark:text-white rounded-br-sm" 
-                : "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-800/30 self-start text-emerald-900 dark:text-emerald-100 rounded-bl-sm"
-            }`}
+            className={`flex gap-2 items-end ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
           >
-            {msg.image && (
-              <img src={msg.image} alt="User upload" className="w-full rounded-xl mb-3 border border-slate-200 dark:border-slate-700" />
-            )}
-            {msg.sender === "bot" ? (
-              <div className="prose prose-sm dark:prose-invert max-w-none prose-p:leading-relaxed prose-pre:bg-slate-100 dark:prose-pre:bg-slate-800 prose-pre:border prose-pre:border-slate-200 dark:prose-pre:border-slate-700">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.text}</ReactMarkdown>
+            {msg.sender === "bot" && (
+              <div className="w-7 h-7 rounded-xl bg-white dark:bg-slate-800 border border-emerald-500/30 flex items-center justify-center p-1.5 shrink-0 mb-0.5 shadow-xs">
+                <img src="/vanara-logo.png" alt="Vanara AI" className="w-full h-full object-contain dark:invert" />
               </div>
-            ) : (
-              <p className="text-sm leading-relaxed whitespace-pre-wrap font-medium">{msg.text}</p>
             )}
-          </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              className={`max-w-[82%] rounded-2xl p-4 shadow-sm border ${
+                msg.sender === "user" 
+                  ? "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-br-sm" 
+                  : "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-800/30 text-emerald-900 dark:text-emerald-100 rounded-bl-sm"
+              }`}
+            >
+              {msg.image && (
+                <img src={msg.image} alt="User upload" className="w-full rounded-xl mb-3 border border-slate-200 dark:border-slate-700" />
+              )}
+              {msg.sender === "bot" ? (
+                <div className="prose prose-sm dark:prose-invert max-w-none prose-p:leading-relaxed prose-pre:bg-slate-100 dark:prose-pre:bg-slate-800 prose-pre:border prose-pre:border-slate-200 dark:prose-pre:border-slate-700">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.text}</ReactMarkdown>
+                </div>
+              ) : (
+                <p className="text-sm leading-relaxed whitespace-pre-wrap font-medium">{msg.text}</p>
+              )}
+            </motion.div>
+          </div>
         ))}
         
         {isLoading && (
-          <motion.div
-            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            className="max-w-[85%] rounded-2xl p-4 shadow-sm border bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-800/30 self-start rounded-bl-sm"
-          >
-            <div className="flex items-center gap-1.5 h-5">
-              <motion.div 
-                animate={{ y: [0, -5, 0] }} 
-                transition={{ repeat: Infinity, duration: 0.6, delay: 0 }}
-                className="w-2 h-2 bg-emerald-500 rounded-full"
-              />
-              <motion.div 
-                animate={{ y: [0, -5, 0] }} 
-                transition={{ repeat: Infinity, duration: 0.6, delay: 0.2 }}
-                className="w-2 h-2 bg-emerald-500 rounded-full"
-              />
-              <motion.div 
-                animate={{ y: [0, -5, 0] }} 
-                transition={{ repeat: Infinity, duration: 0.6, delay: 0.4 }}
-                className="w-2 h-2 bg-emerald-500 rounded-full"
-              />
+          <div className="flex gap-2 items-end justify-start">
+            <div className="w-7 h-7 rounded-xl bg-white dark:bg-slate-800 border border-emerald-500/30 flex items-center justify-center p-1.5 shrink-0 mb-0.5 shadow-xs">
+              <img src="/vanara-logo.png" alt="Vanara AI" className="w-full h-full object-contain dark:invert animate-pulse" />
             </div>
-          </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              className="max-w-[82%] rounded-2xl p-4 shadow-sm border bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-800/30 self-start rounded-bl-sm"
+            >
+              <div className="flex items-center gap-1.5 h-5">
+                <motion.div 
+                  animate={{ y: [0, -5, 0] }} 
+                  transition={{ repeat: Infinity, duration: 0.6, delay: 0 }}
+                  className="w-2 h-2 bg-emerald-500 rounded-full"
+                />
+                <motion.div 
+                  animate={{ y: [0, -5, 0] }} 
+                  transition={{ repeat: Infinity, duration: 0.6, delay: 0.2 }}
+                  className="w-2 h-2 bg-emerald-500 rounded-full"
+                />
+                <motion.div 
+                  animate={{ y: [0, -5, 0] }} 
+                  transition={{ repeat: Infinity, duration: 0.6, delay: 0.4 }}
+                  className="w-2 h-2 bg-emerald-500 rounded-full"
+                />
+              </div>
+            </motion.div>
+          </div>
         )}
       </div>
 

@@ -36,7 +36,17 @@ export default function BottomNav() {
                   ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/50 dark:text-emerald-400" 
                   : "text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
               }`}>
-                <Icon size={isActive ? 22 : 20} className="transition-transform group-active:scale-95" />
+                {item.name === "Chat" ? (
+                  <img
+                    src="/vanara-logo.png"
+                    alt="Vanara AI"
+                    className={`w-5 h-5 object-contain transition-transform group-active:scale-95 dark:invert ${
+                      isActive ? "opacity-100 scale-110" : "opacity-60"
+                    }`}
+                  />
+                ) : (
+                  <Icon size={isActive ? 22 : 20} className="transition-transform group-active:scale-95" />
+                )}
               </div>
               <span className={`text-[9px] font-bold ${
                 isActive ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500"
