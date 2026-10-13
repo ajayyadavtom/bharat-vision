@@ -1,34 +1,42 @@
 // Bharat Vision Service Worker — Production PWA Cache
-const CACHE_NAME = "bharat-vision-v2";
+const CACHE_NAME = "bharat-vision-v4";
 const OFFLINE_URL = "/";
 
 self.addEventListener("install", (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.add(OFFLINE_URL))
   );
-  self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
-        cacheNames.filter((name) => name !== CACHE_NAME).map((name) => caches.delete(name))
+        cacheNames.map((name) => {
+          if (name !== CACHE_NAME) {
+            return caches.delete(name);
+          }
+        })
       );
     })
   );
   self.clients.claim();
 });
 
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
+});
+
 self.addEventListener("fetch", (event) => {
-  // Only cache GET requests
   if (event.request.method !== "GET") return;
 
-  // Skip Chrome extension and non-http(s) requests
   const url = new URL(event.request.url);
   if (url.protocol !== "http:" && url.protocol !== "https:") return;
 
-  // Never cache external map tile requests to prevent stale/watermarked tiles
+  // Never cache external map tile requests to prevent stale tiles
   if (
     url.hostname.includes("tile") || 
     url.hostname.includes("cartocdn") || 
@@ -39,10 +47,17 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  // Network-first strategy for dynamic pages and API calls
+  if (url.pathname.startsWith("/api/") || url.pathname === "/track" || url.pathname === "/route") {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // Clone and cache successful responses
         if (response.status === 200) {
           const responseClone = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
@@ -50,7 +65,6 @@ self.addEventListener("fetch", (event) => {
         return response;
       })
       .catch(() => {
-        // Network failed — try cache (offline fallback)
         return caches.match(event.request).then((cached) => {
           return cached || caches.match(OFFLINE_URL);
         });

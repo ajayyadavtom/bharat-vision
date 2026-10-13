@@ -12,6 +12,7 @@ import { calculateAStarRoute, MultiModalRoute } from "../../src/lib/routing";
 import { predictSmartETA } from "../../src/lib/etaModel";
 import { useAppStore } from "../../src/lib/store";
 import { useRouter } from "next/navigation";
+import { OFFICIAL_BMTC_STOPS } from "@/data/bmtcOfficialData";
 
 export default function RoutePlannerScreen() {
   const router = useRouter();
@@ -27,8 +28,8 @@ export default function RoutePlannerScreen() {
     }
   }, []);
 
-  const [origin, setOrigin] = useState("Yelahanka New Town");
-  const [destination, setDestination] = useState("Silk Board Junction");
+  const [origin, setOrigin] = useState("Yelahanka Satellite Town");
+  const [destination, setDestination] = useState("Kempegowda Station (Majestic)");
   const [routeResult, setRouteResult] = useState<MultiModalRoute | null>(null);
   const [mlEta, setMlEta] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
@@ -40,17 +41,21 @@ export default function RoutePlannerScreen() {
 
   const [simulatedPath, setSimulatedPath] = useState<[number, number][] | null>(null);
 
-  const handleSearchRoute = async (e?: React.FormEvent) => {
+  const handleSearchRoute = async (e?: React.FormEvent, customOrigin?: string, customDest?: string) => {
     if (e) e.preventDefault();
     setLoading(true);
 
-    let result = calculateAStarRoute(origin, destination);
+    const fromLoc = customOrigin || origin;
+    const toLoc = customDest || destination;
+
+    let result = calculateAStarRoute(fromLoc, toLoc);
 
     if (isRainSafe) {
       result = {
         totalDuration: 48,
         totalFare: 65,
         totalCarbon: 1200,
+        summaryText: "Weather-Shielded Route: Covered ONDC Auto + Underground Metro Transit",
         segments: [
           { mode: "Auto", title: "ONDC Auto to Metro (Covered)", durationMinutes: 10, fareRupees: 40, carbonGrams: 150 },
           { mode: "Metro", title: "Green Line → Purple Line (Underground Interchange)", durationMinutes: 35, fareRupees: 25, carbonGrams: 50 },
@@ -61,18 +66,40 @@ export default function RoutePlannerScreen() {
 
     setRouteResult(result);
     
-    // Simulate a map path for the polyline 
-    // Majestic to Silk Board roughly
-    setSimulatedPath([
-      [13.1000, 77.5950], // Yelahanka
-      [13.0120, 77.5850], // Majestic
-      [12.9172, 77.6228]  // Silk Board
-    ]);
+    // Accurate polyline matching real Bengaluru corridors
+    const oLower = fromLoc.toLowerCase();
+    const dLower = toLoc.toLowerCase();
+
+    if ((oLower.includes("yelahanka") || oLower.includes("ilanka")) && (dLower.includes("majestic") || dLower.includes("kempegowda"))) {
+      setSimulatedPath([
+        [13.1007, 77.5963], // Yelahanka New Town
+        [13.0762, 77.5929], // Jakkur Aerodrum
+        [13.0358, 77.5970], // Hebbal Flyover
+        [13.0080, 77.5810], // Mekhri Circle
+        [12.9890, 77.5750], // Sheshadripuram
+        [12.9772, 77.5713]  // Majestic KBS Platform 22
+      ]);
+    } else if (oLower.includes("yelahanka") && dLower.includes("silk")) {
+      setSimulatedPath([
+        [13.1007, 77.5963], // Yelahanka
+        [13.0358, 77.5970], // Hebbal
+        [13.0012, 77.6756], // Tin Factory / KR Puram
+        [12.9560, 77.6980], // Marathahalli
+        [12.9250, 77.6700], // Bellandur
+        [12.9172, 77.6228]  // Silk Board
+      ]);
+    } else {
+      setSimulatedPath([
+        [13.1000, 77.5950],
+        [13.0120, 77.5850],
+        [12.9172, 77.6228]
+      ]);
+    }
 
     const currentHour = new Date().getHours();
     const isPeak = (currentHour >= 8 && currentHour <= 11) || (currentHour >= 17 && currentHour <= 20);
     const predictedMinutes = await predictSmartETA(12.5, currentHour, isPeak);
-    setMlEta(isRainSafe ? result.totalDuration : predictedMinutes + 15);
+    setMlEta(isRainSafe ? result.totalDuration : predictedMinutes + 12);
 
     addKarma(5);
     setLoading(false);
@@ -150,7 +177,7 @@ export default function RoutePlannerScreen() {
     <div className="flex flex-col h-[100dvh] bg-slate-100 dark:bg-[#09090b] relative overflow-hidden">
       
       {/* Top Half: Live Map View */}
-      <div className={`absolute top-0 left-0 right-0 transition-all duration-500 ease-in-out ${routeResult ? 'h-[40vh]' : 'h-[60vh]'} z-0`}>
+      <div className={`absolute top-0 left-0 right-0 transition-all duration-500 ease-in-out ${routeResult ? 'h-[36vh]' : 'h-[54vh]'} z-0`}>
         <LiveMap routePath={simulatedPath} userLocation={userLoc as [number, number] | null} />
         {/* Fog gradient to blend map into bottom sheet */}
         <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-slate-100 dark:from-[#09090b] to-transparent z-10 pointer-events-none"></div>
@@ -159,7 +186,7 @@ export default function RoutePlannerScreen() {
       {/* Bottom Half: Interactive Sheet */}
       <motion.div 
         layout
-        className={`absolute bottom-0 left-0 right-0 bg-slate-100 dark:bg-[#09090b] rounded-t-3xl shadow-[0_-15px_40px_rgba(0,0,0,0.2)] dark:shadow-[0_-15px_40px_rgba(0,0,0,0.6)] z-20 flex flex-col transition-all duration-500 ease-in-out pb-[85px] ${routeResult ? 'h-[75vh]' : 'h-[60vh]'}`}
+        className={`absolute bottom-0 left-0 right-0 bg-slate-100 dark:bg-[#09090b] rounded-t-3xl shadow-[0_-15px_40px_rgba(0,0,0,0.2)] dark:shadow-[0_-15px_40px_rgba(0,0,0,0.6)] z-20 flex flex-col transition-all duration-500 ease-in-out pb-[85px] ${routeResult ? 'h-[78vh]' : 'h-[62vh]'}`}
       >
         <div className="w-full flex justify-center pt-3 pb-2 flex-shrink-0 cursor-grab">
           <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full"></div>
@@ -168,8 +195,61 @@ export default function RoutePlannerScreen() {
         <div className="flex-1 overflow-y-auto no-scrollbar px-5 pb-4" style={{ WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain' }}>
           {!routeResult ? (
             // Search Form View
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col gap-4 mt-2">
-              <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-2">Where to?</h2>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col gap-3.5 mt-1">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-black text-slate-900 dark:text-white">Where to?</h2>
+                <div className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-400 bg-emerald-950/40 border border-emerald-500/30 px-2.5 py-1 rounded-full">
+                  <CheckCircle2 size={12} /> Official BMTC Data
+                </div>
+              </div>
+
+              {/* Popular Real Corridors Quick Selection Pills */}
+              <div className="flex gap-2 overflow-x-auto no-scrollbar py-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOrigin("Yelahanka Satellite Town");
+                    setDestination("Kempegowda Station (Majestic)");
+                    handleSearchRoute(undefined, "Yelahanka Satellite Town", "Kempegowda Station (Majestic)");
+                  }}
+                  className="px-3 py-1.5 rounded-xl bg-surface-dark border border-slate-300 dark:border-slate-800 text-[11px] font-bold text-brand-accent whitespace-nowrap active:scale-95 shadow-sm"
+                >
+                  🚌 Yelahanka ⇄ Majestic (402-B)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOrigin("Yelahanka New Town");
+                    setDestination("Silk Board Junction");
+                    handleSearchRoute(undefined, "Yelahanka New Town", "Silk Board Junction");
+                  }}
+                  className="px-3 py-1.5 rounded-xl bg-surface-dark border border-slate-300 dark:border-slate-800 text-[11px] font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap active:scale-95 shadow-sm"
+                >
+                  ⚡ Yelahanka ⇄ Silk Board (500-D)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOrigin("Kempegowda Station (Majestic)");
+                    setDestination("Whitefield (ITPL)");
+                    handleSearchRoute(undefined, "Kempegowda Station (Majestic)", "Whitefield (ITPL)");
+                  }}
+                  className="px-3 py-1.5 rounded-xl bg-surface-dark border border-slate-300 dark:border-slate-800 text-[11px] font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap active:scale-95 shadow-sm"
+                >
+                  🚇 Majestic ⇄ Whitefield (Purple)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOrigin("Koramangala Sony World Signal");
+                    setDestination("Electronic City Phase 1");
+                    handleSearchRoute(undefined, "Koramangala Sony World Signal", "Electronic City Phase 1");
+                  }}
+                  className="px-3 py-1.5 rounded-xl bg-surface-dark border border-slate-300 dark:border-slate-800 text-[11px] font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap active:scale-95 shadow-sm"
+                >
+                  🛣️ Koramangala ⇄ E-City (356-CW)
+                </button>
+              </div>
               
               <div className="bg-white dark:bg-slate-900 p-4 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col gap-3 relative">
                 
@@ -185,7 +265,7 @@ export default function RoutePlannerScreen() {
                     value={origin}
                     onChange={(e) => setOrigin(e.target.value)}
                     className="flex-1 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white rounded-xl py-3 px-4 outline-none border border-slate-200 dark:border-slate-700 focus:border-brand-base text-sm font-semibold transition-colors"
-                    placeholder="Your Location"
+                    placeholder="Your Location (e.g. Yelahanka Satellite Town)"
                   />
                 </div>
 
@@ -199,7 +279,7 @@ export default function RoutePlannerScreen() {
                       value={destination}
                       onChange={(e) => setDestination(e.target.value)}
                       className="flex-1 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white rounded-xl py-3 px-4 outline-none border border-slate-200 dark:border-slate-700 focus:border-brand-base text-sm font-semibold transition-colors"
-                      placeholder="Destination"
+                      placeholder="Destination (e.g. Majestic Kempegowda Station)"
                     />
                     <button
                       type="button"
@@ -229,9 +309,9 @@ export default function RoutePlannerScreen() {
             </motion.div>
           ) : (
             // Results Timeline View
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-5">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-4">
               
-              <div className="flex justify-between items-center bg-white dark:bg-slate-900 p-5 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 mt-2">
+              <div className="flex justify-between items-center bg-white dark:bg-slate-900 p-5 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 mt-1">
                 <div>
                   <h3 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">{mlEta || routeResult.totalDuration} <span className="text-xl text-slate-500 font-bold">min</span></h3>
                   <div className="flex items-center gap-2 mt-2">
@@ -244,6 +324,14 @@ export default function RoutePlannerScreen() {
                   <ArrowRight size={20} className="rotate-180" />
                 </button>
               </div>
+
+              {/* Verified Corridor Summary Pill */}
+              {routeResult.summaryText && (
+                <div className="bg-emerald-950/20 border border-emerald-500/30 p-3 rounded-2xl flex items-center gap-2.5">
+                  <Bus size={16} className="text-emerald-400 shrink-0" />
+                  <p className="text-xs font-semibold text-emerald-300 leading-snug">{routeResult.summaryText}</p>
+                </div>
+              )}
 
               <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 relative">
                 <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest mb-8 text-center opacity-50">Journey Timeline</h4>
@@ -264,6 +352,14 @@ export default function RoutePlannerScreen() {
                           <h4 className="text-sm font-bold text-slate-900 dark:text-white leading-tight pr-4">{seg.title}</h4>
                           <span className="text-xs font-black text-slate-900 dark:text-white shrink-0 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md">{seg.durationMinutes} min</span>
                         </div>
+                        {seg.lineOrRoute && (
+                          <span className="inline-block bg-brand-dark text-brand-accent font-black text-[10px] px-2 py-0.5 rounded border border-brand-base mb-1.5">
+                            {seg.lineOrRoute}
+                          </span>
+                        )}
+                        {seg.details && (
+                          <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed mb-1.5">{seg.details}</p>
+                        )}
                         {seg.fareRupees > 0 && <p className="text-[10px] text-slate-500 font-bold mb-2 uppercase tracking-wider">Fare: ₹{seg.fareRupees}</p>}
                         
                         {seg.mode === 'Auto' && (

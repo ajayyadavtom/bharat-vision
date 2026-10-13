@@ -2,123 +2,147 @@ import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 
-// Lazy-loaded cached in-memory dataset
-let corridorsCache: any[] | null = null;
-let routesIndexCache: any[] | null = null;
+// In-memory cache for O(1) route lookups & autocomplete
+let routesByCodeCache: Record<string, any[]> | null = null;
+let searchIndexCache: any[] | null = null;
 
-function loadData() {
-  if (!corridorsCache) {
+function loadBmtcData() {
+  if (!routesByCodeCache) {
     try {
-      const corridorsPath = path.join(process.cwd(), "src/data/bmtc_corridors.json");
-      if (fs.existsSync(corridorsPath)) {
-        corridorsCache = JSON.parse(fs.readFileSync(corridorsPath, "utf8"));
+      const codePath = path.join(process.cwd(), "src/data/bmtc_routes_by_code.json");
+      if (fs.existsSync(codePath)) {
+        routesByCodeCache = JSON.parse(fs.readFileSync(codePath, "utf8"));
       }
     } catch (e) {
-      console.error("Failed to load bmtc_corridors.json:", e);
-      corridorsCache = [];
+      console.error("Failed to load bmtc_routes_by_code.json:", e);
+      routesByCodeCache = {};
     }
   }
 
-  if (!routesIndexCache) {
+  if (!searchIndexCache) {
     try {
-      const indexPath = path.join(process.cwd(), "src/data/bmtc_routes_index.json");
+      const indexPath = path.join(process.cwd(), "src/data/bmtc_search_index.json");
       if (fs.existsSync(indexPath)) {
-        routesIndexCache = JSON.parse(fs.readFileSync(indexPath, "utf8"));
+        searchIndexCache = JSON.parse(fs.readFileSync(indexPath, "utf8"));
       }
     } catch (e) {
-      console.error("Failed to load bmtc_routes_index.json:", e);
-      routesIndexCache = [];
+      console.error("Failed to load bmtc_search_index.json:", e);
+      searchIndexCache = [];
     }
   }
 }
 
 export async function GET(req: Request) {
-  loadData();
+  loadBmtcData();
   const { searchParams } = new URL(req.url);
   const busQuery = searchParams.get("bus");
+  const destinationQuery = searchParams.get("destination");
   const searchQuery = searchParams.get("search");
   const listAll = searchParams.get("list");
 
-  // 1. List popular routes for instant autocomplete dropdown
+  // 1. List popular routes for instant autocomplete suggestions
   if (listAll === "true") {
-    const list = (routesIndexCache || []).slice(0, 50).map((r) => ({
-      routeNumber: r.routeNumber,
-      displayName: r.displayName,
-      origin: r.origin,
-      destination: r.destination,
-      platform: r.platforms?.[0] || null,
-    }));
+    const list = (searchIndexCache || [])
+      .sort((a, b) => (b.trip_count || 0) - (a.trip_count || 0))
+      .slice(0, 50)
+      .map((r) => ({
+        routeNumber: r.name,
+        cleanCode: r.clean_code,
+        origin: r.origin,
+        destination: r.destination,
+        stopsCount: r.stops_count,
+        tripCount: r.trip_count,
+      }));
     return NextResponse.json({ routes: list });
   }
 
-  // 2. Specific bus number lookup (e.g. 500D, 250, 335E, 365, etc.)
+  // 2. Specific bus lookup with destination / direction matching
   if (busQuery) {
     const cleanBus = busQuery.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
-    
-    // Look for exact or prefix match in full corridors with GPS coordinates
-    const matchedCorridor = (corridorsCache || []).find((c) => {
-      const cClean = c.cleanRoute.toUpperCase().replace(/[^A-Z0-9]/g, "");
-      return cClean === cleanBus || cClean.startsWith(cleanBus) || cleanBus.startsWith(cClean);
-    });
 
-    if (matchedCorridor) {
+    let matches = (routesByCodeCache && routesByCodeCache[cleanBus]) || [];
+
+    // If no exact code match, try prefix match across index
+    if (matches.length === 0 && searchIndexCache) {
+      const prefixMatch = searchIndexCache.find(
+        (r) => r.clean_code === cleanBus || r.clean_code.startsWith(cleanBus)
+      );
+      if (prefixMatch && routesByCodeCache) {
+        matches = routesByCodeCache[prefixMatch.clean_code] || [];
+      }
+    }
+
+    if (matches.length > 0) {
+      // If destination query provided, pick the direction matching the destination
+      let matchedRoute = matches[0];
+      if (destinationQuery) {
+        const destLower = destinationQuery.toLowerCase().trim();
+        const destMatch = matches.find(
+          (m) =>
+            m.destination.toLowerCase().includes(destLower) ||
+            m.full_name.toLowerCase().includes(destLower)
+        );
+        if (destMatch) matchedRoute = destMatch;
+      }
+
       return NextResponse.json({
         found: true,
         route: {
-          routeNumber: matchedCorridor.cleanRoute,
-          origin: matchedCorridor.origin,
-          destination: matchedCorridor.destination,
-          stopsCount: matchedCorridor.stopsCount,
-          stops: matchedCorridor.stops,
-          stopCoordinates: matchedCorridor.stopCoordinates,
-          platform: matchedCorridor.platforms?.[0] || null,
+          routeNumber: matchedRoute.name,
+          cleanCode: matchedRoute.clean_code,
+          fullName: matchedRoute.full_name,
+          origin: matchedRoute.origin,
+          destination: matchedRoute.destination,
+          tripCount: matchedRoute.trip_count,
+          timetable: matchedRoute.timetable || [],
+          stopsCount: matchedRoute.stops?.length || 0,
+          stops: matchedRoute.stops || [],
+          stopCoordinates: (matchedRoute.stops || []).filter((s: any) => s.lat && s.lon),
+          coordinates: matchedRoute.coordinates || [],
+          availableDirections: matches.map((m: any) => ({
+            name: m.name,
+            origin: m.origin,
+            destination: m.destination,
+            tripCount: m.trip_count,
+          })),
         },
       });
     }
 
-    // Fallback: search in routes index
-    const matchedIndex = (routesIndexCache || []).find((r) => {
-      const rClean = r.routeNumber.toUpperCase().replace(/[^A-Z0-9]/g, "");
-      return rClean === cleanBus || rClean.startsWith(cleanBus);
-    });
-
-    if (matchedIndex) {
-      return NextResponse.json({
-        found: true,
-        route: {
-          routeNumber: matchedIndex.routeNumber,
-          origin: matchedIndex.origin,
-          destination: matchedIndex.destination,
-          stopsCount: matchedIndex.stopsCount,
-          stops: [matchedIndex.origin, matchedIndex.destination],
-          stopCoordinates: [],
-          platform: matchedIndex.platforms?.[0] || null,
-        },
-      });
-    }
-
-    return NextResponse.json({ found: false, message: `Bus ${busQuery} not found in BMTC directory.` }, { status: 404 });
+    return NextResponse.json(
+      { found: false, message: `Bus ${busQuery} not found in BMTC GTFS directory.` },
+      { status: 404 }
+    );
   }
 
-  // 3. Search routes by location or keyword (e.g. Majestic, Silk Board, Yelahanka)
+  // 3. Search routes by keyword (e.g. Majestic, Silk Board, Whitefield, 500D)
   if (searchQuery) {
     const q = searchQuery.toLowerCase().trim();
-    const results = (routesIndexCache || [])
+    const cleanQ = q.toUpperCase().replace(/[^A-Z0-9]/g, "");
+
+    const results = (searchIndexCache || [])
       .filter(
         (r) =>
-          r.routeNumber.toLowerCase().includes(q) ||
+          r.name.toLowerCase().includes(q) ||
+          r.clean_code.includes(cleanQ) ||
           r.origin.toLowerCase().includes(q) ||
-          r.destination.toLowerCase().includes(q) ||
-          r.displayName?.toLowerCase().includes(q)
+          r.destination.toLowerCase().includes(q)
       )
-      .slice(0, 20);
+      .slice(0, 25)
+      .map((r) => ({
+        routeNumber: r.name,
+        cleanCode: r.clean_code,
+        origin: r.origin,
+        destination: r.destination,
+        stopsCount: r.stops_count,
+        tripCount: r.trip_count,
+      }));
 
     return NextResponse.json({ results });
   }
 
   return NextResponse.json({
-    message: "BMTC GTFS Real Transit API",
-    totalRoutes: routesIndexCache?.length || 0,
-    totalCorridors: corridorsCache?.length || 0,
+    message: "BMTC Official GTFS Real Transit API",
+    totalRoutes: searchIndexCache?.length || 0,
   });
 }
