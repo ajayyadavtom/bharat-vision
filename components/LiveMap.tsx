@@ -141,9 +141,9 @@ export default function LiveMap({
 
   const [fleetUpdates, setFleetUpdates] = useState<Record<string, LiveFleetUpdate>>({});
   const [wsConnected, setWsConnected] = useState(false);
-  const [mapLayer, setMapLayer] = useState<"carto" | "mappls">("carto");
-  const [mapplsError, setMapplsError] = useState(false);
-  const mapplsKey = process.env.NEXT_PUBLIC_MAPPLS_KEY || "lhvxctxtboznvhqkwtgkawgxjakfvxlmlfhu";
+  const [mapLayer, setMapLayer] = useState<"carto" | "olamaps">("carto");
+  const [olaError, setOlaError] = useState(false);
+  const olaMapsKey = process.env.NEXT_PUBLIC_OLA_MAPS_KEY || "dBjo8v0MKCLjAFV7Sq4Gczna";
   
   // Calculate dynamic map center
   let mapCenter: [number, number] = cityData.coordinates;
@@ -233,15 +233,15 @@ export default function LiveMap({
         <button
           type="button"
           onClick={() => {
-            setMapplsError(false);
-            setMapLayer(prev => prev === "carto" ? "mappls" : "carto");
+            setOlaError(false);
+            setMapLayer(prev => prev === "carto" ? "olamaps" : "carto");
           }}
           className="text-[10px] font-bold text-slate-700 dark:text-slate-200 hover:text-brand flex items-center gap-1.5 transition-colors cursor-pointer"
         >
-          <span>🗺️</span>
-          <span>{mapLayer === "mappls" ? "Mappls MapmyIndia" : "CARTO Dark"}</span>
+          <span>🇮🇳</span>
+          <span>{mapLayer === "olamaps" ? "Ola Maps" : "CARTO Dark"}</span>
         </button>
-        {mapplsError && (
+        {olaError && (
           <span className="text-[8px] text-amber-500 font-bold uppercase tracking-wider pl-1.5 border-l border-slate-700">
             Fallback
           </span>
@@ -272,14 +272,14 @@ export default function LiveMap({
       >
         <MapController center={mapCenter} bounds={mapBounds} />
         
-        {mapLayer === "mappls" && !mapplsError ? (
+        {mapLayer === "olamaps" && !olaError ? (
           <TileLayer
-            key="mappls-tile-layer"
-            attribution='&copy; <a href="https://www.mappls.com" target="_blank" rel="noreferrer">Mappls</a>'
-            url={`https://tile.mappls.com/raster_tiles/{z}/{x}/{y}.png?access_token=${mapplsKey}`}
+            key="olamaps-tile-layer"
+            attribution='&copy; <a href="https://maps.olakrutrim.com" target="_blank" rel="noreferrer">Ola Maps</a>'
+            url={`https://api.olamaps.io/tiles/vector/v1/styles/default-dark-standard/{z}/{x}/{y}.png?api_key=${olaMapsKey}`}
             eventHandlers={{
               tileerror: () => {
-                setMapplsError(true);
+                setOlaError(true);
                 setMapLayer("carto");
               }
             }}
