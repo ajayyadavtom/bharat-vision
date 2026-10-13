@@ -1,50 +1,114 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { AlertOctagon, Check, X, Users, Medal, Loader2, GitMerge, Camera, XCircle } from "lucide-react";
+import { AlertOctagon, Check, X, Users, Medal, Loader2, GitMerge, Camera, XCircle, Gauge } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 
-export default function RouteDeviationAI({ externalTrigger, resetTrigger }: { externalTrigger?: boolean, resetTrigger?: () => void }) {
+// Helper to calculate exact distance between two coordinates in meters
+function getDistanceMeters(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371e3;
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+export default function RouteDeviationAI({ 
+  externalTrigger, 
+  resetTrigger 
+}: { 
+  externalTrigger?: boolean;
+  resetTrigger?: () => void;
+}) {
   const { addKarma } = useAppStore();
   const [isVisible, setIsVisible] = useState(false);
   const [voteStatus, setVoteStatus] = useState<"pending" | "voting" | "ocr" | "verifying" | "confirmed">("pending");
-  const [isWatching, setIsWatching] = useState(false);
+  const [currentSpeedKmh, setCurrentSpeedKmh] = useState<number>(0);
+
+  // Track previous GPS coordinates to calculate real ground speed
+  const prevPosRef = useRef<{ lat: number; lng: number; time: number } | null>(null);
+  // Rate-limiting cooldown: at least 40 seconds between notifications
+  const lastPromptTimeRef = useRef<number>(Date.now());
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const COOLDOWN_MS = 40000; // 40 seconds minimum cooldown
+
+  const handleDismiss = useCallback(() => {
+    setIsVisible(false);
+    setVoteStatus("pending");
+    lastPromptTimeRef.current = Date.now(); // Reset 40s cooldown upon dismissal
+    if (resetTrigger) resetTrigger();
+  }, [resetTrigger]);
+
   useEffect(() => {
-    // REAL-TIME GEOLOCATION WATCHER
     let watchId: number;
-    if ("geolocation" in navigator) {
-      setIsWatching(true);
+
+    if (typeof window !== "undefined" && "geolocation" in navigator) {
       watchId = navigator.geolocation.watchPosition(
         (position) => {
-          // In a real app, we would compare position.coords against GTFS-RT route shape.
-          // For demo purposes, we still use a timeout to trigger it after location is acquired, 
-          // to guarantee the user sees it without having to actually walk 500 meters.
-          if (!isVisible && !externalTrigger) {
-            const detectAnomaly = setTimeout(() => {
-              setIsVisible(true);
-            }, 10000);
-            return () => clearTimeout(detectAnomaly);
+          const now = Date.now();
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          let calculatedSpeed = 0;
+
+          // 1. First priority: native device speed if available (m/s to km/h)
+          if (position.coords.speed !== null && position.coords.speed >= 0) {
+            calculatedSpeed = position.coords.speed * 3.6;
+          } 
+          // 2. Second priority: compute delta distance / delta time between GPS fixes
+          else if (prevPosRef.current) {
+            const dt = (now - prevPosRef.current.time) / 1000; // seconds
+            if (dt >= 2) {
+              const dist = getDistanceMeters(prevPosRef.current.lat, prevPosRef.current.lng, lat, lng);
+              calculatedSpeed = (dist / dt) * 3.6; // km/h
+            } else {
+              calculatedSpeed = currentSpeedKmh;
+            }
+          }
+
+          // Update location history
+          prevPosRef.current = { lat, lng, time: now };
+          const roundedSpeed = Math.round(calculatedSpeed);
+          setCurrentSpeedKmh(roundedSpeed);
+
+          // SMART AI TRAVELING DETECTION:
+          // User MUST be moving in a transit vehicle (speed >= 12 km/h).
+          // If user is stationary (0 to 5 km/h) or walking, DO NOT annoy the user.
+          const isTraveling = roundedSpeed >= 12;
+          const timeSinceLastPrompt = now - lastPromptTimeRef.current;
+
+          // Only trigger if user is actively traveling AND at least 40 seconds have elapsed
+          if (isTraveling && timeSinceLastPrompt >= COOLDOWN_MS && !isVisible) {
+            lastPromptTimeRef.current = now;
+            setIsVisible(true);
+            setVoteStatus("pending");
           }
         },
         (error) => {
-          console.error("Geolocation error:", error);
+          console.warn("Geolocation watch error:", error.message);
         },
-        { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
+        { enableHighAccuracy: true, maximumAge: 3000, timeout: 10000 }
       );
-    }
-
-    if (externalTrigger) {
-      setIsVisible(true);
-      setVoteStatus("pending");
     }
 
     return () => {
       if (watchId) navigator.geolocation.clearWatch(watchId);
     };
-  }, [externalTrigger, isVisible]);
+  }, [isVisible, currentSpeedKmh]);
+
+  // Handle manual simulation trigger from Track Bus UI button
+  useEffect(() => {
+    if (externalTrigger) {
+      setIsVisible(true);
+      setVoteStatus("pending");
+      lastPromptTimeRef.current = Date.now();
+    }
+  }, [externalTrigger]);
 
   const handleVote = (hasDeviated: boolean) => {
     setVoteStatus("voting");
@@ -55,23 +119,21 @@ export default function RouteDeviationAI({ externalTrigger, resetTrigger }: { ex
         if (hasDeviated) addKarma(15);
         setTimeout(() => {
           handleDismiss();
-        }, 4500);
-      }, 2500);
-    }, 1000);
+        }, 3000);
+      }, 1800);
+    }, 800);
   };
 
   const handleCameraCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      // User uploaded/captured an image. Start OCR process.
       setVoteStatus("ocr");
       setTimeout(() => {
-        // Simulate successful OCR verification extracting route text from the image
         setVoteStatus("confirmed");
         addKarma(25);
         setTimeout(() => {
           handleDismiss();
-        }, 4500);
-      }, 3000);
+        }, 3000);
+      }, 2500);
     }
   };
 
@@ -79,12 +141,6 @@ export default function RouteDeviationAI({ externalTrigger, resetTrigger }: { ex
     if (fileInputRef.current) {
       fileInputRef.current.click();
     }
-  };
-
-  const handleDismiss = () => {
-    setIsVisible(false);
-    setVoteStatus("pending");
-    if (resetTrigger) resetTrigger();
   };
 
   if (!isVisible) return null;
@@ -105,7 +161,8 @@ export default function RouteDeviationAI({ externalTrigger, resetTrigger }: { ex
           {voteStatus === "pending" && (
             <button 
               onClick={handleDismiss}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 z-10"
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 z-10 p-1 cursor-pointer"
+              title="Dismiss for 40 seconds"
             >
               <XCircle size={20} />
             </button>
@@ -116,7 +173,9 @@ export default function RouteDeviationAI({ externalTrigger, resetTrigger }: { ex
               <div className="flex justify-between items-start mb-3 pr-6">
                 <div className="flex items-center gap-2">
                   <AlertOctagon size={16} className="text-amber-500 animate-pulse" />
-                  <span className="text-[10px] uppercase tracking-widest text-amber-600 dark:text-amber-400 font-black">AI Anomaly Detected</span>
+                  <span className="text-[10px] uppercase tracking-widest text-amber-600 dark:text-amber-400 font-black">
+                    Transit Anomaly Detected
+                  </span>
                 </div>
               </div>
 
@@ -124,38 +183,45 @@ export default function RouteDeviationAI({ externalTrigger, resetTrigger }: { ex
                 Are you on Route 500D?
               </h3>
               
-              <div className="text-xs text-slate-600 dark:text-slate-300 font-medium mb-4 bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border border-slate-100 dark:border-slate-700">
-                <p className="mb-2">
-                  <strong className="text-indigo-500 flex items-center gap-1 mb-1">
+              <div className="text-xs text-slate-600 dark:text-slate-300 font-medium mb-3 bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border border-slate-100 dark:border-slate-700">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-indigo-500 font-bold flex items-center gap-1.5 text-[11px]">
                     <span className="relative flex h-2 w-2">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
                     </span>
-                    Live GPS Telemetry Active
-                  </strong>
-                  Our ML model noticed you and 5 passengers took a sudden detour away from Outer Ring Road.
+                    Live Telemetry Active
+                  </span>
+                  {currentSpeedKmh > 0 && (
+                    <span className="text-[10px] bg-indigo-500/10 text-indigo-400 font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                      <Gauge size={10} /> {currentSpeedKmh} km/h
+                    </span>
+                  )}
+                </div>
+                <p className="text-[11px] leading-relaxed text-slate-600 dark:text-slate-300">
+                  Our telemetry model detected a sudden detour away from Outer Ring Road corridor.
                 </p>
-                <p>
-                  <strong>Did the conductor change the destination display to Electronic City?</strong>
+                <p className="mt-1.5 font-bold text-slate-800 dark:text-slate-200 text-[11px]">
+                  Did the bus take a bypass route or detour?
                 </p>
               </div>
 
               <div className="flex items-center gap-2 mb-3 bg-emerald-50 dark:bg-emerald-900/20 p-2 rounded-lg border border-emerald-100 dark:border-emerald-800">
                 <Medal size={14} className="text-emerald-600 dark:text-emerald-400" />
-                <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300">Weighted Trust Score: 2x (Verified Frequent Rider)</span>
+                <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300">Earn +15 Karma Points for verifying</span>
               </div>
 
               <div className="flex flex-col gap-2">
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleVote(true)}
-                    className="flex-1 bg-amber-500 hover:bg-amber-600 text-white dark:text-black font-black py-3 rounded-xl text-xs shadow-sm active:scale-95 transition-all flex items-center justify-center gap-2"
+                    className="flex-1 bg-amber-500 hover:bg-amber-600 text-white dark:text-black font-black py-2.5 rounded-xl text-xs shadow-sm active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     <Check size={16} /> Yes, Detour
                   </button>
                   <button
                     onClick={() => handleVote(false)}
-                    className="flex-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-bold py-3 rounded-xl text-xs active:scale-95 transition-all flex items-center justify-center gap-2"
+                    className="flex-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-bold py-2.5 rounded-xl text-xs active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     <X size={16} /> Normal Path
                   </button>
@@ -173,9 +239,9 @@ export default function RouteDeviationAI({ externalTrigger, resetTrigger }: { ex
                 
                 <button
                   onClick={triggerCamera}
-                  className="w-full bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 border border-indigo-200 dark:border-indigo-500/30 text-indigo-700 dark:text-indigo-300 font-bold py-3 rounded-xl text-xs active:scale-95 transition-all flex items-center justify-center gap-2 mt-1"
+                  className="w-full bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 border border-indigo-200 dark:border-indigo-500/30 text-indigo-700 dark:text-indigo-300 font-bold py-2 rounded-xl text-[11px] active:scale-95 transition-all flex items-center justify-center gap-1.5 mt-0.5 cursor-pointer"
                 >
-                  <Camera size={16} /> Snap Display Board for OCR
+                  <Camera size={14} /> Snap Display Board for OCR (+25 pts)
                 </button>
               </div>
             </>
@@ -195,7 +261,7 @@ export default function RouteDeviationAI({ externalTrigger, resetTrigger }: { ex
           {voteStatus === "voting" && (
             <div className="flex flex-col items-center justify-center py-4 text-center">
               <Loader2 size={24} className="text-amber-500 animate-spin mb-3" />
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white">Transmitting Data...</h3>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">Transmitting Verification...</h3>
             </div>
           )}
 
@@ -207,7 +273,7 @@ export default function RouteDeviationAI({ externalTrigger, resetTrigger }: { ex
                 <Users size={16} className="animate-bounce delay-150" />
               </div>
               <h3 className="text-sm font-bold text-slate-900 dark:text-white">Verifying Consensus</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Cross-checking with 3 other passengers onboard...</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Cross-checking with other telemetry reports...</p>
             </div>
           )}
 
@@ -220,13 +286,13 @@ export default function RouteDeviationAI({ externalTrigger, resetTrigger }: { ex
               <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-500/20 rounded-full flex items-center justify-center mb-3 border border-emerald-500">
                 <GitMerge size={24} className="text-emerald-600 dark:text-emerald-400" />
               </div>
-              <h3 className="text-lg font-black text-slate-900 dark:text-white">Route Graph Updated!</h3>
+              <h3 className="text-lg font-black text-slate-900 dark:text-white">Telemetry Verified!</h3>
               <p className="text-xs text-slate-500 dark:text-slate-300 mt-1 mb-3">
-                Decentralized consensus reached. Ghost ETAs removed instantly.
+                Consensus updated. Ghost ETAs prevented for other commuters.
               </p>
               <div className="bg-amber-100 dark:bg-amber-900/40 border border-amber-300 dark:border-amber-500/30 px-4 py-2 rounded-full flex items-center gap-2">
                 <Medal size={16} className="text-amber-600 dark:text-amber-400" />
-                <span className="text-xs font-bold text-amber-600 dark:text-amber-400">+25 Karma Points Earned</span>
+                <span className="text-xs font-bold text-amber-600 dark:text-amber-400">+15 Karma Points Earned</span>
               </div>
             </motion.div>
           )}
