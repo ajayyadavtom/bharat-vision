@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Umbrella, CloudRain, Sun, Cloud, CloudLightning, Wind, Droplets, MapPin, RefreshCw, Activity } from "lucide-react";
 import { fetchLiveWeatherAndAqi, RealtimeWeatherData } from "@/lib/weather";
 import { CITIES } from "@/lib/cityData";
+import { useAppStore } from "@/lib/store";
 
 interface WeatherWidgetProps {
   isRainSafe: boolean;
@@ -17,17 +18,20 @@ export default function WeatherWidget({
   locationName = "Bengaluru",
   coordinates,
 }: WeatherWidgetProps) {
+  const { userLocation } = useAppStore();
   const [data, setData] = useState<RealtimeWeatherData | null>(null);
   const [loading, setLoading] = useState(true);
   const [showDetails, setShowDetails] = useState(false);
   const [drops, setDrops] = useState<any[]>([]);
 
-  // Resolve coordinates: provided coordinates -> city coordinates -> Bengaluru fallback
-  const resolvedCoords: [number, number] = coordinates || (() => {
+  // Resolve coordinates: provided coordinates -> user live GPS -> city coordinates -> fallback
+  const resolvedCoords: [number, number] = coordinates || userLocation?.coords || (() => {
     const cityKey = locationName.toLowerCase();
     const city = Object.values(CITIES).find(c => c.name.toLowerCase() === cityKey || c.id === cityKey);
     return city ? city.coordinates : [12.9716, 77.5946];
   })();
+
+  const displayLocation = userLocation?.isRealGps && !coordinates ? `${userLocation.name}, ${userLocation.city}` : locationName;
 
   const loadWeather = async () => {
     try {
@@ -107,7 +111,7 @@ export default function WeatherWidget({
         <div>
           <div className="flex items-center gap-1.5 text-blue-300 mb-1">
             <MapPin size={12} />
-            <span className="text-[10px] font-bold uppercase tracking-wider">{locationName}</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider">{displayLocation}</span>
             <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[9px] font-black border border-emerald-500/30">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
               LIVE

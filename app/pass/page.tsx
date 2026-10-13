@@ -28,11 +28,12 @@ export default function PassScreen() {
     topUpNcmcCard
   } = useAppStore();
   const cityData = getCityData(currentCity);
-  const [activeTab, setActiveTab] = useState<"digital" | "ncmc">("digital");
+  const [activeTab, setActiveTab] = useState<"digital" | "ncmc">("ncmc");
   
   const [showUpi, setShowUpi] = useState(false);
   const [pendingAmount, setPendingAmount] = useState(0);
   const [upiMode, setUpiMode] = useState<"pass" | "wallet-topup" | "ncmc-topup">("pass");
+  const [targetCardDetails, setTargetCardDetails] = useState<{ cardNumber: string; cardHolder?: string; issuingBank?: string } | null>(null);
   
   const [showNcmcModal, setShowNcmcModal] = useState(false);
   const [showNcmcTopUpModal, setShowNcmcTopUpModal] = useState(false);
@@ -223,6 +224,7 @@ export default function PassScreen() {
 
   const handleNcmcTopUpProceed = (cardData: any, amount: number) => {
     setShowNcmcTopUpModal(false);
+    setTargetCardDetails(cardData);
     setPendingAmount(amount);
     setUpiMode("ncmc-topup");
     setShowUpi(true);
@@ -600,13 +602,8 @@ export default function PassScreen() {
         </div>
         <button 
           onClick={() => {
-            if (activeTab === "digital") {
-              setPendingAmount(100);
-              setUpiMode("wallet-topup");
-              setShowUpi(true);
-            } else {
-              setShowNcmcTopUpModal(true);
-            }
+            setPendingAmount(100);
+            setShowNcmcTopUpModal(true);
           }}
           className="text-xs bg-white text-black px-3.5 py-2 rounded-xl font-extrabold shadow-md hover:bg-gray-200 transition-colors active:scale-95"
         >
@@ -689,6 +686,7 @@ export default function PassScreen() {
       {/* Top Up Physical NCMC Card Modal (takes card details & amount) */}
       <NcmcTopUpModal
         isOpen={showNcmcTopUpModal}
+        defaultAmount={pendingAmount || 100}
         onClose={() => setShowNcmcTopUpModal(false)}
         onProceedToPay={handleNcmcTopUpProceed}
       />
@@ -697,7 +695,11 @@ export default function PassScreen() {
       <UpiGateway 
         isOpen={showUpi}
         amount={pendingAmount}
-        cardDetails={upiMode === "ncmc-topup" && ncmcCard ? { cardNumber: ncmcCard.cardNumber, cardHolder: ncmcCard.cardHolder, issuingBank: ncmcCard.issuingBank } : undefined}
+        cardDetails={
+          upiMode === "ncmc-topup"
+            ? (targetCardDetails || (ncmcCard.isLinked ? { cardNumber: ncmcCard.cardNumber, cardHolder: ncmcCard.cardHolder, issuingBank: ncmcCard.issuingBank } : undefined))
+            : undefined
+        }
         onCancel={() => setShowUpi(false)}
         onSuccess={() => {
           setShowUpi(false);

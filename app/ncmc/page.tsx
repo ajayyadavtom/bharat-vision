@@ -21,6 +21,7 @@ export default function NcmcPage() {
   const [showUpi, setShowUpi] = useState(false);
   const [pendingAmount, setPendingAmount] = useState(100);
   const [showFullNumber, setShowFullNumber] = useState(false);
+  const [targetCardDetails, setTargetCardDetails] = useState<{ cardNumber: string; cardHolder?: string; issuingBank?: string } | null>(null);
 
   // Simulate or execute Web NFC API reading of physical NCMC chip
   const handleNfcScan = async () => {
@@ -159,7 +160,7 @@ export default function NcmcPage() {
       </motion.div>
 
       {/* Card Action Buttons: Enter Details & Top Up */}
-      <div className="grid grid-cols-2 gap-3 mb-6">
+      <div className="grid grid-cols-2 gap-3 mb-4">
         <button
           onClick={() => setShowModal(true)}
           className="bg-surface-dark hover:bg-slate-800 border border-indigo-500/30 text-white font-bold py-3 px-4 rounded-2xl text-xs flex items-center justify-center gap-2 shadow-sm active:scale-95 transition-transform"
@@ -169,12 +170,39 @@ export default function NcmcPage() {
         </button>
 
         <button
-          onClick={() => setShowTopUpModal(true)}
+          onClick={() => {
+            setPendingAmount(100);
+            setShowTopUpModal(true);
+          }}
           className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-4 rounded-2xl text-xs flex items-center justify-center gap-2 shadow-md active:scale-95 transition-transform"
         >
           <Plus size={14} />
           <span>Top Up via UPI</span>
         </button>
+      </div>
+
+      {/* Quick Top-Up Chips */}
+      <div className="bg-surface-dark border border-indigo-500/30 p-4 rounded-2xl mb-6 shadow-sm">
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+            <Zap size={14} className="text-indigo-400" /> Quick Top-Up Card
+          </span>
+          <span className="text-[10px] text-slate-500 dark:text-gray-400 font-semibold">Select amount</span>
+        </div>
+        <div className="grid grid-cols-4 gap-2">
+          {[100, 200, 500, 1000].map((amt) => (
+            <button
+              key={amt}
+              onClick={() => {
+                setPendingAmount(amt);
+                setShowTopUpModal(true);
+              }}
+              className="bg-surface-black hover:bg-indigo-950/40 border border-slate-200 dark:border-indigo-500/30 text-slate-900 dark:text-white font-black py-2.5 px-1 rounded-xl text-xs active:scale-95 transition-all text-center flex items-center justify-center gap-0.5 shadow-sm"
+            >
+              <span>+₹{amt}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* NFC Tap & Sync Trigger */}
@@ -241,9 +269,11 @@ export default function NcmcPage() {
       {/* Top Up Modal: Takes Card Details & Amount */}
       <NcmcTopUpModal
         isOpen={showTopUpModal}
+        defaultAmount={pendingAmount || 100}
         onClose={() => setShowTopUpModal(false)}
         onProceedToPay={(cardData, amount) => {
           setShowTopUpModal(false);
+          setTargetCardDetails(cardData);
           setPendingAmount(amount);
           setShowUpi(true);
         }}
@@ -253,7 +283,7 @@ export default function NcmcPage() {
       <UpiGateway
         isOpen={showUpi}
         amount={pendingAmount}
-        cardDetails={ncmcCard.isLinked ? { cardNumber: ncmcCard.cardNumber, cardHolder: ncmcCard.cardHolder, issuingBank: ncmcCard.issuingBank } : undefined}
+        cardDetails={targetCardDetails || (ncmcCard.isLinked ? { cardNumber: ncmcCard.cardNumber, cardHolder: ncmcCard.cardHolder, issuingBank: ncmcCard.issuingBank } : undefined)}
         onCancel={() => setShowUpi(false)}
         onSuccess={() => {
           topUpNcmcCard(pendingAmount);

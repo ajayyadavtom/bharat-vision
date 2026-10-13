@@ -60,6 +60,10 @@ interface AppState {
   privacyLiveLocation: boolean;
   privacyCamera: boolean;
   
+  // Real-time Geolocation state
+  userLocation: { coords: [number, number]; name: string; city: string; isRealGps: boolean } | null;
+  setUserLocation: (loc: { coords: [number, number]; name: string; city: string; isRealGps: boolean } | null) => void;
+  
   addMoney: (amount: number) => Promise<void>;
   deductBalance: (amount: number) => Promise<void>;
   addKarma: (points: number) => Promise<void>;
@@ -114,6 +118,8 @@ export const useAppStore = create<AppState>()(
       
       privacyLiveLocation: true,
       privacyCamera: true,
+      userLocation: null,
+      setUserLocation: (loc) => set({ userLocation: loc }),
       activePass: null,
       setActivePass: (pass) => set({ activePass: pass }),
       mockDeviceToggle: false,
@@ -384,7 +390,8 @@ export const useAppStore = create<AppState>()(
         userName: state.userName,
         appLang: state.appLang,
         activePass: state.activePass,
-        ncmcCard: state.ncmcCard
+        ncmcCard: state.ncmcCard,
+        userLocation: state.userLocation
       }),
     }
   )

@@ -2,19 +2,20 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Leaf, Ticket, TrainFront, CreditCard, ShieldAlert, Zap, CloudRain, Sun, Cloud, CloudLightning, User, MapPin, Medal, Droplets, Wind, Activity } from "lucide-react";
+import { Search, Leaf, Ticket, TrainFront, CreditCard, ShieldAlert, Zap, CloudRain, Sun, Cloud, CloudLightning, User, MapPin, Medal, Droplets, Wind, Activity, Crosshair } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { useAppStore } from "@/lib/store";
 import { getCityData, CITIES } from "@/lib/cityData";
 import { fetchLiveWeatherAndAqi, RealtimeWeatherData } from "@/lib/weather";
+import { requestBrowserLocation, reverseGeocodeCoordinates } from "@/lib/location";
 import UpiGateway from "../components/UpiGateway";
 import BehavioralHabitAI from "../components/BehavioralHabitAI";
 
 export default function VisionHome() {
   const router = useRouter();
-  const { appLang, userName, walletBalance, carbonSavedGrams, karmaPoints, currentCity, setCurrentCity, addMoney, fetchUserData, profilePictureUrl } = useAppStore();
+  const { appLang, userName, walletBalance, carbonSavedGrams, karmaPoints, currentCity, setCurrentCity, addMoney, fetchUserData, profilePictureUrl, userLocation, setUserLocation } = useAppStore();
   const cityData = getCityData(currentCity);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
 
@@ -72,29 +73,60 @@ export default function VisionHome() {
 
   const [liveWeather, setLiveWeather] = useState<RealtimeWeatherData | null>(null);
   const [showClimateModal, setShowClimateModal] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
 
-  useEffect(() => {
-    let isCurrent = true;
-    const loadWeather = async () => {
-      try {
-        const coords = cityData.coordinates || [13.0150, 77.5900];
-        const res = await fetchLiveWeatherAndAqi(coords[0], coords[1]);
-        if (isCurrent) setLiveWeather(res);
-      } catch (err) {
-        console.error("Home weather load error:", err);
+  // Core Location & Weather Synchronizer
+  const acquireLocation = async (manual: boolean = false) => {
+    try {
+      setIsLocating(true);
+      const coords = await requestBrowserLocation();
+      const geoInfo = await reverseGeocodeCoordinates(coords.latitude, coords.longitude);
+      
+      const newLoc = {
+        coords: [coords.latitude, coords.longitude] as [number, number],
+        name: geoInfo.locality,
+        city: geoInfo.city,
+        isRealGps: true,
+      };
+      setUserLocation(newLoc);
+
+      // Fetch live weather & AQI for the exact physical GPS coordinates
+      const weatherRes = await fetchLiveWeatherAndAqi(coords.latitude, coords.longitude);
+      setLiveWeather(weatherRes);
+    } catch (err: any) {
+      if (manual) {
+        console.warn("Location permission error or timeout:", err);
       }
-    };
-    loadWeather();
-    const timer = setInterval(loadWeather, 5 * 60 * 1000);
-    return () => {
-      isCurrent = false;
-      clearInterval(timer);
-    };
-  }, [cityData.id]);
+      // If GPS is blocked or denied, fall back to selected city coordinates
+      const fallbackCoords = cityData.coordinates || [13.0150, 77.5900];
+      const weatherRes = await fetchLiveWeatherAndAqi(fallbackCoords[0], fallbackCoords[1]);
+      setLiveWeather(weatherRes);
+    } finally {
+      setIsLocating(false);
+    }
+  };
 
   useEffect(() => {
+    // Automatically prompt/request location the moment the user opens the app
+    acquireLocation(false);
     fetchUserData();
-  }, [fetchUserData]);
+
+    // Auto-refresh weather every 5 minutes
+    const timer = setInterval(() => {
+      const activeCoords = userLocation?.coords || cityData.coordinates || [13.0150, 77.5900];
+      fetchLiveWeatherAndAqi(activeCoords[0], activeCoords[1]).then(setLiveWeather).catch(console.error);
+    }, 5 * 60 * 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  // Update weather if city dropdown changes and not on live GPS
+  useEffect(() => {
+    if (!userLocation?.isRealGps) {
+      const coords = cityData.coordinates || [13.0150, 77.5900];
+      fetchLiveWeatherAndAqi(coords[0], coords[1]).then(setLiveWeather).catch(console.error);
+    }
+  }, [cityData.id, userLocation?.isRealGps]);
 
   const renderWeatherIcon = () => {
     if (!liveWeather) return <Cloud size={16} className="text-slate-400" />;
@@ -129,15 +161,44 @@ export default function VisionHome() {
       >
         <motion.div variants={itemVariants} className="flex justify-between items-start">
           <div>
-            <select 
-              value={currentCity}
-              onChange={(e) => setCurrentCity(e.target.value)}
-              className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-1 bg-transparent outline-none cursor-pointer"
-            >
-              {Object.values(CITIES).map(city => (
-                <option key={city.id} value={city.id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{city.name} {city.state}</option>
-              ))}
-            </select>
+            <div className="flex items-center gap-2 mb-1">
+              <select 
+                value={userLocation?.isRealGps ? "gps" : currentCity}
+                onChange={(e) => {
+                  if (e.target.value === "gps") {
+                    acquireLocation(true);
+                  } else {
+                    setCurrentCity(e.target.value);
+                    setUserLocation(null);
+                  }
+                }}
+                className="text-[10px] uppercase tracking-widest text-slate-500 font-bold bg-transparent outline-none cursor-pointer"
+              >
+                {userLocation?.isRealGps && (
+                  <option value="gps" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-bold">
+                    📍 {userLocation.name} (Live GPS)
+                  </option>
+                )}
+                {Object.values(CITIES).map(city => (
+                  <option key={city.id} value={city.id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{city.name} {city.state}</option>
+                ))}
+              </select>
+
+              <button
+                type="button"
+                onClick={() => acquireLocation(true)}
+                disabled={isLocating}
+                className={`flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-bold tracking-tight transition-all active:scale-95 border ${
+                  userLocation?.isRealGps
+                    ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-500 dark:text-emerald-400"
+                    : "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 hover:text-emerald-500"
+                }`}
+                title="Detect Exact Mobile Location"
+              >
+                <Crosshair size={10} className={isLocating ? "animate-spin text-emerald-500" : (userLocation?.isRealGps ? "text-emerald-500" : "")} />
+                <span>{isLocating ? "Locating..." : (userLocation?.isRealGps ? "GPS Active" : "Detect Location")}</span>
+              </button>
+            </div>
             <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white">
               {tHome[appLang as keyof typeof tHome]?.greeting || tHome.en.greeting}, {userName ? (userName.toLowerCase() === "guest" ? "Jenny" : userName.split(" ")[0]) : "Jenny"}
             </h2>
@@ -184,7 +245,9 @@ export default function VisionHome() {
                   }
                 </p>
                 <p className="text-[10px] text-slate-500 font-medium flex items-center gap-1">
-                  <MapPin size={10} /> {cityData.name} · Feels {liveWeather?.apparentTemperature ?? "--"}°C
+                  <MapPin size={10} className={userLocation?.isRealGps ? "text-emerald-500" : ""} /> 
+                  {userLocation?.isRealGps ? `${userLocation.name}, ${userLocation.city}` : cityData.name} 
+                  · Feels {liveWeather?.apparentTemperature ?? "--"}°C
                 </p>
               </div>
             </div>

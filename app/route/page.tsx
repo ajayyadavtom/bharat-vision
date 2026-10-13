@@ -225,12 +225,7 @@ export default function RoutePlannerScreen() {
               )}
 
               {/* Real-time Weather & Rain-Safe Routing Widget */}
-              <WeatherWidget 
-                isRainSafe={isRainSafe} 
-                setIsRainSafe={setIsRainSafe} 
-                locationName={origin}
-                coordinates={userLoc || undefined}
-              />
+              <WeatherWidget isRainSafe={isRainSafe} setIsRainSafe={setIsRainSafe} locationName={origin} />
             </motion.div>
           ) : (
             // Results Timeline View
