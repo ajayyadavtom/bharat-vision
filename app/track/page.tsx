@@ -192,7 +192,7 @@ export default function TrackScreen() {
         {/* Quick Popular Real BMTC Corridors */}
         <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar mt-2 pb-1">
           <span className="text-[10px] text-slate-400 font-bold uppercase shrink-0">Popular:</span>
-          {["500D", "335E", "250", "365", "KIA-8", "401K", "G-2", "242"].map((b) => (
+          {["285M", "402B", "500D", "335E", "250", "365", "KIA-8", "401K"].map((b) => (
             <button
               key={b}
               type="button"
@@ -337,7 +337,7 @@ export default function TrackScreen() {
 
       {/* Tokyo & Singapore Crowd Density Engine */}
       <div className="px-4">
-        <SmartBoardingCard />
+        <SmartBoardingCard busCode={busCode} routeInfo={routeInfo} />
       </div>
 
       <div className="px-4 mb-6 mt-2">
