@@ -1,8 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import "leaflet/dist/leaflet.css";
-import "leaflet-routing-machine/dist/leaflet-routing-machine.css";
 
 import BottomNav from "../src/components/navigation/BottomNav";
 import PwaRegistry from "../components/PwaRegistry";
@@ -15,6 +13,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  viewportFit: "cover",
 };
 
 export const metadata: Metadata = {
@@ -39,6 +38,7 @@ export const metadata: Metadata = {
 
 import { ThemeProvider } from "next-themes";
 import AuthGuard from "../components/AuthGuard";
+import MobileScrollLock from "../components/MobileScrollLock";
 
 export default function RootLayout({
   children,
@@ -51,7 +51,8 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <AuthGuard>
             <PwaRegistry />
-            <main className="max-w-md mx-auto min-h-screen relative pb-16 shadow-2xl bg-white dark:bg-slate-900 overflow-hidden">
+            <MobileScrollLock />
+            <main className="max-w-md mx-auto h-[100dvh] h-screen relative shadow-2xl bg-white dark:bg-slate-900 overflow-hidden">
               {children}
               <BottomNav />
             </main>

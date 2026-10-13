@@ -2,146 +2,27 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Users, DoorOpen, Bus, Clock, Info, Radio } from "lucide-react";
+import { Users, DoorOpen, ArrowRight, Bus, TrainFront, Clock, Info } from "lucide-react";
 
-export interface SmartBoardingRouteInfo {
-  routeNumber: string;
-  cleanCode?: string;
-  fullName?: string;
-  origin: string;
-  destination: string;
-  tripCount?: number;
-  stopsCount?: number;
-  stops?: { name: string; lat?: number; lon?: number }[];
-}
-
-interface SmartBoardingCardProps {
-  busCode?: string;
-  routeInfo?: SmartBoardingRouteInfo | null;
-}
-
-function getCorridorMetadata(busCode?: string, routeInfo?: SmartBoardingRouteInfo | null) {
-  const code = (busCode || routeInfo?.routeNumber || "285M").toUpperCase().trim();
-  const origin = routeInfo?.origin;
-  const destination = routeInfo?.destination;
-
-  let corridorText = origin && destination ? `${origin} ⇄ ${destination}` : "";
-
-  // Known fallback corridors if routeInfo is not loaded yet
-  if (!corridorText) {
-    if (code.includes("285M") || code.includes("285-M")) corridorText = "Yelahanka ⇄ East West College of Engineering";
-    else if (code.includes("402B") || code.includes("402-B")) corridorText = "Yelahanka Satellite Town ⇄ Kempegowda Station (Majestic)";
-    else if (code.includes("402D") || code.includes("402-D")) corridorText = "Yelahanka NES ⇄ Kempegowda Station (Majestic)";
-    else if (code.includes("500D") || code.includes("500-D")) corridorText = "Hebbal ⇄ Central Silk Board (Outer Ring Road)";
-    else if (code.includes("335E")) corridorText = "Kempegowda Station (Majestic) ⇄ Whitefield (Kadugodi)";
-    else if (code.includes("356CW") || code.includes("356-CW")) corridorText = "Kempegowda Station (Majestic) ⇄ Electronic City Tollway";
-    else if (code.includes("365")) corridorText = "Kempegowda Station (Majestic) ⇄ Electronic City / Bannerghatta";
-    else if (code.includes("401K") || code.includes("401-K")) corridorText = "Yelahanka ⇄ Yeshwantpur ⇄ Kengeri";
-    else if (code.includes("250")) corridorText = "Kempegowda Station (Majestic) ⇄ Yelahanka New Town";
-    else if (code.includes("KIA-8")) corridorText = "Electronic City ⇄ Kempegowda International Airport";
-    else if (code.includes("KIA-9")) corridorText = "Kempegowda Station (Majestic) ⇄ Airport Terminal 1 & 2";
-    else if (code.includes("258")) corridorText = "Nelamangala ⇄ Peenya ⇄ Kempegowda Station (Majestic)";
-    else if (code.includes("G-2")) corridorText = "Brigade Road ⇄ Sarjapur Road";
-    else corridorText = `${code} Arterial Transit Corridor`;
-  }
-
-  // Determine Interchange Strategy based on destination or corridor
-  const destLower = (destination || corridorText).toLowerCase();
-  let strategyDoor = "Board via the Front Door";
-  let strategyAdvice = "Positions you perfectly for the Green Line escalators upon arrival.";
-  let transferTime = "45 sec";
-  let baseOccupancy = 84;
-  let vehicleType = "BMTC Ordinary (BS-VI)";
-
-  if (destLower.includes("majestic") || destLower.includes("kempegowda") || destLower.includes("kbs")) {
-    strategyDoor = "Board via the Front Door";
-    strategyAdvice = "Positions you directly at the subway underpass to Namma Metro Purple & Green Line concourses.";
-    transferTime = "40 sec";
-    baseOccupancy = 86;
-    vehicleType = code.includes("V-") ? "Volvo Vajra AC" : "BMTC City Express";
-  } else if (destLower.includes("silk board") || destLower.includes("csb") || destLower.includes("madiwala")) {
-    strategyDoor = "Board via the Rear Door";
-    strategyAdvice = "Positions you closest to the elevated pedestrian skywalk connecting to Madiwala & BTM Layout.";
-    transferTime = "55 sec";
-    baseOccupancy = 89;
-    vehicleType = code.includes("500") ? "ORR High-Capacity Express" : "BMTC Non-AC";
-  } else if (destLower.includes("whitefield") || destLower.includes("itpl") || destLower.includes("kadugodi")) {
-    strategyDoor = "Board via the Middle Door";
-    strategyAdvice = "Direct alignment with ITPL gate concourse and Purple Line Metro Gate 2 skybridge.";
-    transferTime = "42 sec";
-    baseOccupancy = 74;
-    vehicleType = code.includes("335E") ? "Tata Starbus Ultra" : "BMTC Non-AC";
-  } else if (destLower.includes("electronic city") || destLower.includes("ecity") || destLower.includes("infosys")) {
-    strategyDoor = "Board via the Front Door";
-    strategyAdvice = "Quickest egress to the Infosys / Wipro pedestrian footbridge over Hosur Elevated Highway.";
-    transferTime = "48 sec";
-    baseOccupancy = 82;
-    vehicleType = code.includes("356") ? "Elevated Tollway Express" : "BMTC Non-AC";
-  } else if (destLower.includes("airport") || destLower.includes("kia")) {
-    strategyDoor = "Board via the Luggage Bay Door";
-    strategyAdvice = "Effortless luggage unloading directly at Terminal 1 / Terminal 2 departure curb.";
-    transferTime = "1.5 min";
-    baseOccupancy = 52;
-    vehicleType = "Volvo B11R Vayu Vajra Luxury AC";
-  } else if (destLower.includes("east west") || destLower.includes("yelahanka")) {
-    strategyDoor = "Board via the Front Door";
-    strategyAdvice = "Positions you perfectly for the Green Line escalators upon arrival.";
-    transferTime = "45 sec";
-    baseOccupancy = 84;
-    vehicleType = "BMTC Feeder Bus";
-  } else if (destLower.includes("yeshwantpur") || destLower.includes("peenya")) {
-    strategyDoor = "Board via the Front Door";
-    strategyAdvice = "Direct alignment with Green Line Metro turnstiles and SWR Railway Platform 1.";
-    transferTime = "50 sec";
-    baseOccupancy = 79;
-    vehicleType = "BMTC Ring Feeder";
-  } else {
-    strategyDoor = "Board via the Middle Door";
-    strategyAdvice = "Optimal passenger flow for quick deboarding at high-traffic intermediate stops.";
-    transferTime = "50 sec";
-    baseOccupancy = 76;
-    vehicleType = "BMTC City Service";
-  }
-
-  return {
-    code,
-    corridorText,
-    strategyDoor,
-    strategyAdvice,
-    transferTime,
-    baseOccupancy,
-    vehicleType
-  };
-}
-
-export default function SmartBoardingCard({ busCode, routeInfo }: SmartBoardingCardProps) {
-  const metadata = getCorridorMetadata(busCode, routeInfo);
-  const [occupancy, setOccupancy] = useState(metadata.baseOccupancy);
+export default function SmartBoardingCard() {
+  const [occupancy, setOccupancy] = useState(82); // 82% full
   const [flash, setFlash] = useState(false);
 
-  // Sync occupancy when selected bus changes
-  useEffect(() => {
-    setOccupancy(metadata.baseOccupancy);
-    setFlash(true);
-    const t = setTimeout(() => setFlash(false), 600);
-    return () => clearTimeout(t);
-  }, [busCode, routeInfo?.routeNumber, routeInfo?.destination]);
-
-  // Simulate real-time occupancy updates around current bus base
+  // Simulate real-time occupancy updates
   useEffect(() => {
     const interval = setInterval(() => {
       setOccupancy((prev) => {
         const fluctuate = prev + (Math.floor(Math.random() * 5) - 2);
-        return Math.min(100, Math.max(20, fluctuate));
+        return Math.min(100, Math.max(0, fluctuate));
       });
       setFlash(true);
       setTimeout(() => setFlash(false), 500);
-    }, 4500);
+    }, 5000);
     return () => clearInterval(interval);
-  }, [busCode]);
+  }, []);
 
   const getOccupancyDetails = (occ: number) => {
-    if (occ < 45) return { label: "Seats Available", color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-500/20", border: "border-emerald-200 dark:border-emerald-500/30" };
+    if (occ < 40) return { label: "Seats Available", color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-500/20", border: "border-emerald-200 dark:border-emerald-500/30" };
     if (occ < 80) return { label: "Standing Room", color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-500/20", border: "border-amber-200 dark:border-amber-500/30" };
     return { label: "Packed (Crush Load)", color: "text-red-600 dark:text-red-400", bg: "bg-red-50 dark:bg-red-500/20", border: "border-red-200 dark:border-red-500/30" };
   };
@@ -150,33 +31,24 @@ export default function SmartBoardingCard({ busCode, routeInfo }: SmartBoardingC
 
   return (
     <motion.div
-      key={metadata.code}
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-3xl shadow-sm mt-4 relative overflow-hidden transition-colors"
+      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-3xl shadow-sm mt-6 relative overflow-hidden"
     >
       {/* Dynamic Background Pulse on Update */}
-      {flash && <div className="absolute inset-0 bg-teal-500/10 dark:bg-teal-400/10 animate-pulse pointer-events-none"></div>}
+      {flash && <div className="absolute inset-0 bg-slate-900/5 dark:bg-white/5 animate-pulse pointer-events-none"></div>}
 
       <div className="flex justify-between items-start mb-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="w-2 h-2 rounded-full bg-teal-500 animate-ping"></span>
-            <h3 className="text-[10px] uppercase tracking-widest text-teal-600 dark:text-teal-400 font-bold flex items-center gap-1">
-              <Radio size={10} className="animate-pulse" /> Live Telemetry
-            </h3>
+            <h3 className="text-[10px] uppercase tracking-widest text-teal-600 dark:text-teal-400 font-bold">Live Telemetry</h3>
           </div>
           <h4 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
-            <Bus size={20} className="text-teal-600 dark:text-teal-400" /> Route {metadata.code}
+            <Bus size={20} className="text-teal-600 dark:text-teal-400" /> Route 285M
           </h4>
-          <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5 font-medium">{metadata.corridorText}</p>
+          <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">Yelahanka ⇄ East West College of Engineering</p>
         </div>
-
-        {routeInfo?.tripCount && (
-          <span className="bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 px-2.5 py-1 rounded-full text-[10px] font-bold">
-            {routeInfo.tripCount} Trips/day
-          </span>
-        )}
       </div>
 
       {/* Singapore-Style Crowd Density */}
@@ -211,9 +83,9 @@ export default function SmartBoardingCard({ busCode, routeInfo }: SmartBoardingC
           </div>
           
           <div className="flex-1">
-            <p className="text-sm font-bold text-slate-900 dark:text-white leading-tight">{metadata.strategyDoor}</p>
-            <p className="text-[10px] text-slate-600 dark:text-gray-400 mt-1 leading-relaxed">
-              {metadata.strategyAdvice}
+            <p className="text-sm font-bold text-slate-900 dark:text-white leading-tight">Board via the Front Door</p>
+            <p className="text-[10px] text-slate-600 dark:text-gray-400 mt-1">
+              Positions you perfectly for the Green Line escalators upon arrival.
             </p>
           </div>
         </div>
@@ -223,7 +95,7 @@ export default function SmartBoardingCard({ busCode, routeInfo }: SmartBoardingC
             <Clock size={14} className="text-indigo-600 dark:text-indigo-400" />
             <span className="font-semibold">Expected Transfer Time</span>
           </div>
-          <span className="text-sm font-black text-slate-900 dark:text-white">{metadata.transferTime}</span>
+          <span className="text-sm font-black text-slate-900 dark:text-white">45 sec</span>
         </div>
       </div>
 

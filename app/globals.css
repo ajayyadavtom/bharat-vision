@@ -49,15 +49,31 @@ body {
 
 /* Smooth touch scrolling and hardware acceleration for mobile */
 html, body {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+  overscroll-behavior-y: none;
+  touch-action: pan-y;
+  -webkit-text-size-adjust: 100%;
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Prevent accidental text highlight during multi-touch dragging */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
 .no-scrollbar, .overflow-y-auto, .overflow-x-auto {
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   overscroll-behavior-y: contain;
+  touch-action: pan-y;
   transform: translateZ(0);
-  will-change: transform, scroll-position;
+  will-change: scroll-position;
 }

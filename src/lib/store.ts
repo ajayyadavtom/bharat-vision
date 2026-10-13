@@ -37,6 +37,22 @@ export interface NcmcCardInfo {
   lastSyncedAt?: number | null;
 }
 
+export interface TransitTicketRecord {
+  id: string;
+  category: "metro" | "bus" | "auto" | "pass";
+  type: string;
+  network: string;
+  origin?: string;
+  destination?: string;
+  route?: string;
+  driver?: string;
+  ticketId?: string;
+  fare: number;
+  dateString?: string;
+  timestamp: number;
+  status?: "Active" | "Completed" | "Validated";
+}
+
 interface AppState {
   appLang: string;
   setAppLang: (lang: string) => void;
@@ -53,16 +69,13 @@ interface AppState {
   chatSessions: ChatSession[];
   activeChatId: string | null;
   bookedRide: any | null;
-  rideHistory: any[];
+  rideHistory: TransitTicketRecord[];
+  addRideHistory: (item: TransitTicketRecord) => void;
   profilePictureUrl: string | null;
   
   // Settings
   privacyLiveLocation: boolean;
   privacyCamera: boolean;
-  
-  // Real-time Geolocation state
-  userLocation: { coords: [number, number]; name: string; city: string; isRealGps: boolean } | null;
-  setUserLocation: (loc: { coords: [number, number]; name: string; city: string; isRealGps: boolean } | null) => void;
   
   addMoney: (amount: number) => Promise<void>;
   deductBalance: (amount: number) => Promise<void>;
@@ -113,13 +126,55 @@ export const useAppStore = create<AppState>()(
       chatSessions: [],
       activeChatId: null,
       bookedRide: null,
-      rideHistory: [],
+      rideHistory: [
+        {
+          id: "NMM-849201",
+          category: "metro",
+          type: "Namma Metro QR Token (Purple Line)",
+          network: "BMRCL Namma Metro",
+          origin: "Indiranagar",
+          destination: "Kempegowda Station (Majestic)",
+          route: "Indiranagar ➔ Majestic (9 Stations)",
+          ticketId: "NMM-849201",
+          fare: 30,
+          dateString: "Today, 09:15 AM",
+          timestamp: Date.now() - 7200000,
+          status: "Completed"
+        },
+        {
+          id: "BMTC-402B-89",
+          category: "bus",
+          type: "BMTC Express Ticket (Route 402-B)",
+          network: "BMTC Bengaluru",
+          origin: "Yelahanka Satellite Town",
+          destination: "Kempegowda Bus Station (Platform 22)",
+          route: "Route 402-B Express Corridor",
+          ticketId: "BMTC-402B-89",
+          fare: 25,
+          dateString: "Yesterday, 05:45 PM",
+          timestamp: Date.now() - 54000000,
+          status: "Completed"
+        },
+        {
+          id: "ONDC-194028",
+          category: "auto",
+          type: "Namma Yatri Auto (Zero Surge)",
+          network: "ONDC Beckn Open Network",
+          origin: "Yelahanka NES Office",
+          destination: "Yelahanka Junction Railway Station",
+          route: "NES Office ➔ Yelahanka Junction",
+          driver: "Manjunath S. (KA-04-AB-4819)",
+          ticketId: "PIN: 8492",
+          fare: 45,
+          dateString: "Yesterday, 02:20 PM",
+          timestamp: Date.now() - 68000000,
+          status: "Completed"
+        }
+      ],
       profilePictureUrl: null,
       
       privacyLiveLocation: true,
       privacyCamera: true,
-      userLocation: null,
-      setUserLocation: (loc) => set({ userLocation: loc }),
       activePass: null,
       setActivePass: (pass) => set({ activePass: pass }),
       mockDeviceToggle: false,
@@ -390,8 +445,7 @@ export const useAppStore = create<AppState>()(
         userName: state.userName,
         appLang: state.appLang,
         activePass: state.activePass,
-        ncmcCard: state.ncmcCard,
-        userLocation: state.userLocation
+        ncmcCard: state.ncmcCard
       }),
     }
   )

@@ -12,49 +12,23 @@ export default function BehavioralHabitAI() {
   const [booked, setBooked] = useState(false);
 
   useEffect(() => {
-    // Check if user has previously dismissed or disabled this popup
-    try {
-      if (typeof window !== "undefined") {
-        const isDismissed = localStorage.getItem("habit_ai_dismissed");
-        const sessionDismissed = sessionStorage.getItem("habit_ai_dismissed");
-        if (isDismissed === "true" || sessionDismissed === "true") {
-          return; // Do NOT pop up
-        }
-      }
-    } catch {
-      // ignore storage access errors
-    }
+    // Simulate the AI detecting a routine morning commute from past booking data
+    const checkHabitPattern = () => {
+      setTimeout(() => {
+        setIsVisible(true);
+      }, 2500);
+    };
 
-    // Only show after delay if never dismissed
-    const timer = setTimeout(() => {
-      try {
-        if (localStorage.getItem("habit_ai_dismissed") === "true") return;
-      } catch {}
-      setIsVisible(true);
-    }, 6000);
-
-    return () => clearTimeout(timer);
+    checkHabitPattern();
   }, []);
-
-  const handleDismiss = () => {
-    setIsVisible(false);
-    try {
-      if (typeof window !== "undefined") {
-        // Permanently remember that the user dismissed this notification
-        localStorage.setItem("habit_ai_dismissed", "true");
-        sessionStorage.setItem("habit_ai_dismissed", "true");
-      }
-    } catch {}
-  };
 
   const handleZeroClickBooking = () => {
     setIsBooking(true);
+    // Simulate instantaneous pre-authorized UPI mandate execution
     setTimeout(() => {
       setIsBooking(false);
       setBooked(true);
-      setTimeout(() => {
-        handleDismiss();
-      }, 2500);
+      setTimeout(() => setIsVisible(false), 3000);
     }, 1500);
   };
 
@@ -72,12 +46,9 @@ export default function BehavioralHabitAI() {
           {/* AI Shimmer Effect */}
           <div className="absolute inset-0 bg-gradient-to-r from-teal-500/0 via-teal-500/10 dark:via-brand-accent/5 to-teal-500/0 animate-[shimmer_2s_infinite] pointer-events-none"></div>
 
-          {/* Dismiss (X) button — Permanently silences the habit popup */}
           <button 
-            type="button"
-            onClick={handleDismiss}
-            className="absolute top-3 right-3 text-slate-400 hover:text-slate-600 dark:text-gray-400 dark:hover:text-white transition-colors bg-slate-100 dark:bg-slate-800 p-1.5 rounded-full cursor-pointer"
-            title="Dismiss & do not show again"
+            onClick={() => setIsVisible(false)}
+            className="absolute top-3 right-3 text-slate-400 hover:text-slate-600 dark:text-gray-400 dark:hover:text-white transition-colors bg-slate-100 dark:bg-slate-800 p-1.5 rounded-full"
           >
             <X size={14} />
           </button>
@@ -111,10 +82,9 @@ export default function BehavioralHabitAI() {
               </div>
 
               <button
-                type="button"
                 onClick={handleZeroClickBooking}
                 disabled={isBooking}
-                className="w-full bg-teal-600 hover:bg-teal-700 dark:bg-brand-accent dark:hover:bg-teal-400 text-white dark:text-brand-dark font-black py-3.5 rounded-xl text-sm shadow-md active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+                className="w-full bg-teal-600 hover:bg-teal-700 dark:bg-brand-accent dark:hover:bg-teal-400 text-white dark:text-brand-dark font-black py-3.5 rounded-xl text-sm shadow-md active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 {isBooking ? (
                   <span className="animate-pulse">Processing UPI Mandate...</span>
@@ -125,16 +95,6 @@ export default function BehavioralHabitAI() {
                   </>
                 )}
               </button>
-
-              <div className="text-center mt-2.5">
-                <button
-                  type="button"
-                  onClick={handleDismiss}
-                  className="text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 font-semibold transition-colors cursor-pointer"
-                >
-                  Don't show this notification again
-                </button>
-              </div>
             </>
           ) : (
             <motion.div 

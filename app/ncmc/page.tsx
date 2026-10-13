@@ -67,7 +67,7 @@ export default function NcmcPage() {
   };
 
   return (
-    <div className="flex flex-col h-[100dvh] overflow-y-auto no-scrollbar pb-24 bg-surface-black px-4 pt-8">
+    <div className="flex flex-col h-[100dvh] overflow-y-auto no-scrollbar pb-[120px] bg-surface-black px-4 pt-8 [&>*]:shrink-0">
       
       {/* Top Header */}
       <div className="mb-4 flex items-center justify-between">
