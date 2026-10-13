@@ -35,7 +35,7 @@ export const CITIES: Record<string, CityData> = {
       { name: "Ordinary Monthly", price: "₹1,200", type: "BMTC", color: "text-brand-accent" },
     ],
     metroStations: [
-      { id: "s1", name: "Yelahanka Hub", line: "Green" },
+      { id: "s1", name: "Madavara (BIEC)", line: "Green" },
       { id: "s2", name: "Nagasandra", line: "Green" },
       { id: "s3", name: "Yeshwanthpur", line: "Green" },
       { id: "s4", name: "Majestic (Interchange)", line: "Both" },

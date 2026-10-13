@@ -199,13 +199,14 @@ export default function LiveMap({
           vehicles: [{
             v_id: `KA5709/08/2026, 09:09 AM F${Math.floor(Math.random() * 1000)}`,
             lat, lng, spd, hdg, occ,
-            nxt_stp: route_id === "500D" ? "Silk Board" : "Majestic",
+            nxt_stp: route_id === "500D" ? "Silk Board" : route_id === "402B" ? "Mekhri Circle / Majestic" : "Majestic",
             eta_sec
           }]
         };
       };
 
       const payloads = [
+        generatePayload("402B", 13.0600, 77.5920, 68), // Yelahanka to Majestic
         generatePayload("500D", 13.0358, 77.5970, 82),
         generatePayload("250", 13.0120, 77.5850, 45),
         generatePayload("335E", 12.9716, 77.6412, 95)
