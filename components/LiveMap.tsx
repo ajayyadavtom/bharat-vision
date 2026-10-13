@@ -276,7 +276,7 @@ export default function LiveMap({
           <TileLayer
             key="olamaps-tile-layer"
             attribution='&copy; <a href="https://maps.olakrutrim.com" target="_blank" rel="noreferrer">Ola Maps</a>'
-            url={`https://api.olamaps.io/tiles/vector/v1/styles/default-dark-standard/{z}/{x}/{y}.png?api_key=${olaMapsKey}`}
+            url={`https://api.olamaps.io/tiles/v1/styles/default-dark-standard/{z}/{x}/{y}.png?api_key=${olaMapsKey}`}
             eventHandlers={{
               tileerror: () => {
                 setOlaError(true);
