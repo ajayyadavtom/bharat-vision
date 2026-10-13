@@ -74,18 +74,46 @@ export default function TrackScreen() {
 
       {/* The Live Interactive Map */}
       
-<div className="px-4 mb-4">
+<div className="px-4 mb-2">
   <div className="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3">
-    <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
-      <span className="text-indigo-600 dark:text-indigo-400 text-xs">🚌</span>
+    <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+      <span className="text-emerald-600 dark:text-emerald-400 text-xs">🚌</span>
     </div>
     <input 
       type="text" 
       value={busCode} 
       onChange={(e) => setBusCode(e.target.value.toUpperCase())} 
-      placeholder="Enter Bus Code (e.g. 500D) to track..." 
+      placeholder="Enter BMTC Bus (e.g. 500D, 250, 335E)..." 
       className="flex-1 bg-transparent text-sm text-slate-900 dark:text-white outline-none font-bold placeholder-slate-400" 
     />
+    {busCode && (
+      <button 
+        type="button" 
+        onClick={() => setBusCode("")} 
+        className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-white px-1.5 py-0.5 rounded-full"
+      >
+        Clear
+      </button>
+    )}
+  </div>
+
+  {/* Quick Popular Real BMTC Corridors */}
+  <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar mt-2 pb-1">
+    <span className="text-[10px] text-slate-400 font-bold uppercase shrink-0">Popular:</span>
+    {["500D", "250", "335E", "365", "242", "KIA-9"].map((b) => (
+      <button
+        key={b}
+        type="button"
+        onClick={() => setBusCode(b)}
+        className={`text-[10px] font-bold px-2.5 py-1 rounded-xl transition-all shrink-0 border ${
+          busCode === b
+            ? "bg-emerald-500 text-slate-900 border-emerald-400 font-black shadow-sm"
+            : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-emerald-500"
+        }`}
+      >
+        {b}
+      </button>
+    ))}
   </div>
 </div>
 <div className="px-4 mb-6 mt-2">

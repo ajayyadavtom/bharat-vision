@@ -1,9 +1,16 @@
+import bmtcRoutesIndex from "../data/bmtc_routes_index.json";
+
 export interface GtfsRoute {
   routeId: string;
   shortName: string;
   longName: string;
   agency: "BMTC" | "Namma Metro";
   color: string;
+  platform?: {
+    station: string;
+    platform: string;
+    bay?: number | null;
+  } | null;
 }
 
 export interface GtfsStop {
@@ -13,36 +20,57 @@ export interface GtfsStop {
   longitude: number;
 }
 
-// Official GTFS Static Feed Simulation for Bengaluru Transit Corridors
-export const GTFS_ROUTES: GtfsRoute[] = [
-  { routeId: "BMTC-500D", shortName: "500D", longName: "Hebbal ⇄ Silk Board Outer Ring Road", agency: "BMTC", color: "#14b8a6" },
-  { routeId: "BMTC-250", shortName: "250", longName: "Yelahanka New Town ⇄ Majestic", agency: "BMTC", color: "#3b82f6" },
-  { routeId: "BMTC-335E", shortName: "335E", longName: "ITPL ⇄ Majestic AC Vajra", agency: "BMTC", color: "#6366f1" },
+// Official Namma Metro Corridors
+export const METRO_ROUTES: GtfsRoute[] = [
   { routeId: "METRO-GREEN", shortName: "Green Line", longName: "Nagasandra ⇄ Silk Institute", agency: "Namma Metro", color: "#22c55e" },
   { routeId: "METRO-PURPLE", shortName: "Purple Line", longName: "Whitefield ⇄ Challaghatta", agency: "Namma Metro", color: "#a855f7" }
 ];
 
 export const GTFS_STOPS: Record<string, GtfsStop[]> = {
-  "BMTC-250": [
-    { stopId: "S-YLK-01", stopName: "Yelahanka New Town 5th Phase", latitude: 13.1000, longitude: 77.5963 },
-    { stopId: "S-YLK-02", stopName: "Mother Dairy Yelahanka", latitude: 13.0850, longitude: 77.5910 },
-    { stopId: "S-HBB-01", stopName: "Hebbal Flyover Bus Bay", latitude: 13.0358, longitude: 77.5970 },
-    { stopId: "S-MAJ-01", stopName: "Kempegowda Bus Station (Majestic)", latitude: 12.9776, longitude: 77.5726 }
-  ],
   "METRO-GREEN": [
     { stopId: "M-NGS", stopName: "Nagasandra", latitude: 13.0471, longitude: 77.5186 },
     { stopId: "M-YES", stopName: "Yeshwanthpur Interchange", latitude: 13.0238, longitude: 77.5529 },
     { stopId: "M-MAJ", stopName: "Nadaprabhu Kempegowda Stn (Majestic)", latitude: 12.9757, longitude: 77.5728 },
     { stopId: "M-SLK", stopName: "Silk Institute", latitude: 12.8795, longitude: 77.5276 }
+  ],
+  "METRO-PURPLE": [
+    { stopId: "M-WFD", stopName: "Whitefield (Kadugodi)", latitude: 12.9961, longitude: 77.7610 },
+    { stopId: "M-IND", stopName: "Indiranagar", latitude: 12.9783, longitude: 77.6387 },
+    { stopId: "M-MGR", stopName: "MG Road", latitude: 12.9755, longitude: 77.6067 },
+    { stopId: "M-MAJ-P", stopName: "Majestic Interchange", latitude: 12.9757, longitude: 77.5728 },
+    { stopId: "M-CHL", stopName: "Challaghatta", latitude: 12.9064, longitude: 77.4721 }
   ]
 };
 
-// GTFS Data Query Pipeline
+// GTFS Data Query Pipeline powered by official 4,400+ BMTC routes
 export function queryGtfsRoutes(searchTerm: string): GtfsRoute[] {
-  const query = searchTerm.toLowerCase();
-  return GTFS_ROUTES.filter(
+  const query = searchTerm.toLowerCase().trim();
+  if (!query) return [];
+
+  // 1. Search Metro
+  const metroMatches = METRO_ROUTES.filter(
     route => route.shortName.toLowerCase().includes(query) || route.longName.toLowerCase().includes(query)
   );
+
+  // 2. Search Real BMTC Routes Index
+  const bmtcMatches = (bmtcRoutesIndex as any[])
+    .filter(r => 
+      r.routeNumber.toLowerCase().includes(query) || 
+      r.origin.toLowerCase().includes(query) || 
+      r.destination.toLowerCase().includes(query) ||
+      (r.displayName && r.displayName.toLowerCase().includes(query))
+    )
+    .slice(0, 30)
+    .map(r => ({
+      routeId: `BMTC-${r.routeNumber}`,
+      shortName: r.routeNumber,
+      longName: `${r.origin} ⇄ ${r.destination}`,
+      agency: "BMTC" as const,
+      color: r.routeNumber.startsWith("KIA") ? "#f59e0b" : r.routeNumber.includes("Vajra") || r.routeNumber.endsWith("E") ? "#6366f1" : "#14b8a6",
+      platform: r.platforms?.[0] || null
+    }));
+
+  return [...metroMatches, ...bmtcMatches];
 }
 
 export function getStopsForRoute(routeId: string): GtfsStop[] {
