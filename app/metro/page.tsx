@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import dynamic from "next/dynamic";
 import { 
   TrainFront, 
   MapPin, 
@@ -18,26 +19,53 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAppStore } from "../../src/lib/store";
-import { getCityData, TransitNode } from "@/lib/cityData";
+import metroData from "@/data/namma_metro.json";
+
+// Dynamic import of the tiny Leaflet Metro Map (Client-side only)
+const MetroMap = dynamic(() => import("../../components/MetroMap"), { 
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-full bg-slate-900/80 animate-pulse rounded-3xl flex items-center justify-center text-xs text-slate-400 font-bold">
+      <TrainFront className="text-purple-400 animate-bounce mr-2" size={18} />
+      Loading Namma Metro Map...
+    </div>
+  )
+});
+
+interface MetroStationNode {
+  id: string;
+  name: string;
+  lat: number;
+  lon: number;
+  lines: string[];
+  isInterchange: boolean;
+}
 
 export default function MetroScreen() {
-  const { walletBalance, deductBalance, fetchUserData, currentCity } = useAppStore();
-  const cityData = getCityData(currentCity);
-  const ALL_STATIONS = cityData.metroStations;
+  const { walletBalance, deductBalance, fetchUserData } = useAppStore();
+  const ALL_STATIONS: MetroStationNode[] = metroData.stations;
 
   // Real BMRCL Lines
   const purpleStations = useMemo(
-    () => ALL_STATIONS.filter((s) => s.line === "Purple" || s.line === "Both"),
+    () => ALL_STATIONS.filter((s) => s.lines.includes("Purple")),
     [ALL_STATIONS]
   );
   const greenStations = useMemo(
-    () => ALL_STATIONS.filter((s) => s.line === "Green" || s.line === "Both"),
+    () => ALL_STATIONS.filter((s) => s.lines.includes("Green")),
+    [ALL_STATIONS]
+  );
+  const yellowStations = useMemo(
+    () => ALL_STATIONS.filter((s) => s.lines.includes("Yellow")),
+    [ALL_STATIONS]
+  );
+  const blueStations = useMemo(
+    () => ALL_STATIONS.filter((s) => s.lines.includes("Blue")),
     [ALL_STATIONS]
   );
 
-  const [activeLineFilter, setActiveLineFilter] = useState<"All" | "Purple" | "Green">("All");
-  const [origin, setOrigin] = useState<string>("p-idg"); // Indiranagar by default
-  const [destination, setDestination] = useState<string>("interchange-majestic"); // Majestic by default
+  const [activeLineFilter, setActiveLineFilter] = useState<"All" | "Purple" | "Green" | "Yellow" | "Blue">("All");
+  const [origin, setOrigin] = useState<string>("indiranagar");
+  const [destination, setDestination] = useState<string>("majestic");
   const [bookedToken, setBookedToken] = useState<string | null>(null);
   const [showStationList, setShowStationList] = useState(false);
 
@@ -52,8 +80,10 @@ export default function MetroScreen() {
   const displayStations = useMemo(() => {
     if (activeLineFilter === "Purple") return purpleStations;
     if (activeLineFilter === "Green") return greenStations;
+    if (activeLineFilter === "Yellow") return yellowStations;
+    if (activeLineFilter === "Blue") return blueStations;
     return ALL_STATIONS;
-  }, [activeLineFilter, purpleStations, greenStations, ALL_STATIONS]);
+  }, [activeLineFilter, purpleStations, greenStations, yellowStations, blueStations, ALL_STATIONS]);
 
   // Authentic BMRCL Journey & Fare Engine
   const calculateTrip = () => {
@@ -61,63 +91,28 @@ export default function MetroScreen() {
       return { fare: 0, duration: 0, stops: 0, interchange: false, path: [] };
     }
 
-    const majesticId = "interchange-majestic";
-    const isOrigPurple = originStation.line === "Purple" || originStation.line === "Both";
-    const isDestPurple = destStation.line === "Purple" || destStation.line === "Both";
-    const isOrigGreen = originStation.line === "Green" || originStation.line === "Both";
-    const isDestGreen = destStation.line === "Green" || destStation.line === "Both";
+    const isCommonLine = originStation.lines.some((l) => destStation.lines.includes(l));
+    const interchange = !isCommonLine;
 
-    let stops = 0;
-    let interchange = false;
-    let path: TransitNode[] = [];
+    // Approximate stations between coordinates based on Bangalore metro grid
+    // Distance formula (Euclidean * 111 km/deg)
+    const distKm = Math.sqrt(
+      Math.pow((destStation.lat - originStation.lat) * 111, 2) +
+      Math.pow((destStation.lon - originStation.lon) * 111 * Math.cos(destStation.lat * (Math.PI / 180)), 2)
+    );
 
-    // Case 1: Both stations on Purple Line
-    if (isOrigPurple && isDestPurple && (originStation.line === "Purple" || destStation.line === "Purple")) {
-      const idx1 = purpleStations.findIndex((s) => s.id === originStation.id);
-      const idx2 = purpleStations.findIndex((s) => s.id === destStation.id);
-      stops = Math.abs(idx2 - idx1);
-      path = idx1 <= idx2 ? purpleStations.slice(idx1, idx2 + 1) : purpleStations.slice(idx2, idx1 + 1).reverse();
-    }
-    // Case 2: Both stations on Green Line
-    else if (isOrigGreen && isDestGreen && (originStation.line === "Green" || destStation.line === "Green")) {
-      const idx1 = greenStations.findIndex((s) => s.id === originStation.id);
-      const idx2 = greenStations.findIndex((s) => s.id === destStation.id);
-      stops = Math.abs(idx2 - idx1);
-      path = idx1 <= idx2 ? greenStations.slice(idx1, idx2 + 1) : greenStations.slice(idx2, idx1 + 1).reverse();
-    }
-    // Case 3: Cross-line transfer via Majestic Interchange
-    else {
-      interchange = true;
-      if (isOrigPurple) {
-        // Purple -> Majestic -> Green
-        const p1 = purpleStations.findIndex((s) => s.id === originStation.id);
-        const pMaj = purpleStations.findIndex((s) => s.id === majesticId);
-        const gMaj = greenStations.findIndex((s) => s.id === majesticId);
-        const g2 = greenStations.findIndex((s) => s.id === destStation.id);
+    // BMRCL average station spacing is 1.15 km
+    const stops = Math.max(1, Math.min(35, Math.round(distKm / 1.15)));
 
-        const stopsPart1 = Math.abs(pMaj - p1);
-        const stopsPart2 = Math.abs(g2 - gMaj);
-        stops = stopsPart1 + stopsPart2;
-
-        const path1 = p1 <= pMaj ? purpleStations.slice(p1, pMaj) : purpleStations.slice(pMaj + 1, p1 + 1).reverse();
-        const path2 = gMaj <= g2 ? greenStations.slice(gMaj, g2 + 1) : greenStations.slice(g2, gMaj + 1).reverse();
-        path = [...path1, ...path2];
-      } else {
-        // Green -> Majestic -> Purple
-        const g1 = greenStations.findIndex((s) => s.id === originStation.id);
-        const gMaj = greenStations.findIndex((s) => s.id === majesticId);
-        const pMaj = purpleStations.findIndex((s) => s.id === majesticId);
-        const p2 = purpleStations.findIndex((s) => s.id === destStation.id);
-
-        const stopsPart1 = Math.abs(gMaj - g1);
-        const stopsPart2 = Math.abs(p2 - pMaj);
-        stops = stopsPart1 + stopsPart2;
-
-        const path1 = g1 <= gMaj ? greenStations.slice(g1, gMaj) : greenStations.slice(gMaj + 1, g1 + 1).reverse();
-        const path2 = pMaj <= p2 ? purpleStations.slice(pMaj, p2 + 1) : purpleStations.slice(p2, pMaj + 1).reverse();
-        path = [...path1, ...path2];
+    // Generate path sequence
+    let path: MetroStationNode[] = [originStation];
+    if (interchange) {
+      const majesticStation = ALL_STATIONS.find((s) => s.id === "majestic") || originStation;
+      if (originStation.id !== "majestic" && destStation.id !== "majestic") {
+        path.push(majesticStation);
       }
     }
+    path.push(destStation);
 
     // Official BMRCL Distance-based Fare Matrix
     let fare = 10;
@@ -132,7 +127,7 @@ export default function MetroScreen() {
     else if (stops <= 23) fare = 50;
     else fare = 60; // Max BMRCL Fare Cap
 
-    // Real travel time: ~2.3 mins per station + 5 min interchange buffer if switching at Majestic
+    // Real travel time: ~2.3 mins per station + 5 min interchange buffer if switching
     const duration = Math.round(stops * 2.3 + (interchange ? 5 : 2));
 
     return { fare, duration, stops, interchange, path };
@@ -155,7 +150,7 @@ export default function MetroScreen() {
     <div className="flex flex-col h-[100dvh] overflow-y-auto no-scrollbar pb-28 bg-surface-black px-4 pt-6 text-slate-100">
       
       {/* Header & Live Wallet Display */}
-      <div className="mb-4 flex justify-between items-start">
+      <div className="mb-3 flex justify-between items-start">
         <div>
           <div className="flex items-center gap-1.5 mb-0.5">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
@@ -166,7 +161,7 @@ export default function MetroScreen() {
           <h1 className="text-2xl font-black text-white flex items-center gap-2">
             <TrainFront className="text-purple-400" size={26} /> Namma Metro
           </h1>
-          <p className="text-[11px] text-slate-400">Bengaluru Rapid Transit System</p>
+          <p className="text-[11px] text-slate-400">121 Stations · 5 Lines · Real GeoJSON Network</p>
         </div>
 
         {/* Live Wallet Badge */}
@@ -179,22 +174,11 @@ export default function MetroScreen() {
         </div>
       </div>
 
-      {/* Yelahanka Commuter Advisory Banner */}
-      <div className="mb-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl p-3 flex items-start gap-2.5 text-amber-300">
-        <Info size={16} className="shrink-0 mt-0.5 text-amber-400" />
-        <div className="text-[11px] leading-relaxed">
-          <strong className="font-bold text-amber-200">Commuter Note for Yelahanka:</strong>
-          <span className="text-amber-300/90 block mt-0.5">
-            Yelahanka currently does <strong>not</strong> have an operational metro station (Airport Blue Line Phase 2B is under construction). To reach the nearest metro, take <strong>BMTC bus 402B or 401K</strong> to <strong>Yeshwanthpur</strong> or <strong>Nagasandra</strong> (Green Line).
-          </span>
-        </div>
-      </div>
-
       {/* Official Line Toggle Tabs */}
-      <div className="flex bg-slate-900/90 p-1 rounded-2xl border border-slate-800 mb-5">
+      <div className="flex bg-slate-900/90 p-1 rounded-2xl border border-slate-800 mb-3 overflow-x-auto no-scrollbar">
         <button
           onClick={() => setActiveLineFilter("All")}
-          className={`flex-1 py-2 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+          className={`py-1.5 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 shrink-0 ${
             activeLineFilter === "All"
               ? "bg-slate-800 text-white shadow-md border border-slate-700"
               : "text-slate-400 hover:text-slate-200"
@@ -205,36 +189,81 @@ export default function MetroScreen() {
 
         <button
           onClick={() => setActiveLineFilter("Purple")}
-          className={`flex-1 py-2 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+          className={`py-1.5 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 shrink-0 ${
             activeLineFilter === "Purple"
               ? "bg-purple-600 text-white shadow-md"
               : "text-slate-400 hover:text-slate-200"
           }`}
         >
           <span className="w-2 h-2 rounded-full bg-purple-400" />
-          <span>Purple (37)</span>
+          <span>Purple ({purpleStations.length})</span>
         </button>
 
         <button
           onClick={() => setActiveLineFilter("Green")}
-          className={`flex-1 py-2 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+          className={`py-1.5 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 shrink-0 ${
             activeLineFilter === "Green"
               ? "bg-emerald-600 text-white shadow-md"
               : "text-slate-400 hover:text-slate-200"
           }`}
         >
           <span className="w-2 h-2 rounded-full bg-emerald-400" />
-          <span>Green (31)</span>
+          <span>Green ({greenStations.length})</span>
+        </button>
+
+        <button
+          onClick={() => setActiveLineFilter("Yellow")}
+          className={`py-1.5 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 shrink-0 ${
+            activeLineFilter === "Yellow"
+              ? "bg-amber-500 text-slate-950 shadow-md font-black"
+              : "text-slate-400 hover:text-slate-200"
+          }`}
+        >
+          <span className="w-2 h-2 rounded-full bg-amber-400" />
+          <span>Yellow ({yellowStations.length})</span>
+        </button>
+
+        <button
+          onClick={() => setActiveLineFilter("Blue")}
+          className={`py-1.5 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 shrink-0 ${
+            activeLineFilter === "Blue"
+              ? "bg-blue-600 text-white shadow-md"
+              : "text-slate-400 hover:text-slate-200"
+          }`}
+        >
+          <span className="w-2 h-2 rounded-full bg-blue-400" />
+          <span>Blue ({blueStations.length})</span>
         </button>
       </div>
 
+      {/* Interactive Tiny Namma Metro Network Map */}
+      <div className="mb-4">
+        <div className="flex items-center justify-between mb-1.5 px-1">
+          <span className="text-[10px] font-black uppercase text-slate-300 tracking-wider flex items-center gap-1">
+            <MapPin size={11} className="text-purple-400" /> Interactive Metro Map
+          </span>
+          <span className="text-[9px] text-slate-400 font-bold">
+            Tap stations to set From/To
+          </span>
+        </div>
+        <div className="w-full h-56 bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl relative">
+          <MetroMap
+            originStationId={origin}
+            destStationId={destination}
+            onSelectOrigin={(id) => setOrigin(id)}
+            onSelectDestination={(id) => setDestination(id)}
+            activeLineFilter={activeLineFilter}
+          />
+        </div>
+      </div>
+
       {/* Station Selector Card */}
-      <div className="bg-slate-900/90 p-4 rounded-3xl border border-slate-800 mb-5 shadow-xl">
+      <div className="bg-slate-900/90 p-4 rounded-3xl border border-slate-800 mb-4 shadow-xl">
         <div className="flex justify-between items-center mb-3">
-          <h3 className="text-xs uppercase tracking-wider font-black text-slate-400">Select Journey</h3>
+          <h3 className="text-xs uppercase tracking-wider font-black text-slate-400">Plan Journey</h3>
           <button 
             onClick={() => { setOrigin(destination); setDestination(origin); }}
-            className="p-2 bg-slate-800 rounded-full border border-slate-700 text-emerald-400 active:rotate-180 transition-transform hover:bg-slate-700"
+            className="p-2 bg-slate-800 rounded-full border border-slate-700 text-emerald-400 active:rotate-180 transition-transform hover:bg-slate-700 cursor-pointer"
             title="Swap Origin and Destination"
           >
             <ArrowRightLeft size={14} />
@@ -254,7 +283,7 @@ export default function MetroScreen() {
               >
                 {displayStations.map((s) => (
                   <option key={`orig-${s.id}`} value={s.id} className="bg-slate-900 text-white">
-                    {s.line === "Purple" ? "🟣" : s.line === "Green" ? "🟢" : "🔄"} {s.name}
+                    {s.lines.includes("Purple") ? "🟣" : s.lines.includes("Green") ? "🟢" : s.lines.includes("Yellow") ? "🟡" : "🔵"} {s.name}
                   </option>
                 ))}
               </select>
@@ -273,7 +302,7 @@ export default function MetroScreen() {
               >
                 {displayStations.map((s) => (
                   <option key={`dest-${s.id}`} value={s.id} className="bg-slate-900 text-white">
-                    {s.line === "Purple" ? "🟣" : s.line === "Green" ? "🟢" : "🔄"} {s.name}
+                    {s.lines.includes("Purple") ? "🟣" : s.lines.includes("Green") ? "🟢" : s.lines.includes("Yellow") ? "🟡" : "🔵"} {s.name}
                   </option>
                 ))}
               </select>
@@ -283,11 +312,11 @@ export default function MetroScreen() {
       </div>
 
       {/* Calculated Trip Details */}
-      {originStation.id !== destStation.id && (
+      {originStation && destStation && originStation.id !== destStation.id && (
         <motion.div 
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-slate-900/90 p-5 rounded-3xl border border-slate-800 mb-5 shadow-xl"
+          className="bg-slate-900/90 p-5 rounded-3xl border border-slate-800 mb-4 shadow-xl"
         >
           {/* Fare & Metrics Grid */}
           <div className="grid grid-cols-3 gap-2 text-center border-b border-slate-800 pb-4 mb-4">
@@ -314,14 +343,14 @@ export default function MetroScreen() {
               <div>
                 <strong className="text-amber-200 block font-bold">Interchange Required at Majestic:</strong>
                 <span className="text-[11px] text-amber-300/90">
-                  Switch between <strong>Purple Line</strong> (Platforms 1 & 2) and <strong>Green Line</strong> (Platforms 3 & 4) at <strong>Nadaprabhu Kempegowda Station, Majestic</strong>.
+                  Switch between <strong>Purple Line</strong> and <strong>Green Line</strong> at <strong>Nadaprabhu Kempegowda Station, Majestic</strong>.
                 </span>
               </div>
             </div>
           ) : (
             <div className="bg-emerald-500/10 border border-emerald-500/30 p-2.5 rounded-2xl text-emerald-300 text-xs font-semibold mb-4 flex items-center gap-2">
               <CheckCircle2 size={16} className="text-emerald-400 shrink-0" />
-              <span>Direct single-train journey on {originStation.line === "Purple" ? "Purple Line" : "Green Line"}. No line change needed.</span>
+              <span>Direct single-train journey. No line change needed.</span>
             </div>
           )}
 
@@ -329,11 +358,11 @@ export default function MetroScreen() {
           <div className="mb-4 bg-slate-950 p-3.5 rounded-2xl border border-slate-800">
             <button
               onClick={() => setShowStationList(!showStationList)}
-              className="w-full flex items-center justify-between text-xs font-bold text-slate-300 hover:text-white"
+              className="w-full flex items-center justify-between text-xs font-bold text-slate-300 hover:text-white cursor-pointer"
             >
               <span className="flex items-center gap-2">
                 <Navigation size={14} className="text-emerald-400" />
-                <span>Station-by-Station Route ({trip.path.length} Stations)</span>
+                <span>Station-by-Station Route ({trip.path.length} Key Checkpoints)</span>
               </span>
               {showStationList ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
             </button>
@@ -349,13 +378,13 @@ export default function MetroScreen() {
                   {trip.path.map((station, idx) => {
                     const isStart = idx === 0;
                     const isEnd = idx === trip.path.length - 1;
-                    const isMajestic = station.id === "interchange-majestic";
+                    const isMajestic = station.id === "majestic";
 
                     return (
                       <div key={`path-${station.id}-${idx}`} className="flex items-center gap-2.5 text-xs">
                         <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${
                           isMajestic ? "bg-amber-400 animate-pulse" :
-                          station.line === "Purple" ? "bg-purple-500" : "bg-emerald-500"
+                          station.lines.includes("Purple") ? "bg-purple-500" : "bg-emerald-500"
                         }`} />
                         <span className={`flex-1 truncate ${
                           isStart || isEnd ? "font-black text-white" :
@@ -404,7 +433,7 @@ export default function MetroScreen() {
             <span>Purple Line</span>
           </div>
           <p className="text-[10px] text-slate-300 font-semibold">Whitefield ⇄ Challaghatta</p>
-          <span className="text-[9px] text-slate-500 block mt-1">37 Stations · 43.4 km</span>
+          <span className="text-[9px] text-slate-500 block mt-1">{purpleStations.length} Stations · 43.4 km</span>
         </div>
 
         <div className="bg-slate-900/60 p-3 rounded-2xl border border-emerald-500/30">
@@ -413,7 +442,7 @@ export default function MetroScreen() {
             <span>Green Line</span>
           </div>
           <p className="text-[10px] text-slate-300 font-semibold">Madavara ⇄ Silk Institute</p>
-          <span className="text-[9px] text-slate-500 block mt-1">31 Stations · 33.5 km</span>
+          <span className="text-[9px] text-slate-500 block mt-1">{greenStations.length} Stations · 33.5 km</span>
         </div>
       </div>
 
