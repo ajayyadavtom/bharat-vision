@@ -141,9 +141,9 @@ export default function LiveMap({
 
   const [fleetUpdates, setFleetUpdates] = useState<Record<string, LiveFleetUpdate>>({});
   const [wsConnected, setWsConnected] = useState(false);
-  const [mapLayer, setMapLayer] = useState<"carto" | "mappls" | "osm">("carto");
+  const [mapLayer, setMapLayer] = useState<"carto" | "voyager" | "osm" | "mappls">("carto");
   const [mapplsError, setMapplsError] = useState(false);
-  const mapplsKey = process.env.NEXT_PUBLIC_MAPPLS_KEY || "";
+  const mapplsKey = process.env.NEXT_PUBLIC_MAPPLS_KEY || "lhvxctxtboznvhqkwtgkawgxjakfvxlmlfhu";
   
   // Calculate dynamic map center
   let mapCenter: [number, number] = cityData.coordinates;
@@ -235,14 +235,9 @@ export default function LiveMap({
           onClick={() => {
             setMapplsError(false);
             setMapLayer(prev => {
-              if (prev === "carto") return "osm";
-              if (prev === "osm") {
-                if (!mapplsKey) {
-                  setMapplsError(true);
-                  return "carto";
-                }
-                return "mappls";
-              }
+              if (prev === "carto") return "voyager";
+              if (prev === "voyager") return "osm";
+              if (prev === "osm") return "mappls";
               return "carto";
             });
           }}
@@ -252,14 +247,16 @@ export default function LiveMap({
           <span>
             {mapLayer === "mappls" 
               ? "Mappls MapmyIndia" 
+              : mapLayer === "voyager"
+              ? "Navigation (Day)"
               : mapLayer === "osm" 
               ? "Transit Streets (OSM)" 
               : "CARTO Dark"}
           </span>
         </button>
         {mapplsError && (
-          <span className="text-[8px] text-amber-400 font-bold uppercase tracking-wider pl-1.5 border-l border-slate-700" title="Valid Mappls API key required in NEXT_PUBLIC_MAPPLS_KEY">
-            Key Required
+          <span className="text-[8px] text-amber-400 font-bold uppercase tracking-wider pl-1.5 border-l border-slate-700" title="Enable Web Maps API in Mappls console">
+            Mappls Inactive
           </span>
         )}
       </div>
@@ -299,6 +296,12 @@ export default function LiveMap({
                 setMapLayer("carto");
               }
             }}
+          />
+        ) : mapLayer === "voyager" ? (
+          <TileLayer
+            key="voyager-tile-layer"
+            attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+            url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
           />
         ) : mapLayer === "osm" ? (
           <TileLayer
