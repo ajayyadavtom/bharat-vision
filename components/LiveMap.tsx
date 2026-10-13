@@ -141,9 +141,9 @@ export default function LiveMap({
 
   const [fleetUpdates, setFleetUpdates] = useState<Record<string, LiveFleetUpdate>>({});
   const [wsConnected, setWsConnected] = useState(false);
-  const [mapLayer, setMapLayer] = useState<"carto" | "mappls">("carto");
+  const [mapLayer, setMapLayer] = useState<"carto" | "mappls" | "osm">("carto");
   const [mapplsError, setMapplsError] = useState(false);
-  const mapplsKey = process.env.NEXT_PUBLIC_MAPPLS_KEY || "lhvxctxtboznvhqkwtgkawgxjakfvxlmlfhu";
+  const mapplsKey = process.env.NEXT_PUBLIC_MAPPLS_KEY || "";
   
   // Calculate dynamic map center
   let mapCenter: [number, number] = cityData.coordinates;
@@ -229,21 +229,37 @@ export default function LiveMap({
     <div className="w-full h-full relative z-0 bg-surface-black">
       
       {/* Map Layer Switcher Button Overlay */}
-      <div className="absolute top-3 left-3 z-[400] flex items-center gap-1.5 bg-surface-black/90 backdrop-blur-md px-3 py-1.5 rounded-full border border-slate-200 dark:border-brand-dark shadow-2xl">
+      <div className="absolute top-3 left-3 z-[400] flex items-center gap-1.5 bg-slate-900/90 dark:bg-slate-950/90 backdrop-blur-md px-3 py-1.5 rounded-full border border-slate-700/80 shadow-2xl">
         <button
           type="button"
           onClick={() => {
             setMapplsError(false);
-            setMapLayer(prev => prev === "carto" ? "mappls" : "carto");
+            setMapLayer(prev => {
+              if (prev === "carto") return "osm";
+              if (prev === "osm") {
+                if (!mapplsKey) {
+                  setMapplsError(true);
+                  return "carto";
+                }
+                return "mappls";
+              }
+              return "carto";
+            });
           }}
-          className="text-[10px] font-bold text-slate-700 dark:text-slate-200 hover:text-brand flex items-center gap-1.5 transition-colors cursor-pointer"
+          className="text-[10px] font-bold text-slate-200 hover:text-white flex items-center gap-1.5 transition-colors cursor-pointer"
         >
           <span>🗺️</span>
-          <span>{mapLayer === "mappls" ? "Mappls MapmyIndia" : "CARTO Dark"}</span>
+          <span>
+            {mapLayer === "mappls" 
+              ? "Mappls MapmyIndia" 
+              : mapLayer === "osm" 
+              ? "Transit Streets (OSM)" 
+              : "CARTO Dark"}
+          </span>
         </button>
         {mapplsError && (
-          <span className="text-[8px] text-amber-500 font-bold uppercase tracking-wider pl-1.5 border-l border-slate-700">
-            Fallback
+          <span className="text-[8px] text-amber-400 font-bold uppercase tracking-wider pl-1.5 border-l border-slate-700" title="Valid Mappls API key required in NEXT_PUBLIC_MAPPLS_KEY">
+            Key Required
           </span>
         )}
       </div>
@@ -272,17 +288,23 @@ export default function LiveMap({
       >
         <MapController center={mapCenter} bounds={mapBounds} />
         
-        {mapLayer === "mappls" && !mapplsError ? (
+        {mapLayer === "mappls" && mapplsKey && !mapplsError ? (
           <TileLayer
             key="mappls-tile-layer"
             attribution='&copy; <a href="https://www.mappls.com" target="_blank" rel="noreferrer">Mappls</a>'
-            url={`https://tile.mappls.com/raster_tiles/{z}/{x}/{y}.png?access_token=${mapplsKey}`}
+            url={`https://apis.mappls.com/advancedmaps/v1/${mapplsKey}/map_tile/{z}/{x}/{y}.png`}
             eventHandlers={{
               tileerror: () => {
                 setMapplsError(true);
                 setMapLayer("carto");
               }
             }}
+          />
+        ) : mapLayer === "osm" ? (
+          <TileLayer
+            key="osm-tile-layer"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
         ) : (
           <TileLayer
