@@ -1,5 +1,5 @@
 // Bharat Vision Service Worker — Production PWA Cache
-const CACHE_NAME = "bharat-vision-v1";
+const CACHE_NAME = "bharat-vision-v2";
 const OFFLINE_URL = "/";
 
 self.addEventListener("install", (event) => {
@@ -27,6 +27,17 @@ self.addEventListener("fetch", (event) => {
   // Skip Chrome extension and non-http(s) requests
   const url = new URL(event.request.url);
   if (url.protocol !== "http:" && url.protocol !== "https:") return;
+
+  // Never cache external map tile requests to prevent stale/watermarked tiles
+  if (
+    url.hostname.includes("tile") || 
+    url.hostname.includes("cartocdn") || 
+    url.hostname.includes("olamaps") || 
+    url.hostname.includes("mappls") ||
+    url.hostname.includes("openstreetmap")
+  ) {
+    return;
+  }
 
   event.respondWith(
     fetch(event.request)
