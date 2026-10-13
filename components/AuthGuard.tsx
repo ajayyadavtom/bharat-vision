@@ -28,7 +28,30 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
         const hash = window.location.hash;
         const search = window.location.search;
         if (hash.includes("access_token") || search.includes("code") || hash.includes("refresh_token")) {
-          // Allow Supabase OAuth client to parse tokens without interrupting
+          // Explicitly exchange PKCE auth code if present in query parameters
+          const urlParams = new URLSearchParams(search);
+          const code = urlParams.get("code");
+          if (code) {
+            try {
+              const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+              if (data?.session?.user) {
+                sessionStorage.setItem("bv-auth", "true");
+                const userObj = data.session.user;
+                const displayName = userObj.user_metadata?.full_name || 
+                                    userObj.user_metadata?.name || 
+                                    (userObj.email ? userObj.email.split("@")[0] : "Commuter");
+                setUserName(displayName);
+                setIsAuthorized(true);
+                setShowSplash(false);
+                window.history.replaceState({}, document.title, window.location.pathname);
+                return;
+              }
+            } catch (e) {
+              console.warn("exchangeCodeForSession check:", e);
+            }
+          }
+
+          // Allow Supabase OAuth client to parse tokens from hash/session
           for (let attempt = 0; attempt < 5; attempt++) {
             try {
               const { data } = await supabase.auth.getSession();
@@ -41,6 +64,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
                 setUserName(displayName);
                 setIsAuthorized(true);
                 setShowSplash(false);
+                window.history.replaceState({}, document.title, window.location.pathname);
                 return;
               }
             } catch (e) {
@@ -118,8 +142,17 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
       }
     });
 
+    const isOAuthRedirect = typeof window !== "undefined" && 
+      (window.location.hash.includes("access_token") || 
+       window.location.search.includes("code") || 
+       window.location.hash.includes("refresh_token"));
+
     const hasSeenSplash = sessionStorage.getItem("bv-splash-seen");
-    if (!hasSeenSplash && pathname === "/") {
+    if (isOAuthRedirect) {
+      sessionStorage.setItem("bv-splash-seen", "true");
+      setShowSplash(false);
+      checkAuth();
+    } else if (!hasSeenSplash && pathname === "/") {
       const timer = setTimeout(() => {
         sessionStorage.setItem("bv-splash-seen", "true");
         setShowSplash(false);
