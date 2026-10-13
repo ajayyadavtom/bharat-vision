@@ -25,6 +25,18 @@ export interface EmergencyContact {
   relation: string;
 }
 
+export interface NcmcCardInfo {
+  cardNumber: string;
+  cardHolder: string;
+  expiryDate: string;
+  issuingBank: string;
+  cardBalance: number;
+  isLinked: boolean;
+  autoTopUp: boolean;
+  cardNickName?: string;
+  lastSyncedAt?: number | null;
+}
+
 interface AppState {
   appLang: string;
   setAppLang: (lang: string) => void;
@@ -73,6 +85,13 @@ interface AppState {
   addEmergencyContact: (contact: Omit<EmergencyContact, "id">) => void;
   removeEmergencyContact: (id: string) => void;
   updateEmergencyContact: (contact: EmergencyContact) => void;
+
+  // Physical NCMC Card
+  ncmcCard: NcmcCardInfo;
+  setNcmcCard: (card: Partial<NcmcCardInfo>) => void;
+  linkNcmcCard: (card: Omit<NcmcCardInfo, "isLinked">) => void;
+  unlinkNcmcCard: () => void;
+  topUpNcmcCard: (amount: number) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -114,6 +133,45 @@ export const useAppStore = create<AppState>()(
       })),
       updateEmergencyContact: (contact) => set((state) => ({
         emergencyContacts: state.emergencyContacts.map((c) => c.id === contact.id ? contact : c)
+      })),
+
+      // Physical NCMC Card Initial State & Actions
+      ncmcCard: {
+        cardNumber: "",
+        cardHolder: "",
+        expiryDate: "",
+        issuingBank: "State Bank of India (SBI)",
+        cardBalance: 0,
+        isLinked: false,
+        autoTopUp: true,
+        cardNickName: "Primary NCMC Transit Card",
+        lastSyncedAt: null,
+      },
+      setNcmcCard: (card) => set((state) => ({
+        ncmcCard: { ...state.ncmcCard, ...card }
+      })),
+      linkNcmcCard: (card) => set((state) => ({
+        ncmcCard: { ...state.ncmcCard, ...card, isLinked: true, lastSyncedAt: Date.now() }
+      })),
+      unlinkNcmcCard: () => set({
+        ncmcCard: {
+          cardNumber: "",
+          cardHolder: "",
+          expiryDate: "",
+          issuingBank: "State Bank of India (SBI)",
+          cardBalance: 0,
+          isLinked: false,
+          autoTopUp: true,
+          cardNickName: "Primary NCMC Transit Card",
+          lastSyncedAt: null,
+        }
+      }),
+      topUpNcmcCard: (amount) => set((state) => ({
+        ncmcCard: {
+          ...state.ncmcCard,
+          cardBalance: Math.round((state.ncmcCard.cardBalance + amount) * 100) / 100,
+          lastSyncedAt: Date.now()
+        }
       })),
       
       setCurrentCity: (cityId: string) => {
@@ -325,7 +383,8 @@ export const useAppStore = create<AppState>()(
         carbonSavedGrams: state.carbonSavedGrams,
         userName: state.userName,
         appLang: state.appLang,
-        activePass: state.activePass
+        activePass: state.activePass,
+        ncmcCard: state.ncmcCard
       }),
     }
   )

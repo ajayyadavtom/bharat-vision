@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ShieldCheck, Zap, X, RefreshCw, Smartphone } from "lucide-react";
+import { ShieldCheck, Zap, X, RefreshCw, Smartphone, CreditCard } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 
@@ -10,9 +10,14 @@ interface UpiGatewayProps {
   amount: number;
   onSuccess: () => void;
   onCancel: () => void;
+  cardDetails?: {
+    cardNumber: string;
+    cardHolder?: string;
+    issuingBank?: string;
+  };
 }
 
-export default function UpiGateway({ isOpen, amount, onSuccess, onCancel }: UpiGatewayProps) {
+export default function UpiGateway({ isOpen, amount, onSuccess, onCancel, cardDetails }: UpiGatewayProps) {
   const [loading, setLoading] = useState(false);
   const [verificationStep, setVerificationStep] = useState(0); // 0 = default, 1 = verifying
 
@@ -54,7 +59,29 @@ export default function UpiGateway({ isOpen, amount, onSuccess, onCancel }: UpiG
           </div>
           
           <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-1">Pay to Recharge</h3>
-          <p className="text-xs text-slate-500 dark:text-gray-400 mb-6">Scan using any UPI App (Paytm, PhonePe, GPay)</p>
+          <p className="text-xs text-slate-500 dark:text-gray-400 mb-4">Scan using any UPI App (Paytm, PhonePe, GPay)</p>
+
+          {/* Target NCMC Card Display */}
+          {cardDetails && cardDetails.cardNumber && (
+            <div className="bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-500/40 p-3 rounded-2xl mb-4 flex items-center justify-between text-left">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-indigo-100 dark:bg-indigo-900/50 rounded-xl text-indigo-600 dark:text-indigo-400">
+                  <CreditCard size={18} />
+                </div>
+                <div>
+                  <p className="text-[9px] text-indigo-500 dark:text-indigo-300 font-extrabold uppercase tracking-wider">
+                    Target NCMC Card
+                  </p>
+                  <p className="text-xs font-mono font-bold text-slate-900 dark:text-white">
+                    {cardDetails.cardNumber.slice(0, 4)} •••• •••• {cardDetails.cardNumber.slice(-4)}
+                  </p>
+                </div>
+              </div>
+              <span className="text-[9px] bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 px-2 py-0.5 rounded-md font-bold">
+                {cardDetails.issuingBank?.split("(")[0].trim() || "RuPay"}
+              </span>
+            </div>
+          )}
 
           {/* Amount Display Box */}
           <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 flex justify-between items-center mb-6">

@@ -141,7 +141,7 @@ export default function LiveMap({
 
   const [fleetUpdates, setFleetUpdates] = useState<Record<string, LiveFleetUpdate>>({});
   const [wsConnected, setWsConnected] = useState(false);
-  const [mapLayer, setMapLayer] = useState<"carto" | "voyager" | "osm" | "mappls">("carto");
+  const [mapLayer, setMapLayer] = useState<"carto" | "mappls">("carto");
   const [mapplsError, setMapplsError] = useState(false);
   const mapplsKey = process.env.NEXT_PUBLIC_MAPPLS_KEY || "lhvxctxtboznvhqkwtgkawgxjakfvxlmlfhu";
   
@@ -199,14 +199,13 @@ export default function LiveMap({
           vehicles: [{
             v_id: `KA5709/08/2026, 09:09 AM F${Math.floor(Math.random() * 1000)}`,
             lat, lng, spd, hdg, occ,
-            nxt_stp: route_id === "500D" ? "Silk Board" : route_id === "402B" ? "Mekhri Circle / Majestic" : "Majestic",
+            nxt_stp: route_id === "500D" ? "Silk Board" : "Majestic",
             eta_sec
           }]
         };
       };
 
       const payloads = [
-        generatePayload("402B", 13.0600, 77.5920, 68), // Yelahanka to Majestic
         generatePayload("500D", 13.0358, 77.5970, 82),
         generatePayload("250", 13.0120, 77.5850, 45),
         generatePayload("335E", 12.9716, 77.6412, 95)
@@ -230,34 +229,21 @@ export default function LiveMap({
     <div className="w-full h-full relative z-0 bg-surface-black">
       
       {/* Map Layer Switcher Button Overlay */}
-      <div className="absolute top-3 left-3 z-[400] flex items-center gap-1.5 bg-slate-900/90 dark:bg-slate-950/90 backdrop-blur-md px-3 py-1.5 rounded-full border border-slate-700/80 shadow-2xl">
+      <div className="absolute top-3 left-3 z-[400] flex items-center gap-1.5 bg-surface-black/90 backdrop-blur-md px-3 py-1.5 rounded-full border border-slate-200 dark:border-brand-dark shadow-2xl">
         <button
           type="button"
           onClick={() => {
             setMapplsError(false);
-            setMapLayer(prev => {
-              if (prev === "carto") return "voyager";
-              if (prev === "voyager") return "osm";
-              if (prev === "osm") return "mappls";
-              return "carto";
-            });
+            setMapLayer(prev => prev === "carto" ? "mappls" : "carto");
           }}
-          className="text-[10px] font-bold text-slate-200 hover:text-white flex items-center gap-1.5 transition-colors cursor-pointer"
+          className="text-[10px] font-bold text-slate-700 dark:text-slate-200 hover:text-brand flex items-center gap-1.5 transition-colors cursor-pointer"
         >
           <span>🗺️</span>
-          <span>
-            {mapLayer === "mappls" 
-              ? "Mappls MapmyIndia" 
-              : mapLayer === "voyager"
-              ? "Navigation (Day)"
-              : mapLayer === "osm" 
-              ? "Transit Streets (OSM)" 
-              : "CARTO Dark"}
-          </span>
+          <span>{mapLayer === "mappls" ? "Mappls MapmyIndia" : "CARTO Dark"}</span>
         </button>
         {mapplsError && (
-          <span className="text-[8px] text-amber-400 font-bold uppercase tracking-wider pl-1.5 border-l border-slate-700" title="Enable Web Maps API in Mappls console">
-            Mappls Inactive
+          <span className="text-[8px] text-amber-500 font-bold uppercase tracking-wider pl-1.5 border-l border-slate-700">
+            Fallback
           </span>
         )}
       </div>
@@ -286,29 +272,17 @@ export default function LiveMap({
       >
         <MapController center={mapCenter} bounds={mapBounds} />
         
-        {mapLayer === "mappls" && mapplsKey && !mapplsError ? (
+        {mapLayer === "mappls" && !mapplsError ? (
           <TileLayer
             key="mappls-tile-layer"
             attribution='&copy; <a href="https://www.mappls.com" target="_blank" rel="noreferrer">Mappls</a>'
-            url={`https://apis.mappls.com/advancedmaps/v1/${mapplsKey}/map_tile/{z}/{x}/{y}.png`}
+            url={`https://tile.mappls.com/raster_tiles/{z}/{x}/{y}.png?access_token=${mapplsKey}`}
             eventHandlers={{
               tileerror: () => {
                 setMapplsError(true);
                 setMapLayer("carto");
               }
             }}
-          />
-        ) : mapLayer === "voyager" ? (
-          <TileLayer
-            key="voyager-tile-layer"
-            attribution='&copy; <a href="https://carto.com/">CARTO</a>'
-            url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-          />
-        ) : mapLayer === "osm" ? (
-          <TileLayer
-            key="osm-tile-layer"
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
         ) : (
           <TileLayer

@@ -16,32 +16,6 @@ interface TransitGuide {
 }
 
 const BENGALURU_REAL_TRANSIT_DATA: Record<string, TransitGuide> = {
-  "yelahanka_to_majestic": {
-    title: "Yelahanka (NES / Satellite Town) ⇄ Kempegowda Majestic (KBS)",
-    busRoutes: [
-      "402B (Yelahanka Satellite Town 5th Phase ⇄ Majestic KBS Platform 22) - Frequency: Every 6 mins",
-      "402D (Yelahanka Satellite Town 4th Phase ⇄ Majestic) - Frequency: Every 10 mins",
-      "402C (Attur Layout / Yelahanka NES ⇄ Majestic) - Frequency: Every 12 mins",
-      "402 (Yelahanka New Town ⇄ Majestic) - Frequency: Every 15 mins",
-      "285M (Doddaballapura ⇄ Majestic via Yelahanka Old Town) - Frequency: Every 8 mins",
-      "285 (Rajankunte ⇄ Majestic via Yelahanka NES) - Frequency: Every 12 mins",
-      "298M (Devanahalli ⇄ Majestic via Yelahanka NES) - Frequency: Every 15 mins",
-      "KIA-9 (Vayu Vajra AC Luxury Volvo: Airport ⇄ Majestic via Yelahanka NES) - Every 10 mins (24x7)"
-    ],
-    metroOption: "⚠️ NO METRO AVAILABLE: Yelahanka does NOT have an operational Namma Metro line (Blue Line Phase 2B Airport Metro is currently under construction). Commuters MUST use direct BMTC Buses or SWR Suburban Rail.",
-    duration: "BMTC Bus: 35 - 50 mins via Bellary Road | SWR Suburban Train: 35 - 45 mins",
-    fareOrdinary: "₹25 (Free for Karnataka women under Shakti Scheme | BMTC Daily Pass: ₹70)",
-    fareVajra: "₹240 (Vayu Vajra KIA-9 AC Volvo)",
-    frequency: "Every 5 to 8 minutes from Yelahanka NES & Satellite Town (High-Density Corridor)",
-    firstLastTime: "First Bus: 05:00 AM | Last Bus: 11:00 PM | Night Owl: Every 30 mins",
-    chokePoints: "Hebbal Flyover merging, Esteem Mall junction, Palace Grounds, and Anand Rao Circle underpass",
-    steps: [
-      "BOARDING IN YELAHANKA: Head to Yelahanka NES Bus Stop, Yelahanka Police Station, Allalasandra Gate, or Satellite Town 5th Phase Bus Stand.",
-      "DIRECT BUS BOARDING: Board Route 402B (or 402D, 402C, 285M) heading to Kempegowda Bus Station (Majestic).",
-      "EXACT ROUTE & STOPS: Yelahanka NES ➔ Seshadripuram College ➔ Allalasandra Gate ➔ Jakkur Aerodrome ➔ GKVK Gate ➔ Byatarayanapura ➔ Kodigehalli Gate ➔ Esteem Mall ➔ Hebbal Flyover ➔ Veterinary College ➔ Ganganagar ➔ Mekhri Circle ➔ Palace Grounds ➔ RM Guttahalli ➔ Shivananda Stores ➔ Anand Rao Circle ➔ Kempegowda Bus Station (Majestic Platform 22).",
-      "RAILROAD ALTERNATIVE (SWR SUBURBAN COMMUTER TRAIN): Walk to Yelahanka Junction Railway Station (YNK). Take direct South Western Railway MEMU / DEMU commuter train to KSR Bengaluru City Junction (SBC - Majestic). Fare is only ₹10 (Unreserved ticket)! Daily Trains: Train 66524 (08:05 AM), Train 06550 DEMU (08:45 AM), Train 06596 MEMU (04:42 PM), Train 66560 MEMU (06:17 PM). Arrives directly at SBC platform opposite Majestic Bus Station!"
-    ]
-  },
   "yelahanka_to_silkboard": {
     title: "Yelahanka New Town ⇄ Central Silk Board (Outer Ring Road Corridor)",
     busRoutes: ["500D (Hebbal ➔ Silk Board Express)", "500CA", "500K", "V-500D (AC Volvo Vajra)"],
@@ -138,12 +112,7 @@ function generateDetailedTransitReport(query: string, appLang: string, cityName:
 
   // Route matches
   let matchedGuide: TransitGuide | null = null;
-  const isYel = q.includes("yelahanka") || q.includes("ilanka") || q.includes("yelanka") || q.includes("attur") || q.includes("allalasandra") || q.includes("kogilu") || q.includes("jakkur") || q.includes("ynk");
-  const isMaj = q.includes("majestic") || q.includes("kempegowda") || q.includes("kbs") || q.includes("railway") || q.includes("sbc");
-
-  if (isYel && isMaj) {
-    matchedGuide = BENGALURU_REAL_TRANSIT_DATA["yelahanka_to_majestic"];
-  } else if (isYel && (q.includes("silk") || q.includes("500d") || q.includes("orr") || q.includes("hsr"))) {
+  if (q.includes("yelahanka") && (q.includes("silk") || q.includes("500d") || q.includes("orr"))) {
     matchedGuide = BENGALURU_REAL_TRANSIT_DATA["yelahanka_to_silkboard"];
   } else if ((q.includes("majestic") && q.includes("whitefield")) || q.includes("purple") || q.includes("335e") || q.includes("itpl")) {
     matchedGuide = BENGALURU_REAL_TRANSIT_DATA["majestic_to_whitefield"];
@@ -377,23 +346,15 @@ The current time is ${currentTime}. The regional language is ${primaryLanguage}.
 
 CRITICAL INSTRUCTIONS & DATA ACCURACY:
 1. GIVE ENTIRE REAL TRANSIT DATA WITH FULL DETAILS: Do NOT be brief. Give commuters complete, exhaustive, and actionable transit intelligence.
-2. CRITICAL LOCALITY & NETWORK FACTS:
-   - YELAHANKA (Ilanka / Yelanka / Yelahanka Satellite Town / Yelahanka NES) DOES NOT HAVE AN OPERATIONAL METRO LINE. (Blue Line Phase 2B Airport Metro is currently under construction). Never suggest Namma Metro starting from Yelahanka!
-   - YELAHANKA TO MAJESTIC (Kempegowda Bus Station / KBS):
-     * PRIMARY DIRECT BMTC BUSES: Route 402B (Majestic Platform 22 ⇄ Yelahanka 5th Phase, every 6 mins), Route 402D (4th Phase ⇄ Majestic), Route 402C (Attur ⇄ Majestic), Route 402 (New Town ⇄ Majestic), Route 285M (Doddaballapura ⇄ Majestic via Yelahanka Old Town), Route 285, Route 298M, and Luxury AC Volvo KIA-9 (Airport ⇄ Majestic via Yelahanka NES).
-     * EXACT INTERMEDIATE STOPS: Yelahanka NES ➔ Seshadripuram College ➔ Allalasandra Gate ➔ Jakkur Aerodrome ➔ GKVK Gate ➔ Byatarayanapura ➔ Kodigehalli Gate ➔ Esteem Mall ➔ Hebbal Flyover ➔ Veterinary College ➔ Ganganagar ➔ Mekhri Circle ➔ Palace Grounds ➔ RM Guttahalli ➔ Shivananda Stores ➔ Anand Rao Circle ➔ Kempegowda Bus Station (Platform 22).
-     * REAL FARES: Ordinary ₹25 (Free for Karnataka women under Shakti Scheme; Daily Pass ₹70). Volvo AC KIA-9 ₹240.
-     * TRAVEL TIME: 35-50 mins via Bellary Road Expressway. Frequency: Every 5-8 mins.
-     * RAILROAD / SUBURBAN RAIL NAVIGATION: South Western Railway (SWR) MEMU / DEMU commuter trains run directly between Yelahanka Junction (YNK) and KSR Bengaluru City Junction (SBC - Majestic). Fare is only ₹10! Fast 35-45 mins traffic-free commute. Daily trains: Train 66524 (08:05 AM), Train 06550 DEMU (08:45 AM), Train 06596 MEMU (04:42 PM), Train 66560 MEMU (06:17 PM).
-3. ALWAYS INCLUDE:
-   - Exact BMTC Bus Route numbers (e.g., 402B, 500D, 335E, 250, 401K, KIA-9 Airport Vayu Vajra, V-500CA, G-2, 365, 285M).
-   - Namma Metro Lines (Purple Line, Green Line) with exact interchange instructions at Kempegowda Majestic Station where applicable.
+2. ALWAYS INCLUDE:
+   - Exact BMTC Bus Route numbers (e.g., 500D, 335E, 250, 401K, KIA-9 Airport Vayu Vajra, V-500CA, G-2, 365).
+   - Namma Metro Lines (Purple Line, Green Line) with exact interchange instructions at Kempegowda Majestic Station.
    - Exact stops, platforms, and walking/skywalk transfers.
    - Real travel duration, frequency, first bus/train, and last bus/train timings.
-   - Real fare breakdowns (Ordinary BMTC ₹5-₹35, Daily Pass ₹70, Volvo Vajra AC ₹120, Metro ₹10-₹60 with 5% smartcard discount, Railway MEMU ₹10-₹15).
-   - Known choke points (Silk Board, Tin Factory, Hebbal, Marathahalli, Mekhri Circle) and peak-hour delay mitigation.
-4. FORMATTING: Use structured, elegant Markdown with bold headers, bullet points, and numbered step-by-step itineraries.
-5. LANGUAGE: Answer ENTIRELY in ${appLang === 'kn' ? 'Kannada (ಕನ್ನಡ)' : appLang === 'hi' ? 'Hindi (हिन्दी)' : 'English'}. Translate fully with natural local phrasing.`;
+   - Real fare breakdowns (Ordinary BMTC ₹5-₹35, Daily Pass ₹70, Volvo Vajra AC ₹120, Metro ₹10-₹60 with 5% smartcard discount).
+   - Known choke points (Silk Board, Tin Factory, Hebbal, Marathahalli) and peak-hour delay mitigation.
+3. FORMATTING: Use structured, elegant Markdown with bold headers, bullet points, and numbered step-by-step itineraries.
+4. LANGUAGE: Answer ENTIRELY in ${appLang === 'kn' ? 'Kannada (ಕನ್ನಡ)' : appLang === 'hi' ? 'Hindi (हिन्दी)' : 'English'}. Translate fully with natural local phrasing.`;
 
   // Try external LLM API (Sarvam or Gemini)
   let externalSuccess = false;

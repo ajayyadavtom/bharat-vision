@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Leaf, Ticket, TrainFront, CreditCard, ShieldAlert, Zap, CloudRain, Sun, Cloud, User, MapPin, Medal } from "lucide-react";
+import { Search, Leaf, Ticket, TrainFront, CreditCard, ShieldAlert, Zap, CloudRain, Sun, Cloud, CloudLightning, User, MapPin, Medal, Droplets, Wind, Activity } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { useAppStore } from "@/lib/store";
 import { getCityData, CITIES } from "@/lib/cityData";
+import { fetchLiveWeatherAndAqi, RealtimeWeatherData } from "@/lib/weather";
 import UpiGateway from "../components/UpiGateway";
 import BehavioralHabitAI from "../components/BehavioralHabitAI";
 
@@ -69,20 +70,37 @@ export default function VisionHome() {
   };
   
 
-  const weather = {
-    temperature: 22,
-    condition: "Rain",
-    location: cityData.name,
-    commuterAlert: "Light drizzle expected. Carry an umbrella."
-  };
+  const [liveWeather, setLiveWeather] = useState<RealtimeWeatherData | null>(null);
+  const [showClimateModal, setShowClimateModal] = useState(false);
+
+  useEffect(() => {
+    let isCurrent = true;
+    const loadWeather = async () => {
+      try {
+        const coords = cityData.coordinates || [13.0150, 77.5900];
+        const res = await fetchLiveWeatherAndAqi(coords[0], coords[1]);
+        if (isCurrent) setLiveWeather(res);
+      } catch (err) {
+        console.error("Home weather load error:", err);
+      }
+    };
+    loadWeather();
+    const timer = setInterval(loadWeather, 5 * 60 * 1000);
+    return () => {
+      isCurrent = false;
+      clearInterval(timer);
+    };
+  }, [cityData.id]);
 
   useEffect(() => {
     fetchUserData();
   }, [fetchUserData]);
 
   const renderWeatherIcon = () => {
-    if (weather.condition === "Rain") return <CloudRain size={16} className="text-blue-400" />;
-    if (weather.condition === "Clear") return <Sun size={16} className="text-amber-400" />;
+    if (!liveWeather) return <Cloud size={16} className="text-slate-400" />;
+    if (liveWeather.weatherCode >= 95) return <CloudLightning size={16} className="text-amber-400 animate-pulse" />;
+    if (liveWeather.isRaining) return <CloudRain size={16} className="text-blue-400" />;
+    if (liveWeather.weatherCode === 0) return <Sun size={16} className="text-amber-400" />;
     return <Cloud size={16} className="text-slate-500 dark:text-gray-400" />;
   };
 
@@ -145,20 +163,92 @@ export default function VisionHome() {
           </div>
         </motion.div>
 
-        <motion.div variants={itemVariants} className="flex items-center justify-between bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="bg-slate-100 dark:bg-slate-800 p-2 rounded-full border border-slate-200 dark:border-slate-700">{renderWeatherIcon()}</div>
-            <div>
-              <p className="text-slate-900 dark:text-white text-sm font-bold">{weather.temperature}°C · {weather.condition}</p>
-              <p className="text-[10px] text-slate-500 font-medium flex items-center gap-1"><MapPin size={10} /> {weather.location}</p>
+        <motion.div 
+          variants={itemVariants} 
+          onClick={() => setShowClimateModal(!showClimateModal)}
+          className="flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3.5 shadow-sm cursor-pointer transition-all hover:border-slate-300 dark:hover:border-slate-700"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="bg-slate-100 dark:bg-slate-800 p-2.5 rounded-full border border-slate-200 dark:border-slate-700">
+                {renderWeatherIcon()}
+              </div>
+              <div>
+                <p className="text-slate-900 dark:text-white text-sm font-bold flex items-center gap-1.5">
+                  {liveWeather ? `${liveWeather.temperature}°C` : "--°C"} · {
+                    liveWeather ? (
+                      appLang === 'kn' ? liveWeather.conditionTextKn :
+                      appLang === 'hi' ? liveWeather.conditionTextHi :
+                      liveWeather.conditionText
+                    ) : "Loading weather..."
+                  }
+                </p>
+                <p className="text-[10px] text-slate-500 font-medium flex items-center gap-1">
+                  <MapPin size={10} /> {cityData.name} · Feels {liveWeather?.apparentTemperature ?? "--"}°C
+                </p>
+              </div>
+            </div>
+
+            {/* Real-Time US AQI Badge */}
+            <div className="flex items-center gap-2">
+              <div className="text-right">
+                <span className="text-[9px] uppercase font-bold text-slate-400 block">US AQI</span>
+                <span className={`text-xs font-black ${liveWeather?.aqiColor || "text-emerald-400"}`}>
+                  {liveWeather?.aqi ?? "--"} ({liveWeather?.aqiCategory ?? "..."})
+                </span>
+              </div>
             </div>
           </div>
-          {weather.commuterAlert && (
-            <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800/50 px-3 py-1.5 rounded-lg max-w-[140px] text-right relative overflow-hidden">
-              <motion.div animate={{ opacity: [0.3, 0.6, 0.3] }} transition={{ duration: 2, repeat: Infinity }} className="absolute inset-0 bg-blue-500/10" />
-              <p className="text-[9px] text-blue-700 dark:text-blue-300 font-bold leading-tight relative z-10">{weather.commuterAlert}</p>
+
+          {/* Commuter Climate Advisory */}
+          {liveWeather && (
+            <div className="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-600 dark:text-slate-300">
+              <span className="truncate pr-2 font-medium">
+                💡 {
+                  appLang === 'kn' ? liveWeather.commuterAlertKn :
+                  appLang === 'hi' ? liveWeather.commuterAlertHi :
+                  liveWeather.commuterAlert
+                }
+              </span>
+              <span className="text-[9px] text-emerald-500 font-bold uppercase tracking-wider shrink-0 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                Live
+              </span>
             </div>
           )}
+
+          {/* Detailed Real-Time Telemetry Drawer */}
+          <AnimatePresence>
+            {showClimateModal && liveWeather && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 grid grid-cols-4 gap-2 text-center text-slate-700 dark:text-slate-200"
+              >
+                <div className="bg-slate-50 dark:bg-slate-800/60 p-2 rounded-xl">
+                  <span className="text-[9px] text-slate-400 font-bold block uppercase flex items-center justify-center gap-0.5">
+                    <Droplets size={10} className="text-blue-400" /> Humidity
+                  </span>
+                  <span className="text-xs font-black">{liveWeather.humidity}%</span>
+                </div>
+                <div className="bg-slate-50 dark:bg-slate-800/60 p-2 rounded-xl">
+                  <span className="text-[9px] text-slate-400 font-bold block uppercase flex items-center justify-center gap-0.5">
+                    <Wind size={10} className="text-teal-400" /> Wind
+                  </span>
+                  <span className="text-xs font-black">{liveWeather.windSpeed} km/h</span>
+                </div>
+                <div className="bg-slate-50 dark:bg-slate-800/60 p-2 rounded-xl">
+                  <span className="text-[9px] text-slate-400 font-bold block uppercase">PM2.5</span>
+                  <span className="text-xs font-black">{liveWeather.pm25} µg</span>
+                </div>
+                <div className="bg-slate-50 dark:bg-slate-800/60 p-2 rounded-xl">
+                  <span className="text-[9px] text-slate-400 font-bold block uppercase">PM10</span>
+                  <span className="text-xs font-black">{liveWeather.pm10} µg</span>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
 
         <motion.div variants={itemVariants} className="relative group">
@@ -195,9 +285,16 @@ export default function VisionHome() {
               <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Smart Pass</span>
             </Link>
 
-            <Link href="/metro" className="group flex flex-col items-center justify-center bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-indigo-500 transition-all shadow-sm">
+            <Link href="/ncmc" className="group flex flex-col items-center justify-center bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-indigo-500 transition-all shadow-sm">
               <div className="bg-indigo-50 dark:bg-indigo-900/30 p-3 rounded-full mb-2 group-hover:scale-110 transition-transform">
-                <TrainFront size={24} className="text-indigo-500 dark:text-indigo-400" />
+                <CreditCard size={24} className="text-indigo-500 dark:text-indigo-400" />
+              </div>
+              <span className="text-xs font-bold text-slate-700 dark:text-slate-300">NCMC Card</span>
+            </Link>
+
+            <Link href="/metro" className="group flex flex-col items-center justify-center bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-purple-500 transition-all shadow-sm">
+              <div className="bg-purple-50 dark:bg-purple-900/30 p-3 rounded-full mb-2 group-hover:scale-110 transition-transform">
+                <TrainFront size={24} className="text-purple-500 dark:text-purple-400" />
               </div>
               <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Namma Metro</span>
             </Link>

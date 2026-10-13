@@ -33,23 +33,23 @@ export default function BottomNav() {
             >
               <div className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${
                 isActive 
-                  ? "bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white" 
-                  : "text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
+                  ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/50 dark:text-emerald-400" 
+                  : "text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
               }`}>
                 {item.name === "Chat" ? (
                   <img
                     src="/vanara-logo.png"
                     alt="Vanara AI"
                     className={`w-5 h-5 object-contain transition-transform group-active:scale-95 dark:invert ${
-                      isActive ? "opacity-100 scale-110" : "opacity-40"
+                      isActive ? "opacity-100 scale-110" : "opacity-60"
                     }`}
                   />
                 ) : (
-                  <Icon size={isActive ? 22 : 20} className="transition-transform group-active:scale-95" strokeWidth={isActive ? 2.5 : 2} />
+                  <Icon size={isActive ? 22 : 20} className="transition-transform group-active:scale-95" />
                 )}
               </div>
-              <span className={`text-[9px] transition-colors ${
-                isActive ? "font-black text-slate-900 dark:text-white" : "font-semibold text-slate-400 dark:text-slate-500"
+              <span className={`text-[9px] font-bold ${
+                isActive ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500"
               }`}>
                 {item.name}
               </span>

@@ -61,30 +61,13 @@ export default function RoutePlannerScreen() {
 
     setRouteResult(result);
     
-    // Exact real-world GPS polyline coordinates for key corridors
-    const isYel = /yelahanka|ilanka|yelanka|attur|allalasandra|kogilu|jakkur/i.test(origin) || /yelahanka|ilanka|yelanka|attur|allalasandra|kogilu|jakkur/i.test(destination);
-    const isMaj = /majestic|kempegowda|kbs|railway|sbc/i.test(origin) || /majestic|kempegowda|kbs|railway|sbc/i.test(destination);
-
-    if (isYel && isMaj) {
-      setSimulatedPath([
-        [13.1007, 77.5963], // Yelahanka NES
-        [13.0880, 77.5940], // Allalasandra Gate
-        [13.0760, 77.5930], // Jakkur Aerodrome
-        [13.0610, 77.5920], // GKVK / Byatarayanapura
-        [13.0450, 77.5950], // Kodigehalli Gate / Esteem Mall
-        [13.0358, 77.5970], // Hebbal Flyover
-        [13.0080, 77.5840], // Mekhri Circle
-        [12.9980, 77.5800], // Palace Grounds / Guttahalli
-        [12.9820, 77.5740], // Anand Rao Circle
-        [12.9772, 77.5713]  // Kempegowda Majestic (Platform 22)
-      ]);
-    } else {
-      setSimulatedPath([
-        [13.1000, 77.5950], // Yelahanka
-        [13.0120, 77.5850], // Majestic
-        [12.9172, 77.6228]  // Silk Board
-      ]);
-    }
+    // Simulate a map path for the polyline 
+    // Majestic to Silk Board roughly
+    setSimulatedPath([
+      [13.1000, 77.5950], // Yelahanka
+      [13.0120, 77.5850], // Majestic
+      [12.9172, 77.6228]  // Silk Board
+    ]);
 
     const currentHour = new Date().getHours();
     const isPeak = (currentHour >= 8 && currentHour <= 11) || (currentHour >= 17 && currentHour <= 20);
@@ -229,43 +212,6 @@ export default function RoutePlannerScreen() {
                 </div>
               </div>
 
-              {/* Popular Direct Corridors Quick-Select */}
-              <div className="flex flex-col gap-1.5 mt-1">
-                <span className="text-[10px] uppercase tracking-wider font-extrabold text-slate-400">Popular Corridors (Direct Transit)</span>
-                <div className="flex gap-2 overflow-x-auto no-scrollbar py-1">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setOrigin("Yelahanka NES / New Town");
-                      setDestination("Kempegowda Station (Majestic)");
-                    }}
-                    className="shrink-0 text-xs px-3 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 font-bold transition-all flex items-center gap-1.5"
-                  >
-                    <span>🚌 Yelahanka ⇄ Majestic (402B)</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setOrigin("Yelahanka New Town");
-                      setDestination("Silk Board Junction");
-                    }}
-                    className="shrink-0 text-xs px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 font-bold transition-all"
-                  >
-                    🚌 Yelahanka ⇄ Silk Board (500D)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setOrigin("Kempegowda Station (Majestic)");
-                      setDestination("Whitefield (ITPL)");
-                    }}
-                    className="shrink-0 text-xs px-3 py-2 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30 font-bold transition-all"
-                  >
-                    🚇 Majestic ⇄ Whitefield (Purple Line)
-                  </button>
-                </div>
-              </div>
-
               {isListening && (
                 <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-500/30 p-3 rounded-2xl flex items-center gap-3 mt-2">
                   <div className="bg-emerald-100 dark:bg-emerald-800 p-2 rounded-full">
@@ -279,7 +225,12 @@ export default function RoutePlannerScreen() {
               )}
 
               {/* Real-time Weather & Rain-Safe Routing Widget */}
-              <WeatherWidget isRainSafe={isRainSafe} setIsRainSafe={setIsRainSafe} locationName={origin} />
+              <WeatherWidget 
+                isRainSafe={isRainSafe} 
+                setIsRainSafe={setIsRainSafe} 
+                locationName={origin}
+                coordinates={userLoc || undefined}
+              />
             </motion.div>
           ) : (
             // Results Timeline View
