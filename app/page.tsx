@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Leaf, Ticket, TrainFront, CreditCard, ShieldAlert, Zap, CloudRain, Sun, Cloud, CloudLightning, User, MapPin, Medal, Droplets, Wind, Activity, Crosshair } from "lucide-react";
+import { Search, Leaf, Ticket, TrainFront, CreditCard, ShieldAlert, Zap, CloudRain, Sun, Cloud, CloudLightning, User, MapPin, Medal, Droplets, Wind, Activity, Crosshair, Compass } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -374,6 +374,13 @@ export default function VisionHome() {
                 <ShieldAlert size={24} className="text-red-500 dark:text-red-400" />
               </div>
               <span className="text-xs font-bold text-slate-700 dark:text-slate-300">SafeKeep</span>
+            </Link>
+
+            <Link href="/map" className="group flex flex-col items-center justify-center bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-emerald-500 transition-all shadow-sm">
+              <div className="bg-emerald-50 dark:bg-emerald-900/30 p-3 rounded-full mb-2 group-hover:scale-110 transition-transform">
+                <Compass size={24} className="text-emerald-500 dark:text-emerald-400" />
+              </div>
+              <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Live Map</span>
             </Link>
           </div>
         </motion.div>

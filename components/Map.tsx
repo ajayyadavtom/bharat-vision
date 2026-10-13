@@ -84,12 +84,11 @@ function RoutingControl({ from, to }: { from: [number, number]; to: [number, num
     }
 
     try {
-      // @ts-ignore - leaflet-routing-machine dynamically attached to L
-      if (L.Routing && L.Routing.control) {
-        // @ts-ignore
-        const control = L.Routing.control({
+      const LRouting = (L as any).Routing;
+      if (LRouting && LRouting.control) {
+        const control = LRouting.control({
           waypoints: [L.latLng(from[0], from[1]), L.latLng(to[0], to[1])],
-          router: (L.Routing as any).osrmv1({
+          router: LRouting.osrmv1({
             serviceUrl: "https://router.project-osrm.org/route/v1", // 100% Free Public OSRM Endpoint
           }),
           lineOptions: {
