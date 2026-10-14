@@ -127,7 +127,14 @@ export default function VisionHome() {
           <div className="flex flex-col items-end gap-2">
             <Link href="/profile" className="w-10 h-10 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full flex items-center justify-center shadow-sm active:scale-95 transition-transform hover:bg-slate-50 dark:hover:bg-slate-800 overflow-hidden">
               {profilePictureUrl ? (
-                <img src={profilePictureUrl} alt="Profile" className="w-full h-full object-cover" />
+                <img 
+                  src={profilePictureUrl} 
+                  alt="Profile" 
+                  className="w-full h-full object-cover" 
+                  onError={(e) => {
+                    (e.target as HTMLElement).style.display = "none";
+                  }}
+                />
               ) : (
                 <User size={18} className="text-slate-600 dark:text-slate-300" />
               )}

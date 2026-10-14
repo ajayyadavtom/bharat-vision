@@ -36,11 +36,71 @@ export default function ProfileScreen() {
     }, 2500);
   };
 
-  const handleProfileImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+
+  // Compress and resize image to lightweight, persistent base64 data URI (survives restarts)
+  const compressAndResizeImage = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (readerEvent) => {
+        const img = new Image();
+        img.onload = () => {
+          const maxDimension = 320;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > maxDimension) {
+              height = Math.round((height * maxDimension) / width);
+              width = maxDimension;
+            }
+          } else {
+            if (height > maxDimension) {
+              width = Math.round((width * maxDimension) / height);
+              height = maxDimension;
+            }
+          }
+
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            resolve(readerEvent.target?.result as string);
+            return;
+          }
+
+          ctx.drawImage(img, 0, 0, width, height);
+          const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
+          resolve(dataUrl);
+        };
+        img.onerror = () => {
+          resolve(readerEvent.target?.result as string);
+        };
+        img.src = readerEvent.target?.result as string;
+      };
+      reader.onerror = (err) => reject(err);
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleProfileImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      const imageUrl = URL.createObjectURL(file);
-      setProfilePictureUrl(imageUrl);
+      if (!file.type.startsWith("image/")) {
+        alert("Please select a valid image file.");
+        return;
+      }
+      setIsUploadingImage(true);
+      try {
+        const dataUrl = await compressAndResizeImage(file);
+        await setProfilePictureUrl(dataUrl);
+      } catch (err) {
+        console.error("Error processing profile picture:", err);
+      } finally {
+        setIsUploadingImage(false);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+      }
     }
   };
 
@@ -65,18 +125,40 @@ export default function ProfileScreen() {
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-3xl shadow-sm mb-6 flex items-center gap-4 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
         
-        <div 
-          onClick={() => fileInputRef.current?.click()}
-          className="w-16 h-16 rounded-full border-2 border-emerald-500 flex items-center justify-center bg-slate-100 dark:bg-slate-800 relative z-10 shadow-sm cursor-pointer overflow-hidden group"
-        >
-          {profilePictureUrl ? (
-            <img src={profilePictureUrl} alt="Profile" className="w-full h-full object-cover" />
-          ) : (
-            <User size={32} className="text-slate-400" />
-          )}
-          <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-            <ImageIcon size={20} className="text-slate-900 dark:text-white" />
+        <div className="flex flex-col items-center">
+          <div 
+            onClick={() => !isUploadingImage && fileInputRef.current?.click()}
+            className="w-16 h-16 rounded-full border-2 border-emerald-500 flex items-center justify-center bg-slate-100 dark:bg-slate-800 relative z-10 shadow-sm cursor-pointer overflow-hidden group"
+            title="Click to update profile picture"
+          >
+            {isUploadingImage ? (
+              <Loader2 size={24} className="text-emerald-500 animate-spin" />
+            ) : profilePictureUrl ? (
+              <img 
+                src={profilePictureUrl} 
+                alt="Profile" 
+                className="w-full h-full object-cover" 
+                onError={() => setProfilePictureUrl(null)}
+              />
+            ) : (
+              <User size={32} className="text-slate-400" />
+            )}
+            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <ImageIcon size={20} className="text-white" />
+            </div>
           </div>
+          {profilePictureUrl && !isUploadingImage && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setProfilePictureUrl(null);
+              }}
+              className="text-[10px] text-red-500 hover:text-red-600 font-semibold mt-1 relative z-10 active:scale-95 transition-transform"
+            >
+              Remove
+            </button>
+          )}
         </div>
         
         {/* Hidden File Input for Avatar */}

@@ -12,7 +12,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
-  const { setUserName } = useAppStore();
+  const { setUserName, setProfilePictureUrl } = useAppStore();
 
   useEffect(() => {
     // If already on the login page, allow rendering immediately
@@ -39,6 +39,18 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
                                     userObj.user_metadata?.name || 
                                     (userObj.email ? userObj.email.split("@")[0] : "Commuter");
                 setUserName(displayName);
+                const avatar = userObj.user_metadata?.avatar_url || userObj.user_metadata?.picture;
+                if (avatar && !avatar.startsWith("blob:")) {
+                  setProfilePictureUrl(avatar);
+                } else if (typeof window !== "undefined") {
+                  try {
+                    const cache = JSON.parse(localStorage.getItem("bv_user_avatars") || "{}");
+                    const cached = cache[userObj.id] || (userObj.email ? cache[userObj.email] : null) || cache["last"];
+                    if (cached && !cached.startsWith("blob:")) {
+                      setProfilePictureUrl(cached);
+                    }
+                  } catch (e) {}
+                }
                 setIsAuthorized(true);
                 setShowSplash(false);
                 return;
@@ -61,6 +73,18 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
                               userObj.user_metadata?.name || 
                               (userObj.email ? userObj.email.split("@")[0] : "Commuter");
           setUserName(displayName);
+          const avatar = userObj.user_metadata?.avatar_url || userObj.user_metadata?.picture;
+          if (avatar && !avatar.startsWith("blob:")) {
+            setProfilePictureUrl(avatar);
+          } else if (typeof window !== "undefined") {
+            try {
+              const cache = JSON.parse(localStorage.getItem("bv_user_avatars") || "{}");
+              const cached = cache[userObj.id] || (userObj.email ? cache[userObj.email] : null) || cache["last"];
+              if (cached && !cached.startsWith("blob:")) {
+                setProfilePictureUrl(cached);
+              }
+            } catch (e) {}
+          }
           setIsAuthorized(true);
           setShowSplash(false);
           return;
@@ -106,6 +130,18 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
                             userObj.user_metadata?.name || 
                             (userObj.email ? userObj.email.split("@")[0] : "Commuter");
         setUserName(displayName);
+        const avatar = userObj.user_metadata?.avatar_url || userObj.user_metadata?.picture;
+        if (avatar && !avatar.startsWith("blob:")) {
+          setProfilePictureUrl(avatar);
+        } else if (typeof window !== "undefined") {
+          try {
+            const cache = JSON.parse(localStorage.getItem("bv_user_avatars") || "{}");
+            const cached = cache[userObj.id] || (userObj.email ? cache[userObj.email] : null) || cache["last"];
+            if (cached && !cached.startsWith("blob:")) {
+              setProfilePictureUrl(cached);
+            }
+          } catch (e) {}
+        }
         setIsAuthorized(true);
         setShowSplash(false);
       } else if (event === "SIGNED_OUT") {
@@ -137,7 +173,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     return () => {
       authListener?.subscription.unsubscribe();
     };
-  }, [pathname, router, setUserName]);
+  }, [pathname, router, setUserName, setProfilePictureUrl]);
 
   if (showSplash && pathname === "/") {
     return (

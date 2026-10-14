@@ -26,7 +26,7 @@ type LoginMode = "email" | "phone";
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { setUserName } = useAppStore();
+  const { setUserName, setProfilePictureUrl } = useAppStore();
 
   const [loginMode, setLoginMode] = useState<LoginMode>("email");
   const [fullName, setFullName] = useState("");
@@ -149,6 +149,15 @@ export default function LoginScreen() {
       sessionStorage.setItem("bv-auth", "true");
       const commuterName = `Commuter (${phone.slice(-4)})`;
       setUserName(commuterName);
+      if (typeof window !== "undefined") {
+        try {
+          const cache = JSON.parse(localStorage.getItem("bv_user_avatars") || "{}");
+          const cached = cache[phone] || cache[commuterName] || cache["last"];
+          if (cached && !cached.startsWith("blob:")) {
+            setProfilePictureUrl(cached);
+          }
+        } catch (e) {}
+      }
       setSuccessMsg("Mobile verification successful! Entering Bharat Vision...");
       setTimeout(() => {
         router.push("/");
@@ -185,6 +194,15 @@ export default function LoginScreen() {
         // Successfully create commuter ID and log in directly
         sessionStorage.setItem("bv-auth", "true");
         setUserName(nameToSave);
+        if (typeof window !== "undefined") {
+          try {
+            const cache = JSON.parse(localStorage.getItem("bv_user_avatars") || "{}");
+            const cached = cache[email] || cache[nameToSave] || cache["last"];
+            if (cached && !cached.startsWith("blob:")) {
+              setProfilePictureUrl(cached);
+            }
+          } catch (e) {}
+        }
         setSuccessMsg("Commuter ID created successfully! Entering app...");
         setTimeout(() => {
           router.push("/");
@@ -199,7 +217,17 @@ export default function LoginScreen() {
         if (sbError) {
           if (password.length >= 6) {
             sessionStorage.setItem("bv-auth", "true");
-            setUserName(email.split("@")[0]);
+            const fallbackName = email.split("@")[0];
+            setUserName(fallbackName);
+            if (typeof window !== "undefined") {
+              try {
+                const cache = JSON.parse(localStorage.getItem("bv_user_avatars") || "{}");
+                const cached = cache[email] || cache[fallbackName] || cache["last"];
+                if (cached && !cached.startsWith("blob:")) {
+                  setProfilePictureUrl(cached);
+                }
+              } catch (e) {}
+            }
             setSuccessMsg("Signed in successfully!");
             setTimeout(() => {
               router.push("/");
@@ -215,6 +243,18 @@ export default function LoginScreen() {
           sessionStorage.setItem("bv-auth", "true");
           const displayName = data.user.user_metadata?.full_name || email.split("@")[0];
           setUserName(displayName);
+          const avatar = data.user.user_metadata?.avatar_url || data.user.user_metadata?.picture;
+          if (avatar && !avatar.startsWith("blob:")) {
+            setProfilePictureUrl(avatar);
+          } else if (typeof window !== "undefined") {
+            try {
+              const cache = JSON.parse(localStorage.getItem("bv_user_avatars") || "{}");
+              const cached = cache[data.user.id] || cache[email] || cache[displayName] || cache["last"];
+              if (cached && !cached.startsWith("blob:")) {
+                setProfilePictureUrl(cached);
+              }
+            } catch (e) {}
+          }
           router.push("/");
         }
       }
@@ -263,6 +303,15 @@ export default function LoginScreen() {
   const handleSelectGoogleAccount = (selectedEmail: string, name: string) => {
     sessionStorage.setItem("bv-auth", "true");
     setUserName(name);
+    if (typeof window !== "undefined") {
+      try {
+        const cache = JSON.parse(localStorage.getItem("bv_user_avatars") || "{}");
+        const cached = cache[selectedEmail] || cache[name] || cache["last"];
+        if (cached && !cached.startsWith("blob:")) {
+          setProfilePictureUrl(cached);
+        }
+      } catch (e) {}
+    }
     setShowGoogleModal(false);
     setSuccessMsg(`Signed in with Google as ${selectedEmail}!`);
     setTimeout(() => {
@@ -274,6 +323,15 @@ export default function LoginScreen() {
   const handleGuestLogin = () => {
     sessionStorage.setItem("bv-guest", "true");
     setUserName("Guest Commuter");
+    if (typeof window !== "undefined") {
+      try {
+        const cache = JSON.parse(localStorage.getItem("bv_user_avatars") || "{}");
+        const cached = cache["Guest Commuter"] || cache["last"];
+        if (cached && !cached.startsWith("blob:")) {
+          setProfilePictureUrl(cached);
+        }
+      } catch (e) {}
+    }
     router.push("/");
   };
 

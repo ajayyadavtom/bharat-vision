@@ -10,6 +10,7 @@ const LiveMap = dynamic(() => import("../../components/LiveMap"), { ssr: false }
 import RouteDeviationAI from "../../components/RouteDeviationAI";
 import ProximityChime from "../../components/ProximityChime";
 import SmartBoardingCard from "../../components/SmartBoardingCard";
+import CrowdReportPrompt from "../../components/CrowdReportPrompt";
 
 export default function TrackScreen() {
   const [triggerAnomaly, setTriggerAnomaly] = useState(false);
@@ -74,7 +75,7 @@ export default function TrackScreen() {
 
       {/* The Live Interactive Map */}
       
-<div className="px-4 mb-4">
+<div className="px-4 mb-3">
   <div className="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3">
     <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
       <span className="text-indigo-600 dark:text-indigo-400 text-xs">🚌</span>
@@ -83,16 +84,57 @@ export default function TrackScreen() {
       type="text" 
       value={busCode} 
       onChange={(e) => setBusCode(e.target.value.toUpperCase())} 
-      placeholder="Enter Bus Code (e.g. 500D) to track..." 
+      placeholder="Search bus code (e.g. 500D, 335E, 250)..." 
       className="flex-1 bg-transparent text-sm text-slate-900 dark:text-white outline-none font-bold placeholder-slate-400" 
     />
+    {busCode && (
+      <button 
+        type="button" 
+        onClick={() => setBusCode("")}
+        className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-bold px-1.5"
+      >
+        ✕
+      </button>
+    )}
+  </div>
+  
+  {/* Quick corridor selector pills */}
+  <div className="flex gap-1.5 mt-2 overflow-x-auto no-scrollbar py-0.5">
+    {[
+      { code: "", label: "All Fleet" },
+      { code: "500D", label: "500D (Silk Board)" },
+      { code: "335E", label: "335E (Whitefield)" },
+      { code: "250", label: "250 (Majestic)" }
+    ].map((item) => (
+      <button
+        key={item.label}
+        type="button"
+        onClick={() => setBusCode(item.code)}
+        className={`px-2.5 py-1 rounded-full text-[10px] font-bold tracking-tight whitespace-nowrap transition-all cursor-pointer ${
+          busCode === item.code
+            ? "bg-emerald-500 text-white shadow-sm"
+            : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:border-emerald-400"
+        }`}
+      >
+        {item.label}
+      </button>
+    ))}
   </div>
 </div>
-<div className="px-4 mb-6 mt-2">
-  <div className="w-full h-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl relative overflow-hidden shadow-sm">
-          <LiveMap busCode={busCode} destination={destination} userLocation={userLoc} />
-        </div>
-      </div>
+
+<div className="px-4 mb-6 mt-1">
+  <div className="w-full h-80 sm:h-96 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl relative overflow-hidden shadow-lg">
+    <LiveMap busCode={busCode} destination={destination} userLocation={userLoc} />
+  </div>
+</div>
+
+{/* Real-time Hardware-free Crowd Detection System Prompt */}
+<div className="px-4 mb-2">
+  <CrowdReportPrompt
+    busId={busCode || "500D"}
+    availableBuses={["500D", "335E", "250"]}
+  />
+</div>
 
       {/* Tokyo & Singapore Crowd Density Engine */}
       <div className="px-4">

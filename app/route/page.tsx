@@ -8,9 +8,10 @@ import dynamic from "next/dynamic";
 
 const LiveMap = dynamic(() => import("../../components/LiveMap"), { ssr: false });
 
-import { calculateAStarRoute, MultiModalRoute } from "../../src/lib/routing";
+import { calculateAStarRoute, MultiModalRoute, matchHub, BENGALURU_HUBS } from "../../src/lib/routing";
 import { predictSmartETA } from "../../src/lib/etaModel";
 import { useAppStore } from "../../src/lib/store";
+import { fetchMapboxRoute } from "../../src/lib/mapbox";
 import { useRouter } from "next/navigation";
 
 export default function RoutePlannerScreen() {
@@ -40,6 +41,29 @@ export default function RoutePlannerScreen() {
 
   const [simulatedPath, setSimulatedPath] = useState<[number, number][] | null>(null);
 
+  // Load initial road path from Mapbox Directions
+  useEffect(() => {
+    let isMounted = true;
+    async function loadInitialRoute() {
+      const origHub = BENGALURU_HUBS.yelahanka;
+      const dstHub = BENGALURU_HUBS.silk_board;
+      const realPath = await fetchMapboxRoute([origHub.lat, origHub.lng], [dstHub.lat, dstHub.lng]);
+      if (isMounted) {
+        if (realPath && realPath.length > 0) {
+          setSimulatedPath(realPath);
+        } else {
+          setSimulatedPath([
+            [origHub.lat, origHub.lng],
+            [12.9772, 77.5713], // Majestic
+            [dstHub.lat, dstHub.lng]  // Silk Board
+          ]);
+        }
+      }
+    }
+    loadInitialRoute();
+    return () => { isMounted = false; };
+  }, []);
+
   const handleSearchRoute = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     setLoading(true);
@@ -61,13 +85,20 @@ export default function RoutePlannerScreen() {
 
     setRouteResult(result);
     
-    // Simulate a map path for the polyline 
-    // Majestic to Silk Board roughly
-    setSimulatedPath([
-      [13.1000, 77.5950], // Yelahanka
-      [13.0120, 77.5850], // Majestic
-      [12.9172, 77.6228]  // Silk Board
-    ]);
+    // Resolve start and end hub coordinates and fetch live Mapbox directions
+    const origHub = matchHub(origin) || BENGALURU_HUBS.yelahanka;
+    const dstHub = matchHub(destination) || BENGALURU_HUBS.silk_board;
+
+    const realPath = await fetchMapboxRoute([origHub.lat, origHub.lng], [dstHub.lat, dstHub.lng]);
+    if (realPath && realPath.length > 0) {
+      setSimulatedPath(realPath);
+    } else {
+      setSimulatedPath([
+        [origHub.lat, origHub.lng],
+        [12.9772, 77.5713], // Majestic
+        [dstHub.lat, dstHub.lng]
+      ]);
+    }
 
     const currentHour = new Date().getHours();
     const isPeak = (currentHour >= 8 && currentHour <= 11) || (currentHour >= 17 && currentHour <= 20);

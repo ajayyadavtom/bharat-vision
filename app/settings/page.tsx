@@ -123,6 +123,19 @@ export default function SettingsScreen() {
   }, []);
 
   const handleLogout = async () => {
+    // Preserve active profile picture in durable cache before session reset
+    if (typeof window !== "undefined") {
+      try {
+        const state = useAppStore.getState();
+        if (state.profilePictureUrl && !state.profilePictureUrl.startsWith("blob:")) {
+          const cache = JSON.parse(localStorage.getItem("bv_user_avatars") || "{}");
+          cache["last"] = state.profilePictureUrl;
+          if (state.userName) cache[state.userName] = state.profilePictureUrl;
+          localStorage.setItem("bv_user_avatars", JSON.stringify(cache));
+        }
+      } catch (e) {}
+    }
+
     // Clear local storage and session storage
     sessionStorage.clear();
     localStorage.removeItem("bharat-vision-storage");

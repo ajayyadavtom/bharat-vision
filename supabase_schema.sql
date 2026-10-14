@@ -16,6 +16,7 @@ CREATE TABLE public.commuter_profiles (
   karma_points INTEGER DEFAULT 0,
   carbon_saved_grams INTEGER DEFAULT 0,
   is_student_verified BOOLEAN DEFAULT false,
+  avatar_url TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -42,13 +43,14 @@ WITH CHECK (auth.uid() = id);
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.commuter_profiles (id, full_name, wallet_balance, karma_points, carbon_saved_grams)
+  INSERT INTO public.commuter_profiles (id, full_name, wallet_balance, karma_points, carbon_saved_grams, avatar_url)
   VALUES (
     NEW.id,
     COALESCE(NEW.raw_user_meta_data->>'full_name', split_part(NEW.email, '@', 1), 'Commuter'),
     0.00,
     0,
-    0
+    0,
+    COALESCE(NEW.raw_user_meta_data->>'avatar_url', NEW.raw_user_meta_data->>'picture', NULL)
   )
   ON CONFLICT (id) DO NOTHING;
   RETURN NEW;

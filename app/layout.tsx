@@ -47,6 +47,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <link rel="stylesheet" href="/leaflet/leaflet.css" />
+      </head>
       <body className={`${inter.className} bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <AuthGuard>

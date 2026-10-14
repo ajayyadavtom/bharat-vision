@@ -16,7 +16,7 @@ export interface MultiModalRoute {
   summaryText?: string;
 }
 
-interface TransitHub {
+export interface TransitHub {
   name: string;
   aliases: string[];
   lat: number;
@@ -25,7 +25,7 @@ interface TransitHub {
   majorBuses: string[];
 }
 
-const BENGALURU_HUBS: Record<string, TransitHub> = {
+export const BENGALURU_HUBS: Record<string, TransitHub> = {
   majestic: {
     name: "Kempegowda Station (Majestic)",
     aliases: ["majestic", "kempegowda", "kbs", "railway station"],
@@ -132,7 +132,7 @@ const BENGALURU_HUBS: Record<string, TransitHub> = {
   }
 };
 
-function matchHub(query: string): TransitHub | null {
+export function matchHub(query: string): TransitHub | null {
   const q = query.toLowerCase().trim();
   for (const key of Object.keys(BENGALURU_HUBS)) {
     const hub = BENGALURU_HUBS[key];
