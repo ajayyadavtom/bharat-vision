@@ -1,297 +1,6 @@
 import { NextResponse } from "next/server";
-import { BMTC_FLEET_STATISTICS, BMTC_DIVISIONAL_FLEET_DATA, getOfficialStopByName } from "@/data/bmtcOfficialData";
-
-// Comprehensive Real Bengaluru Transit Knowledge Base
-interface TransitGuide {
-  title: string;
-  busRoutes: string[];
-  metroOption?: string;
-  duration: string;
-  fareOrdinary: string;
-  fareVajra: string;
-  metroFare?: string;
-  frequency: string;
-  firstLastTime: string;
-  chokePoints: string;
-  steps: string[];
-}
-
-const BENGALURU_REAL_TRANSIT_DATA: Record<string, TransitGuide> = {
-  "yelahanka_to_silkboard": {
-    title: "Yelahanka New Town ⇄ Central Silk Board (Outer Ring Road Corridor)",
-    busRoutes: ["500D (Hebbal ➔ Silk Board Express)", "500CA", "500K", "V-500D (AC Volvo Vajra)"],
-    metroOption: "Green Line (Nagasandra ➔ Majestic) transfer to Purple Line (Majestic ➔ Indiranagar) + Route 201 feeder bus",
-    duration: "65 - 85 mins (Peak Hours) | 45 - 55 mins (Off-Peak)",
-    fareOrdinary: "₹30 - ₹35",
-    fareVajra: "₹85 - ₹95 (BMTC Vajra Daily Pass: ₹120)",
-    frequency: "Every 4 to 6 minutes from Hebbal / Yelahanka bypass",
-    firstLastTime: "First Bus: 05:15 AM | Last Bus: 10:45 PM | Night Owl Service: Every 45 mins",
-    chokePoints: "Hebbal Flyover merging, Tin Factory / KR Puram railway bridge, Marathahalli bridge, and Bellandur junction",
-    steps: [
-      "Board Route 250 / 401K from Yelahanka NES / Police Station to Hebbal Junction (15 mins).",
-      "Switch to Route 500D Express or AC Volvo V-500D at Hebbal bus bay.",
-      "Travel along the Outer Ring Road passing Manyata Tech Park, Nagawara, Kalyan Nagar, Kasturi Nagar, Tin Factory, Marathahalli, Kadubeesanahalli, Bellandur, and HSR Layout.",
-      "Alight directly at Central Silk Board bus stop. Skywalk connects directly to Madiwala and BTM Layout."
-    ]
-  },
-  "majestic_to_whitefield": {
-    title: "Kempegowda Majestic ⇄ Whitefield (Kadugodi / ITPL)",
-    busRoutes: ["335E (Majestic ➔ Kadugodi via HAL)", "V-335E (Volvo AC)", "333P", "330"],
-    metroOption: "Namma Metro Purple Line (Direct Train from Kempegowda Station Platform 3 ➔ Whitefield Kadugodi)",
-    duration: "Metro: 42 mins (Zero Traffic) | Bus: 75 - 100 mins",
-    fareOrdinary: "Bus: ₹30 - ₹35",
-    fareVajra: "Bus: ₹85 | Metro: ₹60 (₹57 with Metro Smartcard / NCMC)",
-    metroFare: "₹60 (Token) / ₹57 (Smartcard)",
-    frequency: "Metro: Every 3.5 to 5 minutes | Bus 335E: Every 8 to 10 minutes",
-    firstLastTime: "Metro: 05:00 AM to 11:00 PM | BMTC Bus: 05:00 AM to 10:30 PM",
-    chokePoints: "Old Airport Road, Marathahalli Multiplex signal, Kundalahalli gate, and Hope Farm junction",
-    steps: [
-      "RECOMMENDED FASTEST: Enter Kempegowda Metro Station (Majestic), take Escalator to Platform 3.",
-      "Board eastbound Purple Line train towards Whitefield (Kadugodi).",
-      "Ride non-stop through Central Business District: MG Road ➔ Indiranagar ➔ Baiyappanahalli ➔ Benniganahalli ➔ KR Puram ➔ Singayyanapalya ➔ Garudacharpalya ➔ Hoodi ➔ ITPL ➔ Kadugodi Tree Park ➔ Whitefield.",
-      "Exit at ITPL (Gate 2 for direct tech park covered skywalk) or Kadugodi for railway station feeder."
-    ]
-  },
-  "koramangala_to_electronic_city": {
-    title: "Koramangala ⇄ Electronic City (Phase 1 & Phase 2)",
-    busRoutes: ["365 (Majestic ➔ Electronic City / Jigani)", "V-365 (Volvo AC)", "600F", "356M", "500EB"],
-    duration: "28 - 40 mins via Elevated Tollway | 55 - 75 mins via surface Hosur Road",
-    fareOrdinary: "₹25 - ₹30",
-    fareVajra: "₹65 - ₹80 (Flyover Express)",
-    frequency: "Every 5 to 8 minutes from Madiwala Checkpost / Forum Mall",
-    firstLastTime: "First Bus: 05:00 AM | Last Bus: 11:15 PM | 24x7 Night Owl available on Hosur Rd",
-    chokePoints: "Madiwala St. John's signal, Bommanahalli junction, and Kudlu Gate ramp",
-    steps: [
-      "Board local feeder from Koramangala (Sony World Signal / Forum Mall) to Madiwala Checkpost (7 mins).",
-      "Board BMTC Route 365 Express or V-365 Volvo that takes the Electronic City Elevated Expressway (Bettadasanapura flyover).",
-      "Express non-stop glide over the 9 km elevated expressway, bypassing surface traffic jams at Kudlu Gate and Singasandra.",
-      "Alight directly at Toll Gate Phase 1 (Infosys Gate) or Phase 2 (TCS / Tech Mahindra gate)."
-    ]
-  },
-  "any_to_airport": {
-    title: "Bengaluru City ⇄ Kempegowda International Airport (KIA Devanahalli)",
-    busRoutes: [
-      "KIA-9 (Majestic ➔ Airport via Hebbal) - Every 10 mins (24x7)",
-      "KIA-8 (Electronic City ➔ Airport via Silk Board, Marathahalli, Hebbal) - Every 15 mins",
-      "KIA-4 (HAL Main Gate / Indiranagar ➔ Airport) - Every 20 mins",
-      "KIA-6 (Whitefield ITPL ➔ Airport via Kadugodi, Budigere Cross) - Every 25 mins",
-      "KIA-10 (Silk Board / Koramangala ➔ Airport) - Every 20 mins"
-    ],
-    duration: "50 - 90 mins depending on origin corridor",
-    fareOrdinary: "Ordinary buses do not ply airport terminal; Vayu Vajra luxury Volvo service is standard",
-    fareVajra: "₹240 - ₹350 (Includes luggage allowance, free high-speed onboard WiFi, and USB charging)",
-    frequency: "High frequency round-the-clock 24x7 operation",
-    firstLastTime: "Continuous 24 Hours / 7 Days a week",
-    chokePoints: "Hebbal Flyover airport ramp, Yelahanka bypass signal, and Sadahalli toll plaza",
-    steps: [
-      "Locate the nearest designated BMTC Vayu Vajra bus shelter.",
-      "Board designated KIA bus matching your zone (KIA-9 from Central/Majestic, KIA-8 from South/ORR, KIA-6 from East/Whitefield).",
-      "Travel along Bellandur / Outer Ring Road or Ballari Road elevated airport express corridor.",
-      "Alight at Terminal 1 (Domestic & International) or Terminal 2 (Garden Terminal) departure drop-off."
-    ]
-  },
-  "majestic_to_hebbal": {
-    title: "Kempegowda Majestic ⇄ Hebbal Junction",
-    busRoutes: ["250", "280", "285", "401K", "KIA-9"],
-    duration: "25 - 40 mins",
-    fareOrdinary: "₹20 - ₹25",
-    fareVajra: "₹50 - ₹70",
-    frequency: "Every 3 to 5 minutes from KBS Platform 19 & 22",
-    firstLastTime: "First Bus: 05:00 AM | Last Bus: 11:00 PM",
-    chokePoints: "Cauvery Theatre junction, Palace Grounds, and Mekhri Circle underpass",
-    steps: [
-      "From Majestic Kempegowda Bus Station, head to Platform 19 or 22.",
-      "Board Route 250, 280, or 285 heading towards Yelahanka / Doddaballapur via Hebbal.",
-      "Travel via Anand Rao Circle ➔ Sheshadripuram ➔ Guttahalli ➔ Mekhri Circle ➔ Veterinary College ➔ Hebbal Flyover.",
-      "Alight at Hebbal bus stop for Outer Ring Road feeder connections."
-    ]
-  }
-};
-
-function generateDetailedTransitReport(query: string, appLang: string, cityName: string): string {
-  const q = query.toLowerCase();
-
-  // Route matches
-  let matchedGuide: TransitGuide | null = null;
-  if (q.includes("yelahanka") && (q.includes("silk") || q.includes("500d") || q.includes("orr"))) {
-    matchedGuide = BENGALURU_REAL_TRANSIT_DATA["yelahanka_to_silkboard"];
-  } else if ((q.includes("majestic") && q.includes("whitefield")) || q.includes("purple") || q.includes("335e") || q.includes("itpl")) {
-    matchedGuide = BENGALURU_REAL_TRANSIT_DATA["majestic_to_whitefield"];
-  } else if ((q.includes("koramangala") && q.includes("electronic")) || q.includes("365") || q.includes("ecity")) {
-    matchedGuide = BENGALURU_REAL_TRANSIT_DATA["koramangala_to_electronic_city"];
-  } else if (q.includes("airport") || q.includes("kia") || q.includes("flight") || q.includes("vayu vajra")) {
-    matchedGuide = BENGALURU_REAL_TRANSIT_DATA["any_to_airport"];
-  } else if (q.includes("hebbal") || q.includes("250")) {
-    matchedGuide = BENGALURU_REAL_TRANSIT_DATA["majestic_to_hebbal"];
-  }
-
-  // Official BMTC Fleet & Divisional Operational Statistics (from 56f6deb2-c7ad-4ade-88fb-92190eafe19b.csv)
-  if (q.includes("fleet") || q.includes("division") || q.includes("buses on road") || q.includes("buses held") || q.includes("utilization") || q.includes("depot count") || q.includes("how many buses")) {
-    return `### 🚌 Official BMTC Fleet & Divisional Operations (Open Data Portal)
-
-* **Bengaluru Total Fleet Held:** **6,514.9 buses** (Active citywide fleet)
-* **Buses on Road Daily:** **5,542.4 buses/day**
-* **Fleet Utilization Rate:** **85.1%** (Road-worthy spare reserve: **504.9 buses**)
-* **Off-Road Maintenance Rate:** **7.1%** (467.4 buses)
-
-#### 🏢 Official Division Breakdown:
-* **North Division (Yelahanka / Hebbal / Doddaballapur):** **1,416.4 held** | 1,239.9 on road (**87.5% utilization**)
-* **West Division (Yeshwantpur / Peenya / Kengeri):** **1,174.8 held** | 1,004.8 on road (**85.5% utilization**)
-* **South Division (Banashankari / Electronic City / Jayanagar):** **1,138.2 held** | 1,003.9 on road (**88.2% utilization**)
-* **East Division (Whitefield / Indiranagar / KR Puram):** **1,026.6 held** | 864.4 on road (**84.2% utilization**)
-* **North East Division (Nagawara / Thanisandra / Kalyan Nagar):** **906.5 held** | 788.7 on road (**87.0% utilization**)
-* **Central Division (Majestic / Shivajinagar / Shantinagar):** **852.2 held** | 640.7 on road (**75.2% utilization**)
-
-* **Total Active Operating Depots:** **50 TTMC Depots** across Bengaluru.`;
-  }
-
-  // Official BMTC Bus Stop & Connecting Route Frequencies (from ac150-stops.csv)
-  const matchedStop = getOfficialStopByName(query);
-  if (matchedStop && matchedStop.routesMap) {
-    const routeList = Object.entries(matchedStop.routesMap).sort((a, b) => b[1] - a[1]);
-    const topList = routeList.slice(0, 10).map(([r, t]) => `**${r}** (${t} trips/day)`).join(" • ");
-
-    return `### 🚏 Official BMTC Bus Stop: ${matchedStop.name}
-
-* **Location Coordinates:** Lat ${matchedStop.lat.toFixed(5)}, Lon ${matchedStop.lng.toFixed(5)}
-* **Daily Trip Density:** **${matchedStop.dailyTrips} bus trips/day** passing through this stop
-* **Connected Routes:** **${matchedStop.routesCount} distinct BMTC routes**
-* **Top Operating Schedules:** ${topList}
-${routeList.length > 10 ? `\n*+${routeList.length - 10} additional feeder & ordinary routes.*` : ""}
-
-💡 *Tip:* Check the **Forecast / Transit Analytics** dashboard in Bharat Vision to view live crowd surges and dispatch standby buses.`;
-  }
-
-  // Pass or fare inquiries
-  if (q.includes("pass") || q.includes("ticket") || q.includes("fare") || q.includes("cost") || q.includes("price")) {
-    if (appLang === 'kn') {
-      return `### 🎫 ಬಿಎಂಟಿಸಿ ಮತ್ತು ನಮ್ಮ ಮೆಟ್ರೋ ದರ & ಪಾಸ್ ವಿವರಗಳು (BMTC & Metro Passes)
-
-* **ದೈನಂದಿನ ಸಾಮಾನ್ಯ ಬಸ್ ಪಾಸ್ (Daily Ordinary Pass):** ₹70 (ಕಂಡಕ್ಟರ್ ಬಳಿ ಲಭ್ಯ, ಯಾವುದೇ ಗುರುತಿನ ಚೀಟಿ ತೋರಿಸಿ ಪಡೆಯಬಹುದು).
-* **ದೈನಂದಿನ ವಜ್ರ ಎಸಿ ಪಾಸ್ (Daily Volvo Vajra AC Pass):** ₹120 (ಎಲ್ಲಾ ಎಸಿ ಬಸ್‌ಗಳಲ್ಲೂ ಅನ್ವಯಿಸುತ್ತದೆ, ವಿಮಾನ ನಿಲ್ದಾಣದ ಬಸ್‌ಗಳನ್ನು ಹೊರತುಪಡಿಸಿ).
-* **ಮಾಸಿಕ ಸಾಮಾನ್ಯ ಪಾಸ್ (Monthly Ordinary Pass):** ₹1,050 (ಬಿಎಂಟಿಸಿ ಟಿಟಿಎಂಸಿ ಕೌಂಟರ್‌ಗಳಲ್ಲಿ ಲಭ್ಯ).
-* **ಮಾಸಿಕ ವಜ್ರ ಪಾಸ್ (Monthly Vajra AC Pass):** ₹2,200.
-* **ನಮ್ಮ ಮೆಟ್ರೋ ದರಗಳು (Namma Metro Fares):** ಕನಿಷ್ಠ ₹10 ರಿಂದ ಗರಿಷ್ಠ ₹60. ಸ್ಮಾರ್ಟ್‌ಕಾರ್ಡ್ / NCMC ಕಾರ್ಡ್ ಬಳಸಿದರೆ **5% ರಿಯಾಯಿತಿ** ಸಿಗುತ್ತದೆ.
-* **ವಿದ್ಯಾರ್ಥಿ ರಿಯಾಯಿತಿ ಪಾಸ್:** ಸೇವಾ ಸಿಂಧು ಪೋರ್ಟಲ್ ಮೂಲಕ ಅರ್ಜಿ ಸಲ್ಲಿಸಿ ಬಿಎಂಟಿಸಿ ಡಿಪೋಗಳಿಂದ ಪಡೆಯಬಹುದು.
-* **ಡಿಜಿಟಲ್ ಕ್ಯೂಆರ್ ಟಿಕೆಟ್ (QR Ticketing):** 'ಭಾರತ್ ವಿಷನ್' ಅಥವಾ ನಮ್ಮ ಬಿಎಂಟಿಸಿ ಆ್ಯಪ್ ಮೂಲಕ ಶೇ. 5% ರಿಯಾಯಿತಿ ದರದಲ್ಲಿ ಖರೀದಿಸಬಹುದು.`;
-    } else if (appLang === 'hi') {
-      return `### 🎫 बीएमटीसी और नम्मा मेट्रो किराया एवं पास की पूरी जानकारी (Passes & Fares)
-
-* **दैनिक साधारण बस पास (Daily Non-AC Pass):** ₹70 (कंडक्टर से तुरंत खरीदा जा सकता है, किसी भी सरकारी आईडी के साथ)।
-* **दैनिक वोल्वो वज्र एसी पास (Daily Volvo Vajra AC Pass):** ₹120 (एयरपोर्ट वोल्वो को छोड़कर सभी वज्र एसी बसों में मान्य)।
-* **मासिक साधारण पास (Monthly Non-AC Pass):** ₹1,050 (टीटीएमसी केंद्रों पर उपलब्ध)।
-* **मासिक वज्र एसी पास (Monthly Vajra AC Pass):** ₹2,200।
-* **नम्मा मेट्रो किराया (Namma Metro):** ₹10 से ₹60 तक। स्मार्ट कार्ड और NCMC कार्ड पर **5% की छूट** मिलती है।
-* **डिजिटल क्यूआर टिकट (Digital QR):** 'भारत विजन' ऐप के स्मार्ट पास टैब से तुरंत खरीदें।`;
-    } else {
-      return `### 🎫 BMTC & Namma Metro Complete Fare & Pass Structure
-
-* **BMTC Daily Non-AC Pass:** **₹70** (Purchasable directly from conductors with any government ID).
-* **BMTC Daily Volvo Vajra AC Pass:** **₹120** (Unlimited rides on all Vajra AC services citywide, excluding KIA airport shuttles).
-* **BMTC Monthly Ordinary Pass:** **₹1,050** (Issued at major TTMC depots).
-* **BMTC Monthly Volvo Vajra Pass:** **₹2,200** (Full city access).
-* **Namma Metro Slabs:** Minimum **₹10** to Maximum **₹60**. Flat **5% discount** using NCMC / Metro Smartcard.
-* **First & Last Timings:** Metro runs 05:00 AM – 11:00 PM. BMTC regular buses run 05:00 AM – 10:30 PM with 24x7 Night Owl service on arterial rings.
-* **Helpline & Inquiries:** BMTC Helpline: **080-22483777** | BMRCL Metro: **1800-425-12345** | Police/SOS: **112**.`;
-    }
-  }
-
-  // If a specific corridor was matched, render full real details
-  if (matchedGuide) {
-    if (appLang === 'kn') {
-      return `### 🚌 ${matchedGuide.title} - ಸಂಪೂರ್ಣ ನೈಜ ಪ್ರಯಾಣ ಮಾಹಿತಿ
-
-* **ಪ್ರಮುಖ ಬಸ್ ಮಾರ್ಗ ಸಂಖ್ಯೆಗಳು:** ${matchedGuide.busRoutes.join(", ")}
-${matchedGuide.metroOption ? `* **ಮೆಟ್ರೋ ಪರ್ಯಾಯ:** ${matchedGuide.metroOption}` : ""}
-* **ಅಂದಾಜು ಪ್ರಯಾಣ ಸಮಯ:** ${matchedGuide.duration}
-* **ದರ ವಿವರ (Fares):** ಸಾಮಾನ್ಯ ಬಸ್: ${matchedGuide.fareOrdinary} | ವಜ್ರ ಎಸಿ: ${matchedGuide.fareVajra} ${matchedGuide.metroFare ? `| ಮೆಟ್ರೋ: ${matchedGuide.metroFare}` : ""}
-* **ಬಸ್ ಬರುವ ಆವರ್ತನ (Frequency):** ${matchedGuide.frequency}
-* **ಕಾರ್ಯಾಚರಣೆ ಸಮಯ:** ${matchedGuide.firstLastTime}
-* **ಟ್ರಾಫಿಕ್ ದಟ್ಟಣೆ ವಲಯಗಳು (Traffic Bottlenecks):** ${matchedGuide.chokePoints}
-
-#### 📋 ಹಂತ-ಹಂತದ ಪ್ರಯಾಣ ಮಾರ್ಗದರ್ಶಿ (Step-by-Step Directions):
-${matchedGuide.steps.map((s, idx) => `${idx + 1}. ${s}`).join("\n")}
-
-💡 *ಸಲಹೆ:* ಪೀಕ್ ಅವರ್‌ಗಳಲ್ಲಿ ಬಿಎಂಟಿಸಿ 500D ಎಕ್ಸ್‌ಪ್ರೆಸ್ ಅಥವಾ ಮೆಟ್ರೋ ಬಳಸಿ ಟ್ರಾಫಿಕ್‌ನಿಂದ ಮುಕ್ತಿ ಪಡೆಯಿರಿ. ತುರ್ತು ಸಹಾಯಕ್ಕಾಗಿ **112** ಅಥವಾ ಬಿಎಂಟಿಸಿ ಕಾಲ್ ಸೆಂಟರ್ **080-22483777** ಸಂಪರ್ಕಿಸಿ.`;
-    } else if (appLang === 'hi') {
-      return `### 🚌 ${matchedGuide.title} - संपूर्ण वास्तविक यात्रा विवरण
-
-* **प्रमुख बस रूट संख्या:** ${matchedGuide.busRoutes.join(", ")}
-${matchedGuide.metroOption ? `* **मेट्रो विकल्प:** ${matchedGuide.metroOption}` : ""}
-* **यात्रा का समय:** ${matchedGuide.duration}
-* **किराया संरचना:** साधारण बस: ${matchedGuide.fareOrdinary} | वोल्वो वज्र: ${matchedGuide.fareVajra} ${matchedGuide.metroFare ? `| मेट्रो: ${matchedGuide.metroFare}` : ""}
-* **बसों की आवृत्ति (Frequency):** ${matchedGuide.frequency}
-* **समय सारिणी:** ${matchedGuide.firstLastTime}
-* **ट्रैफिक जाम वाले क्षेत्र:** ${matchedGuide.chokePoints}
-
-#### 📋 चरण-दर-चरण यात्रा योजना (Step-by-Step Route):
-${matchedGuide.steps.map((s, idx) => `${idx + 1}. ${s}`).join("\n")}
-
-💡 *सुझाव:* भारी जाम से बचने के लिए पर्पल लाइन मेट्रो या आउटर रिंग रोड एक्सप्रेस बसों का उपयोग करें। आपातकालीन सहायता के लिए **112** डायल करें।`;
-    } else {
-      return `### 🚌 ${matchedGuide.title} — Real Transit Intelligence
-
-* **Key BMTC Routes:** ${matchedGuide.busRoutes.join(" | ")}
-${matchedGuide.metroOption ? `* **Rapid Metro Rail Alternative:** ${matchedGuide.metroOption}` : ""}
-* **Estimated Travel Time:** ${matchedGuide.duration}
-* **Real Fare Breakdown:** Ordinary Bus: **${matchedGuide.fareOrdinary}** | Volvo AC Vajra: **${matchedGuide.fareVajra}** ${matchedGuide.metroFare ? `| Metro: **${matchedGuide.metroFare}**` : ""}
-* **Service Frequency:** ${matchedGuide.frequency}
-* **First & Last Schedules:** ${matchedGuide.firstLastTime}
-* **Critical Traffic Bottlenecks:** ${matchedGuide.chokePoints}
-
-#### 📋 Step-by-Step Itinerary & Transfer Strategy:
-${matchedGuide.steps.map((s, idx) => `**Step ${idx + 1}:** ${s}`).join("\n")}
-
-💡 *Commuter Pro-Tip:* For the fastest cross-city transit, prioritize dedicated Namma Metro Purple / Green corridors to completely bypass peak-hour surface choke points. For live SOS dispatch, tap the **SafeKeep** tab to auto-transmit coordinates to **112**.`;
-    }
-  }
-
-  // General comprehensive fallback for any other transit queries
-  if (appLang === 'kn') {
-    return `### 🗺️ ಬೆಂಗಳೂರು ಸಾರಿಗೆ ನೈಜ ಮಾಹಿತಿ (Bengaluru Transit Mastermind)
-
-ನಿಮ್ಮ ಕೋರಿಕೆ: **"${query}"**
-
-* **ಮೆಟ್ರೋ ಕಾರ್ಯಾಚರಣೆ:** ನೇರಳೆ ಲೈನ್ (ಚಲ್ಲಘಟ್ಟ ⇄ ವೈಟ್‌ಫೀಲ್ಡ್) ಮತ್ತು ಹಸಿರು ಲೈನ್ (ನಾಗಸಂದ್ರ ⇄ ಸಿಲ್ಕ್ ಇನ್‌ಸ್ಟಿಟ್ಯೂಟ್) ಮೆಜೆಸ್ಟಿಕ್ ಕೆಂಪೇಗೌಡ ನಿಲ್ದಾಣದಲ್ಲಿ ಪರಸ್ಪರ ಸಂಪರ್ಕಿಸುತ್ತವೆ. ರೈಲುಗಳು ಪ್ರತಿ 3 ರಿಂದ 5 ನಿಮಿಷಗಳಿಗೆ ಲಭ್ಯ.
-* **ಬಿಎಂಟಿಸಿ ಪ್ರಮುಖ ಸಂಪರ್ಕ ಮಾರ್ಗಗಳು:**
-  - **500D ಸರಣಿ:** ಹೆಬ್ಬಾಳ ➔ ಕೆಆರ್ ಪುರಂ ➔ ಮಾರತ್‌ಹಳ್ಳಿ ➔ ಬೆಳ್ಳಂದೂರು ➔ ಸಿಲ್ಕ್ ಬೋರ್ಡ್ (ಹೊರವರ್ತುಲ ರಸ್ತೆ).
-  - **335E ಸರಣಿ:** ಮೆಜೆಸ್ಟಿಕ್ ➔ ಎಂಜಿ ರಸ್ತೆ ➔ ಎಚ್‌ಎಎಲ್ ➔ ವೈಟ್‌ಫೀಲ್ಡ್.
-  - **250 ಸರಣಿ:** ಮೆಜೆಸ್ಟಿಕ್ ➔ ಮಲ್ಲೇಶ್ವರಂ ➔ ಯಶವಂತಪುರ ➔ ಯಲಹಂಕ.
-  - **ಕೆಐಎ ಸರಣಿ (ವಾಯು ವಜ್ರ):** ನಗರದ ಪ್ರಮುಖ ತಾಣಗಳಿಂದ ಕೆಂಪೇಗೌಡ ಅಂತಾರಾಷ್ಟ್ರೀಯ ವಿಮಾನ ನಿಲ್ದಾಣಕ್ಕೆ 24 ಗಂಟೆ ಲಭ್ಯ.
-* **ದರ ಮಾಹಿತಿ:** ಸಾಮಾನ್ಯ ಬಸ್: ₹5 ರಿಂದ ₹35 | ದೈನಂದಿನ ಪಾಸ್: ₹70 | ವಜ್ರ ಎಸಿ ಪಾಸ್: ₹120 | ಮೆಟ್ರೋ: ₹10 ರಿಂದ ₹60 (ಸ್ಮಾರ್ಟ್‌ಕಾರ್ಡ್‌ಗೆ 5% ರಿಯಾಯಿತಿ).
-* **ಸಹಾಯವಾಣಿ:** ಬಿಎಂಟಿಸಿ: 080-22483777 | ಮೆಟ್ರೋ: 1800-425-12345 | ಪೊಲೀಸ್/ತುರ್ತು: 112.`;
-  } else if (appLang === 'hi') {
-    return `### 🗺️ बेंगलुरु ट्रांजिट मास्टरमाइंड - पूरी वास्तविक जानकारी
-
-आपकी क्वेरी: **"${query}"**
-
-* **नम्मा मेट्रो नेटवर्क:** पर्पल लाइन (चल्लाघट्टा ⇄ व्हाइटफील्ड) और ग्रीन लाइन (नागासंद्रा ⇄ सिल्क इंस्टीट्यूट) केम्पेगौड़ा मजेस्टिक पर इंटरचेंज प्रदान करते हैं। पीक ऑवर्स में हर 3-5 मिनट पर ट्रेन उपलब्ध है।
-* **प्रमुख बीएमटीसी बस कॉरीडोर:**
-  - **रूट 500D:** हेब्बाल ➔ केआर पुरम ➔ मराठाहल्ली ➔ बेल्लंदूर ➔ सिल्क बोर्ड (आउटर रिंग रोड एक्सप्रेस)।
-  - **रूट 335E:** मजेस्टिक ➔ एमजी रोड ➔ एचएएल ➔ व्हाइटफील्ड।
-  - **रूट 250:** मजेस्टिक ➔ यशवंतपुर ➔ हेब्बाल ➔ येलहंका।
-  - **KIA वायु वज्र वोल्वो:** हवाई अड्डे के लिए 24x7 एक्सप्रेस सेवा।
-* **किराया संरचना:** साधारण बस: ₹5 से ₹35 | दैनिक पास: ₹70 | वज्र पास: ₹120 | मेट्रो: ₹10 से ₹60 (5% छूट)।
-* **हेल्पलाइन नंबर:** बीएमटीसी: 080-22483777 | मेट्रो: 1800-425-12345 | पुलिस/इमरजेंसी: 112।`;
-  } else {
-    return `### 🗺️ Bengaluru Transit Real-World Mastermind Guide
-
-Inquiry: **"${query}"**
-
-* **Rapid Rail Corridors (Namma Metro):**
-  - **Purple Line:** Challaghatta ⇄ Whitefield (Kadugodi) via Majestic, MG Road, Indiranagar, KR Puram. Frequency: 3.5 mins.
-  - **Green Line:** Nagasandra ⇄ Silk Institute via Yeshwantpur, Majestic, Banashankari. Frequency: 5 mins.
-  - **Major Interchange:** Kempegowda Station (Majestic) platforms 1/2 (Green) & platforms 3/4 (Purple).
-* **Key High-Capacity BMTC Corridors:**
-  - **Route 500D Express:** Hebbal ➔ Manyata ➔ Tin Factory ➔ Marathahalli ➔ Bellandur ➔ Silk Board (Outer Ring Road).
-  - **Route 335E / V-335E:** Majestic ➔ HAL Main Gate ➔ ITPL / Kadugodi.
-  - **Route 250 / 401K:** Majestic ➔ Yeshwantpur ➔ Yelahanka / Kengeri.
-  - **Vayu Vajra (KIA Series):** 24x7 luxury Volvo airport transit from all key IT hubs (KIA-4, KIA-8, KIA-9).
-* **Fares & Passes:** Daily Ordinary Pass: **₹70** | Daily Vajra Volvo Pass: **₹120** | Metro Token/Smartcard: **₹10 - ₹60** (5% discount on Smartcard).
-* **Emergency Contacts:** Police/SOS: **112** | Women Helpline: **1091** | BMTC Call Center: **080-22483777** | Metro Helpline: **1800-425-12345**.`;
-  }
-}
-
+import { BMTC_FLEET_STATISTICS, getOfficialStopByName, getStopsForRoute } from "@/data/bmtcOfficialData";
+import { generateOfflineTransitReply } from "@/lib/offlineTransitEngine";
 export async function POST(req: Request) {
   let parsedBody: any = { message: "", imageBase64: "", appLang: "en" };
   try {
@@ -379,8 +88,38 @@ Language: Answer ENTIRELY in ${appLang === 'kn' ? 'Kannada' : appLang === 'hi' ?
   }
 
   // 2. TEXT INTELLIGENCE ENGINE (Detailed Real-World Transit Intelligence)
+  let groundedTransitContext = "";
+  if (message) {
+    const matchedStop = getOfficialStopByName(message);
+    if (matchedStop && matchedStop.routesMap) {
+      const topRouteChips = Object.entries(matchedStop.routesMap)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10)
+        .map(([r, t]) => `${r} (${t} trips/day)`)
+        .join(", ");
+      groundedTransitContext += `\n[BMTC Open Data Ground-Truth for Stop: "${matchedStop.name}"]: Lat ${matchedStop.lat.toFixed(5)}, Lon ${matchedStop.lng.toFixed(5)}, Daily Density: ${matchedStop.dailyTrips} trips/day, Serving Routes (${matchedStop.routesCount} total): ${topRouteChips}.`;
+    }
+  }
+
   const systemInstruction = `You are Vanara AI, the authoritative, highly advanced transit mastermind for 'Bharat Vision' in ${userCityName}. 
 The current time is ${currentTime}. The regional language is ${primaryLanguage}.
+
+OFFICIAL DATASETS GROUNDED KNOWLEDGE:
+* BMTC Operational Baseline: 6,514.9 total fleet held | 5,542.4 buses on road daily | 85.1% fleet utilization | 7.1% maintenance off-road | 50 active TTMC depots across 6 divisions (North, West, South, East, North East, Central).
+* Division Breakdown:
+  - North (Yelahanka / Hebbal / Doddaballapur): 1,416.4 held (87.5% util)
+  - West (Yeshwantpur / Peenya / Kengeri): 1,174.8 held (85.5% util)
+  - South (Banashankari / Electronic City / Jayanagar): 1,138.2 held (88.2% util)
+  - East (Whitefield / Indiranagar / KR Puram): 1,026.6 held (84.2% util)
+  - North East (Nagawara / Thanisandra / Kalyan Nagar): 906.5 held (87.0% util)
+  - Central (Majestic / Shivajinagar / Shantinagar): 852.2 held (75.2% util)
+* BMTC Network Scale: 5,409 stops, 1,307 routes. Key high-density corridors: 500D (Hebbal ⇄ Silk Board ORR, 1,307 trips/day), 335E / V-335E (Majestic ⇄ Whitefield Kadugodi), 250 (Majestic ⇄ Yelahanka), 401K (Yelahanka ⇄ Kengeri), 365 (Majestic ⇄ Electronic City), Vayu Vajra KIA airport shuttles (KIA-4, KIA-8, KIA-9, KIA-10 running 24x7).
+* Namma Metro Network: 121 stations across Purple (Challaghatta ⇄ Whitefield Kadugodi, 43.5km), Green (Nagasandra ⇄ Silk Institute, 30.5km), Yellow, and Blue lines.
+  - Central underground interchange at Nadaprabhu Kempegowda Majestic (Platforms 1/2 Green, Platforms 3/4 Purple).
+  - Train Headways: 3.5 to 5 mins peak, 7-8 mins off-peak. Timings: 05:00 AM - 11:00 PM (Sundays from 07:00 AM). Fares: ₹10 to ₹60 (Flat 5% discount on Smartcard / NCMC).
+* Pass Structure: Daily Non-AC Pass ₹70, Daily Volvo Vajra AC Pass ₹120, Monthly Ordinary ₹1,050, Monthly Volvo ₹2,200. Student pass 75% subsidized via Seva Sindhu.
+* Emergency / Helpline: BMTC 080-22483777 | Metro 1800-425-12345 | Police/SOS 112.
+${groundedTransitContext}
 
 CRITICAL INSTRUCTIONS & DATA ACCURACY:
 1. GIVE ENTIRE REAL TRANSIT DATA WITH FULL DETAILS: Do NOT be brief. Give commuters complete, exhaustive, and actionable transit intelligence.
@@ -477,6 +216,6 @@ CRITICAL INSTRUCTIONS & DATA ACCURACY:
   }
 
   // 3. INTERNAL HIGH-FIDELITY REAL TRANSIT INTELLIGENCE ENGINE (Always Reliable & Detailed)
-  const fullDetailReply = generateDetailedTransitReport(message || "", appLang, userCityName);
+  const fullDetailReply = generateOfflineTransitReply(message || "", appLang, userCityName);
   return NextResponse.json({ reply: fullDetailReply });
 }

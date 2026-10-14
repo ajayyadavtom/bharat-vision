@@ -54,8 +54,8 @@ export default function UpiGateway({ isOpen, amount, onSuccess, onCancel, cardDe
           </button>
 
           <div className="flex items-center justify-center gap-2 mb-2">
-            <Zap size={16} className="text-brand-accent" />
-            <span className="text-[10px] uppercase tracking-widest text-brand-dark dark:text-brand-light font-bold">Manual UPI Gateway</span>
+            <Zap size={16} className="text-teal-600 dark:text-brand-accent" />
+            <span className="text-[10px] uppercase tracking-widest text-teal-800 dark:text-brand-light font-bold">Manual UPI Gateway</span>
           </div>
           
           <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-1">Pay to Recharge</h3>
@@ -86,7 +86,7 @@ export default function UpiGateway({ isOpen, amount, onSuccess, onCancel, cardDe
           {/* Amount Display Box */}
           <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 flex justify-between items-center mb-6">
             <span className="text-xs text-slate-600 dark:text-gray-300 font-bold uppercase">Amount to Pay</span>
-            <span className="text-2xl font-black text-brand-accent">₹{amount}.00</span>
+            <span className="text-2xl font-black text-teal-700 dark:text-brand-accent">₹{amount}.00</span>
           </div>
 
           {/* QR Code Section */}
@@ -115,7 +115,7 @@ export default function UpiGateway({ isOpen, amount, onSuccess, onCancel, cardDe
           <button
             onClick={handleLiveCheckout}
             disabled={loading}
-            className="w-full bg-brand-accent text-brand-dark font-black py-4 rounded-2xl text-xs shadow-[0_5px_20px_rgba(20,184,166,0.3)] active:scale-95 transition-transform flex items-center justify-center gap-2 disabled:opacity-50"
+            className="w-full bg-teal-600 hover:bg-teal-700 text-white dark:bg-brand-accent dark:text-brand-dark font-black py-4 rounded-2xl text-xs shadow-md active:scale-95 transition-transform flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
           >
             {loading ? (
               <>

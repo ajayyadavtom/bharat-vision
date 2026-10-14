@@ -24537,7 +24537,25 @@ export const OFFICIAL_BMTC_ROUTES: BMTCRouteRecord[] = [
 // Helper Lookup Utilities
 export function getOfficialStopByName(name: string): BMTCStopRecord | undefined {
   const q = name.toLowerCase().trim();
-  return OFFICIAL_BMTC_STOPS.find(s => s.name.toLowerCase().trim() === q || s.name.toLowerCase().includes(q));
+  // 1. Direct match or stop name contains query
+  const direct = OFFICIAL_BMTC_STOPS.find(s => s.name.toLowerCase().trim() === q || s.name.toLowerCase().includes(q));
+  if (direct) return direct;
+
+  // 2. Query contains full stop name
+  const sorted = [...OFFICIAL_BMTC_STOPS].sort((a, b) => (b.dailyTrips || 0) - (a.dailyTrips || 0));
+  for (const s of sorted) {
+    const sName = s.name.toLowerCase();
+    if (sName.length >= 4 && q.includes(sName)) {
+      return s;
+    }
+    const words = sName.split(/[\s,/-]+/).filter(w => w.length >= 4 && !["road", "cross", "gate", "main", "layout", "near", "opposite", "stop", "station"].includes(w));
+    for (const w of words) {
+      if (q.includes(w)) {
+        return s;
+      }
+    }
+  }
+  return undefined;
 }
 
 export function getRoutesPassingThroughStop(stopName: string): { route: string; trips: number }[] {

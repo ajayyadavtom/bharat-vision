@@ -37,6 +37,20 @@ export interface NcmcCardInfo {
   lastSyncedAt?: number | null;
 }
 
+export interface UserPass {
+  id: string;
+  name: string;
+  boundDeviceId: string;
+  expiry: number;
+  lastMigratedAt: number | null;
+  type?: string;
+  price?: number;
+  isNcmc?: boolean;
+  activatedAt?: number;
+  network?: string;
+  qrPayload?: string;
+}
+
 export interface TransitTicketRecord {
   id: string;
   category: "metro" | "bus" | "auto" | "pass";
@@ -51,6 +65,11 @@ export interface TransitTicketRecord {
   dateString?: string;
   timestamp: number;
   status?: "Active" | "Completed" | "Validated";
+  quantity?: number;
+  passengerIndex?: number;
+  vehicleNo?: string;
+  qrPayload?: string;
+  expiryTimestamp?: number;
 }
 
 interface AppState {
@@ -92,8 +111,15 @@ interface AppState {
   setProfilePictureUrl: (url: string | null) => Promise<void> | void;
   setPrivacyLiveLocation: (val: boolean) => void;
   setPrivacyCamera: (val: boolean) => void;
-  activePass: { name: string; boundDeviceId: string; expiry: number; lastMigratedAt: number | null } | null;
-  setActivePass: (pass: any) => void;
+  activePass: UserPass | null;
+  activePasses: UserPass[];
+  setActivePass: (pass: UserPass | null) => void;
+  addActivePass: (pass: UserPass) => void;
+  removeActivePass: (id: string) => void;
+  activeTickets: TransitTicketRecord[];
+  addActiveTickets: (tickets: TransitTicketRecord[]) => void;
+  markTicketValidated: (id: string) => void;
+  removeActiveTicket: (id: string) => void;
   mockDeviceToggle: boolean;
   setMockDeviceToggle: (val: boolean) => void;
   

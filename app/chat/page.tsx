@@ -5,6 +5,7 @@ import { Mic, Send, Sparkles, StopCircle, Loader2, Menu, X, PlusCircle, MessageS
 import { motion, AnimatePresence } from "framer-motion";
 import { useAppStore, ChatMessage } from "@/lib/store";
 import { getCityData } from "@/lib/cityData";
+import { generateOfflineTransitReply } from "@/lib/offlineTransitEngine";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -15,7 +16,21 @@ export default function ChatScreen() {
   const [isListening, setIsListening] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isOnline, setIsOnline] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Monitor network online/offline state
+  useEffect(() => {
+    setIsOnline(typeof navigator !== "undefined" ? navigator.onLine : true);
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
   
   // Set initial welcome message if empty
   useEffect(() => {
@@ -50,6 +65,18 @@ export default function ChatScreen() {
     setInputText("");
     setIsLoading(true);
 
+    // 1. Instant on-device execution if currently offline
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      setTimeout(() => {
+        const offlineReply = generateOfflineTransitReply(text || "Where am I?", appLang, currentCity);
+        const botMsg: ChatMessage = { id: Date.now() + 1, text: offlineReply, sender: "bot" };
+        addChatMessage(botMsg);
+        setIsLoading(false);
+        setIsListening(false);
+      }, 350);
+      return;
+    }
+
     try {
       // Get the last 6 messages for context memory (excluding the one we just added since it's sent explicitly)
       const recentHistory = chatMessages.slice(-6).map(m => ({
@@ -69,13 +96,22 @@ export default function ChatScreen() {
         })
       });
       
+      if (!response.ok) {
+        throw new Error(`API responded with status ${response.status}`);
+      }
+
       const data = await response.json();
+      if (!data.reply) {
+        throw new Error("Empty response received from chat API");
+      }
+
       const botMsg: ChatMessage = { id: Date.now() + 1, text: data.reply, sender: "bot" };
       addChatMessage(botMsg);
     } catch (error) {
-      console.error(error);
-      const errorMsg: ChatMessage = { id: Date.now() + 1, text: "Sorry, my neural link to BMTC servers timed out. Try again?", sender: "bot" };
-      addChatMessage(errorMsg);
+      console.warn("Online API unavailable, seamlessly falling back to local on-device transit engine:", error);
+      const offlineReply = generateOfflineTransitReply(text || "Where am I?", appLang, currentCity);
+      const fallbackMsg: ChatMessage = { id: Date.now() + 1, text: offlineReply, sender: "bot" };
+      addChatMessage(fallbackMsg);
     } finally {
       setIsLoading(false);
       setIsListening(false);
@@ -236,15 +272,18 @@ export default function ChatScreen() {
             <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-500/10 via-teal-500/10 to-slate-100 dark:from-emerald-950/40 dark:via-slate-800 dark:to-slate-900 border border-emerald-500/30 flex items-center justify-center p-2 shadow-sm">
               <img src="/vanara-logo.png" alt="Vanara AI" className="w-full h-full object-contain dark:invert" />
             </div>
-            <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full animate-pulse" />
+            <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 ${isOnline ? "bg-emerald-500 animate-pulse" : "bg-amber-500"} border-2 border-white dark:border-slate-900 rounded-full`} />
           </div>
           <div className="flex flex-col">
             <div className="flex items-center gap-1.5">
               <h1 className="text-base font-black tracking-tight text-slate-900 dark:text-white">Vanara AI</h1>
-              <span className="px-1.5 py-0.5 text-[9px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-full border border-emerald-500/20 uppercase tracking-wider">Assistant</span>
+              <span className={`px-1.5 py-0.5 text-[9px] font-bold ${isOnline ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"} rounded-full border uppercase tracking-wider`}>
+                {isOnline ? "Assistant" : "Offline DB"}
+              </span>
             </div>
             <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1">
-              <Sparkles size={10} className="text-emerald-500" /> Transit Intelligence • Active
+              <Sparkles size={10} className={isOnline ? "text-emerald-500" : "text-amber-500"} /> 
+              {isOnline ? "Transit Intelligence • Online" : "On-Device Transit Engine • Offline"}
             </p>
           </div>
         </div>

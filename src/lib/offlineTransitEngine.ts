@@ -124,6 +124,121 @@ export function generateOfflineTransitReply(
     ? `> ⚡ **ऑफलाइन बीएमटीसी एवं मेट्रो मोड:** बिना इंटरनेट के स्थानीय डेटाबेस से तुरंत लोड किया गया।\n\n`
     : `> ⚡ **Offline Transit Mode:** Answered directly from on-device BMTC & Namma Metro local database (Zero Internet Needed).\n\n`;
 
+  // 0A. SPECIAL QUERY: WHY IS 500D ALWAYS LATE? (ORR Bottleneck Intelligence)
+  if (q.includes("500d") && (q.includes("late") || q.includes("delay") || q.includes("slow") || q.includes("traffic") || q.includes("stuck") || q.includes("why"))) {
+    if (appLang === "kn") {
+      return offlineBadge + `### 🚌 ಬಿಎಂಟಿಸಿ 500D ಏಕೆ ವಿಳಂಬವಾಗುತ್ತದೆ? (ORR ಟ್ರಾಫಿಕ್ ವಿಶ್ಲೇಷಣೆ)
+
+ಬಿಎಂಟಿಸಿ **500D (ಹೆಬ್ಬಾಳ ⇄ ಸೆಂಟ್ರಲ್ ಸಿಲ್ಕ್ ಬೋರ್ಡ್)** ಬೆಂಗಳೂರಿನ ಅತ್ಯಂತ ಜನನಿಬಿಡ 38 ಕಿ.ಮೀ ಹೊರವರ್ತುಲ ರಸ್ತೆ (Outer Ring Road) ಮಾರ್ಗವಾಗಿದೆ. ಪ್ರತಿದಿನ 1,307 ಕ್ಕೂ ಹೆಚ್ಚು ಟ್ರಿಪ್‌ಗಳನ್ನು ಇದು ನಿರ್ವಹಿಸುತ್ತದೆ.
+
+#### ⚠️ ಪ್ರಮುಖ 5 ಟ್ರಾಫಿಕ್ ಅಡೆತಡೆಗಳು (Choke Points):
+1. **ಹೆಬ್ಬಾಳ ಫ್ಲೈಓವರ್ ಪ್ರವೇಶ:** ಬಳ್ಳಾರಿ ರಸ್ತೆ ಮತ್ತು ಏರ್‌ಪೋರ್ಟ್ ಸಂಚಾರ ಒಟ್ಟುಗೂಡುವ ಸ್ಥಳ.
+2. **ಟಿನ್ ಫ್ಯಾಕ್ಟರಿ & ಕೆ.ಆರ್. ಪುರಂ ರೈಲ್ವೆ ಬ್ರಿಡ್ಜ್:** ಕಿರಿದಾದ ರಸ್ತೆ ಮತ್ತು ಹಳೆ ಮದ್ರಾಸ್ ರಸ್ತೆ ಸಂಪರ್ಕದ ಬಾಟಲ್‌ನೆಕ್.
+3. **ಮಾರತ್‌ಹಳ್ಳಿ ಬ್ರಿಡ್ಜ್:** ಐಟಿ ಕಾರಿಡಾರ್‌ಗೆ ಸಂಪರ್ಕ ಕಲ್ಪಿಸುವ ಪ್ರಮುಖ ಜಂಕ್ಷನ್.
+4. **ಬೆಳ್ಳಂದೂರು ಎಕೋಸ್ಪೇಸ್ & ಕಡುಬೀಸನಹಳ್ಳಿ:** ಬೆಳಗಿನ ಹಾಗೂ ಸಂಜೆಯ ಐಟಿ ಉದ್ಯೋಗಿಗಳ ವಿಪರೀತ ಸಂಚಾರ.
+5. **ಸೆಂಟ್ರಲ್ ಸಿಲ್ಕ್ ಬೋರ್ಡ್:** ಹೊಸೂರು ರಸ್ತೆ ಮತ್ತು ಬಿಟಿಎಂ ಲೇಔಟ್ ಸಂಚಾರ ದಟ್ಟಣೆ.
+
+#### 💡 ಪ್ರಯಾಣಿಕರಿಗೆ ಸಲಹೆ:
+* **ಪೀಕ್ ಅವರ್ ಹೊರತುಪಡಿಸಿ ಪ್ರಯಾಣಿಸಿ:** ಬೆಳಗ್ಗೆ 08:00 ಕ್ಕಿಂತ ಮೊದಲು ಅಥವಾ ಮಧ್ಯಾಹ್ನ 12:00 ರಿಂದ 04:00 ರ ನಡುವೆ ಪ್ರಯಾಣಿಸಿ.
+* **ಮೆಟ್ರೋ ಪರ್ಯಾಯ:** ಕೆಆರ್ ಪುರಂ ನಿಂದ ವೈಟ್‌ಫೀಲ್ಡ್ ಅಥವಾ ಮೆಜೆಸ್ಟಿಕ್‌ಗೆ ಪ್ರಯಾಣಿಸಲು **ನೇರಳೆ ಲೈನ್ ಮೆಟ್ರೋ** ಬಳಸಿ ಟ್ರಾಫಿಕ್‌ನಿಂದ ಪಾರಾಗಿ.
+* **ಲೈವ್ ಟ್ರ್ಯಾಕಿಂಗ್:** ಭಾರತ್ ವಿಷನ್ 'ಲೈವ್ ಮ್ಯಾಪ್' ಮೂಲಕ 500D ಬಸ್‌ಗಳ ನೈಜ ಜಿಪಿಎಸ್ ಲೊಕೇಶನ್ ಗಮನಿಸಿ.`;
+    } else if (appLang === "hi") {
+      return offlineBadge + `### 🚌 बीएमटीसी 500D में अक्सर देरी क्यों होती है? (ORR विश्लेषण)
+
+बीएमटीसी **500D (हेब्बाल ⇄ सेंट्रल सिल्क बोर्ड)** बेंगलुरु का सबसे व्यस्त 38 किमी आउटर रिंग रोड (ORR) कॉरिडोर है, जिसमें प्रतिदिन 1,307 से अधिक फेरे लगते हैं।
+
+#### ⚠️ 5 मुख्य ट्रैफिक बॉटलनेक (Traffic Choke Points):
+1. **हेब्बाल फ्लाईओवर जंक्शन:** एयरपोर्ट और बल्लारी रोड का भारी ट्रैफिक संगम।
+2. **टिन फैक्ट्री / केआर पुरम ब्रिज:** रेलवे क्रॉसिंग बॉटलनेक और संकरी सड़क।
+3. **मराठाहल्ली ब्रिज:** प्रमुख टेक हब इंटरचेंज पर वाहनों की कतारें।
+4. **बेल्लंदूर इकोस्पेस एवं कडुबीसनहल्ली:** सुबह 8:30-11:00 और शाम 5:30-8:30 के बीच टेक पार्क रश।
+5. **सेंट्रल सिल्क बोर्ड जंक्शन:** होसुर रोड एवं बीटीएम लेआउट का भारी संगम।
+
+#### 💡 यात्रियों के लिए स्मार्ट सुझाव:
+* **पर्पल लाइन मेट्रो का विकल्प लें:** केआर पुरम / बैयप्पनहल्ली से सीधे पर्पल लाइन मेट्रो द्वारा सीबीडी / व्हाइटफील्ड बिना जाम के पहुँचें।
+* **समय का चयन:** पीक आवर्स से पहले (सुबह 8:00 से पूर्व) यात्रा शुरू करें।
+* **लाइव ट्रैकिंग:** भारत विजन ऐप के 'लाइव मैप' टैब पर 500D का जीपीएस रूट देखें।`;
+    } else {
+      return offlineBadge + `### 🚌 Why is BMTC 500D Frequently Delayed? (Outer Ring Road Intelligence)
+
+BMTC **Route 500D (Hebbal ⇄ Central Silk Board)** traverses Bengaluru's 38-kilometer arterial Outer Ring Road (ORR). Operating over **1,307 daily trips**, it is the lifeblood of the tech corridor—yet faces notorious congestion.
+
+#### ⚠️ 5 Critical Bottlenecks Causing Schedule Variance:
+1. **Hebbal Flyover Ingress:** Heavy convergence of Airport / NH-44 Bellary Road vehicular surges.
+2. **Tin Factory / KR Puram Railway Span:** Narrow bottleneck with mixed city-suburban and Old Madras Road traffic.
+3. **Marathahalli Multiplex & Bridge:** High-volume pedestrian crossing and bidirectional feeder congestion.
+4. **Bellandur Ecospace & Kadubeesanahalli:** Tech corridor peak influx (08:30 AM – 11:00 AM & 05:30 PM – 08:30 PM).
+5. **Central Silk Board Intersection:** Crucial multi-arm junction connecting Hosur Road, BTM, and HSR.
+
+#### 💡 Commuter Mitigation Strategy:
+* **Interchange with Namma Metro Purple Line:** Switch at Benniganahalli or KR Puram station to bypass surface congestion toward CBD and Whitefield.
+* **Off-Peak Travel Window:** Board prior to 08:15 AM or between 11:30 AM – 04:30 PM for smooth 45-minute transits.
+* **Dedicated Bus Lane:** Watch for active BMTC Bus Priority Lanes along Bellandur.`;
+    }
+  }
+
+  // 0B. SPECIAL QUERY: ROUTE TO MAJESTIC / HOW TO REACH MAJESTIC
+  if ((q.includes("majestic") && (q.includes("route") || q.includes("how to") || q.includes("reach") || q.includes("go to") || q.includes("hogodu") || q.includes("kaise"))) || q === "show me the route to majestic") {
+    if (appLang === "kn") {
+      return offlineBadge + `### 🏛️ ಮೆಜೆಸ್ಟಿಕ್ (ಕೆಂಪೇಗೌಡ ನಿಲ್ದಾಣ) ತಲುಪುವ ಸಂಪೂರ್ಣ ಮಾರ್ಗದರ್ಶಿ
+
+ನಾಡಪ್ರಭು ಕೆಂಪೇಗೌಡ ಬಸ್ ನಿಲ್ದಾಣ (ಮೆಜೆಸ್ಟಿಕ್) ಹಾಗೂ ಮೆಟ್ರೋ ಇಂಟರ್‌ಚೇಂಜ್ ನಗರದ ಕೇಂದ್ರ ಸಾರಿಗೆ ಕೇಂದ್ರವಾಗಿದೆ.
+
+#### 🧭 ನಗರದ ವಿವಿಧ ಭಾಗಗಳಿಂದ ಬರುವ ಮಾರ್ಗಗಳು:
+* **ಉತ್ತರ ಭಾಗದಿಂದ (ಯಲಹಂಕ / ಹೆಬ್ಬಾಳ / ಜಕ್ಕೂರು):**
+  - **ಬಿಎಂಟಿಸಿ ಬಸ್‌ಗಳು:** ರೂಟ್ **250**, **280**, **285**, **401K** (ಪ್ಲಾಟ್‌ಫಾರ್ಮ್ 19 ಮತ್ತು 22 ಕ್ಕೆ ತಲುಪುತ್ತವೆ).
+  - ಪ್ರಯಾಣ ಸಮಯ: 30 ರಿಂದ 45 ನಿಮಿಷಗಳು.
+* **ಪೂರ್ವ ಭಾಗದಿಂದ (ವೈಟ್‌ಫೀಲ್ಡ್ / ಇಂದಿರಾನಗರ / ಎಂಜಿ ರಸ್ತೆ):**
+  - **ನಮ್ಮ ಮೆಟ್ರೋ ನೇರಳೆ ಲೈನ್:** ಕಡುಗೋಡಿ/ವೈಟ್‌ಫೀಲ್ಡ್‌ನಿಂದ ನೇರ ಮೆಟ್ರೋ ಹತ್ತಿ ಕೆಂಪೇಗೌಡ ಮೆಜೆಸ್ಟಿಕ್ ಪ್ಲಾಟ್‌ಫಾರ್ಮ್ 3/4 ಕ್ಕೆ ತಲುಪಿ (ಕೇವಲ 42 ನಿಮಿಷ, ಶೂನ್ಯ ಟ್ರಾಫಿಕ್).
+  - **ಬಿಎಂಟಿಸಿ ಬಸ್:** ರೂಟ್ **335E** ಅಥವಾ **V-335E** (ವಜ್ರ ಎಸಿ).
+* **ದಕ್ಷಿಣ ಭಾಗದಿಂದ (ಬನಶಂಕರಿ / ಜಯನಗರ / ಎಲೆಕ್ಟ್ರಾನಿಕ್ ಸಿಟಿ):**
+  - **ನಮ್ಮ ಮೆಟ್ರೋ ಹಸಿರು ಲೈನ್:** ಸಿಲ್ಕ್ ಇನ್‌ಸ್ಟಿಟ್ಯೂಟ್ / ಬನಶಂಕರಿಯಿಂದ ನೇರ ಕೆಂಪೇಗೌಡ ಪ್ಲಾಟ್‌ಫಾರ್ಮ್ 1/2.
+  - **ಬಿಎಂಟಿಸಿ ಬಸ್:** ರೂಟ್ **365**, **215** (ಹೊಸೂರು ರಸ್ತೆ ಮೂಲಕ).
+* **ವಿಮಾನ ನಿಲ್ದಾಣದಿಂದ (KIA):**
+  - **ವಾಯು ವಜ್ರ KIA-9:** ವಿಮಾನ ನಿಲ್ದಾಣದಿಂದ ಪ್ರತಿ 10 ನಿಮಿಷಕ್ಕೆ 24 ಗಂಟೆ ಲಭ್ಯ (ಮೆಜೆಸ್ಟಿಕ್ ಪ್ಲಾಟ್‌ಫಾರ್ಮ್ 19).
+
+* **ದರ:** ಸಾಮಾನ್ಯ ಬಸ್: ₹15-₹30 | ಮೆಟ್ರೋ: ₹10-₹60 (ಸ್ಮಾರ್ಟ್‌ಕಾರ್ಡ್‌ಗೆ 5% ರಿಯಾಯಿತಿ).`;
+    } else if (appLang === "hi") {
+      return offlineBadge + `### 🏛️ केम्पेगौड़ा मजेस्टिक पहुँचने की संपूर्ण गाइड
+
+केम्पेगौड़ा बस स्टेशन (मजेस्टिक) एवं नाडाप्रभु केम्पेगौड़ा मेट्रो स्टेशन बेंगलुरु का केंद्रीय ट्रांजिट हब है।
+
+#### 🧭 शहर के विभिन्न दिशाओं से पहुँचने के विकल्प:
+* **उत्तर से (येलहंका / हेब्बाल):**
+  - **बीएमटीसी बसें:** रूट **250**, **280**, **285**, **401K** (सीधे प्लेटफॉर्म 19 और 22 पर)।
+  - समय: 30 से 45 मिनट।
+* **पूर्व से (व्हाइटफील्ड / इंदिरानगर / एमजी रोड):**
+  - **नम्मा मेट्रो पर्पल लाइन:** व्हाइटफील्ड/काडुगोडी से सीधे केम्पेगौड़ा मजेस्टिक प्लेटफॉर्म 3/4 (मात्र 42 मिनट, ज़ीरो ट्रैफिक)।
+  - **बीएमटीसी बस:** रूट **335E** / **V-335E** वोल्वो एसी।
+* **दक्षिण से (बनशंकरी / जयनगर / इलेक्ट्रॉनिक सिटी):**
+  - **नम्मा मेट्रो ग्रीन लाइन:** सीधे मजेस्टिक प्लेटफॉर्म 1/2।
+  - **बीएमटीसी बस:** रूट **365**, **215**।
+* **एयरपोर्ट से (KIA):**
+  - **वायु वज्र KIA-9:** 24x7 हर 10 मिनट में सीधे मजेस्टिक टर्मिनल 1 (प्लेटफॉर्म 19)।
+
+* **किराया:** साधारण बस: ₹15-₹30 | मेट्रो: ₹10-₹60 (स्मार्ट कार्ड पर 5% छूट)।`;
+    } else {
+      return offlineBadge + `### 🏛️ Transit Blueprint: How to Reach Kempegowda Majestic Hub
+
+Nadaprabhu Kempegowda Bus Station (Majestic KBS) and Kempegowda Underground Metro Station form the central nerve-center of Bengaluru public transit.
+
+#### 🧭 Multi-Modal Directions from All Quadrants:
+* **From North (Yelahanka / Hebbal / Doddaballapur):**
+  - **BMTC Routes:** Board **250**, **280**, **285**, or **401K** directly to KBS Platforms 19–22.
+  - Duration: 25–40 mins via Ballari Road / Mekhri Circle.
+* **From East (Whitefield / ITPL / Indiranagar / MG Road):**
+  - **FASTEST: Namma Metro Purple Line** direct train to Kempegowda Station Platforms 3/4 (42 mins flat, zero traffic).
+  - **BMTC Bus:** Route **335E** or Volvo Vajra **V-335E** via Old Airport Road.
+* **From South (Banashankari / Jayanagar / Electronic City):**
+  - **Namma Metro Green Line** direct train to Kempegowda Station Platforms 1/2.
+  - **BMTC Bus:** Route **365** (from E-City) or Route **215** (from Banashankari).
+* **From Kempegowda International Airport (KIA):**
+  - **BMTC Vayu Vajra KIA-9:** Continuous 24x7 express luxury shuttle departing every 10 mins into KBS Platform 19 (₹240).
+
+* **Fare Matrix:** Ordinary Bus: **₹15 – ₹30** | Metro: **₹10 – ₹60** (5% NCMC discount) | Daily Non-AC Pass: **₹70**.`;
+    }
+  }
+
   // 1. SPECIFIC BUS ROUTE LOOKUP
   const busRouteMatch = q.match(/\b([vV]-)?(kia|kias|mf|d)?[0-9]{1,4}[a-z]{0,4}(-?[a-z0-9]+)?\b/i);
   if (busRouteMatch) {
