@@ -38,7 +38,7 @@ export interface NcmcCardInfo {
 }
 
 export interface UserPass {
-  id: string;
+  id?: string;
   name: string;
   boundDeviceId: string;
   expiry: number;
@@ -213,7 +213,61 @@ export const useAppStore = create<AppState>()(
       privacyLiveLocation: true,
       privacyCamera: true,
       activePass: null,
+      activePasses: [],
       setActivePass: (pass) => set({ activePass: pass }),
+      addActivePass: (pass: UserPass) => set((state) => {
+        const passes = state.activePasses || [];
+        const existingFiltered = passes.filter((p) => p.id !== pass.id && p.name !== pass.name);
+        const updatedPasses = [pass, ...existingFiltered];
+
+        const historyRecord: TransitTicketRecord = {
+          id: pass.id || `PASS-${Date.now()}`,
+          category: "pass",
+          type: pass.name,
+          network: pass.network || (pass.isNcmc ? "National Common Mobility Card (RuPay)" : "BMTC / Unified Transit Authority"),
+          origin: "Citywide Network",
+          destination: "All Transit Zones",
+          route: `Unlimited Transit Pass (${pass.type || "Daily Pass"})`,
+          ticketId: pass.id || `PASS-${Math.floor(100000 + Math.random() * 900000)}`,
+          fare: pass.price || 70,
+          dateString: `Today, ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`,
+          timestamp: Date.now(),
+          status: "Active",
+          expiryTimestamp: pass.expiry,
+          qrPayload: pass.qrPayload
+        };
+
+        return {
+          activePass: pass,
+          activePasses: updatedPasses,
+          rideHistory: [historyRecord, ...(state.rideHistory || []).filter((r) => r.id !== historyRecord.id)]
+        };
+      }),
+      removeActivePass: (id: string) => set((state) => {
+        const updated = (state.activePasses || []).filter((p) => p.id !== id);
+        return {
+          activePasses: updated,
+          activePass: updated.length > 0 ? updated[0] : null
+        };
+      }),
+
+      activeTickets: [],
+      addActiveTickets: (tickets: TransitTicketRecord[]) => set((state) => {
+        const existingTickets = state.activeTickets || [];
+        const existingHistory = state.rideHistory || [];
+        const newTicketIds = new Set(tickets.map((t) => t.id));
+        return {
+          activeTickets: [...tickets, ...existingTickets.filter((t) => !newTicketIds.has(t.id))],
+          rideHistory: [...tickets, ...existingHistory.filter((h) => !newTicketIds.has(h.id))]
+        };
+      }),
+      markTicketValidated: (id: string) => set((state) => ({
+        activeTickets: (state.activeTickets || []).map((t) => t.id === id ? { ...t, status: "Validated" as const } : t),
+        rideHistory: (state.rideHistory || []).map((t) => t.id === id ? { ...t, status: "Validated" as const } : t)
+      })),
+      removeActiveTicket: (id: string) => set((state) => ({
+        activeTickets: (state.activeTickets || []).filter((t) => t.id !== id)
+      })),
       mockDeviceToggle: false,
       setMockDeviceToggle: (val) => set({ mockDeviceToggle: val }),
       appLang: "en",
@@ -348,11 +402,26 @@ export const useAppStore = create<AppState>()(
       
       setBookedRide: (ride: any | null) => {
         set((state) => {
-          // If booking a new ride, add to history
           if (ride) {
+            const record: TransitTicketRecord = {
+              id: ride.id || `ONDC-${Math.floor(100000 + Math.random() * 900000)}`,
+              category: ride.category || "auto",
+              type: ride.type || `${ride.network || "ONDC"} Ride`,
+              network: ride.network || "ONDC Beckn Open Network",
+              origin: ride.pickup || ride.origin || "Current Location",
+              destination: ride.dropoff || ride.destination || "Destination",
+              route: ride.route || `${ride.pickup || ride.origin || "Pickup"} ➔ ${ride.dropoff || ride.destination || "Destination"}`,
+              driver: ride.driver ? `${ride.driver}${ride.vehicleNo ? ` (${ride.vehicleNo})` : ""}` : undefined,
+              ticketId: ride.ticketId || `PIN: ${ride.pin || Math.floor(1000 + Math.random() * 9000)}`,
+              fare: ride.fare || ride.price || 0,
+              dateString: ride.dateString || `Today, ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`,
+              timestamp: ride.timestamp || Date.now(),
+              status: ride.status || "Active",
+              vehicleNo: ride.vehicleNo
+            };
             return { 
               bookedRide: ride, 
-              rideHistory: [ride, ...state.rideHistory] 
+              rideHistory: [record, ...(state.rideHistory || []).filter((r) => r.id !== record.id)] 
             };
           }
           return { bookedRide: null };
@@ -604,6 +673,8 @@ export const useAppStore = create<AppState>()(
         userName: state.userName,
         appLang: state.appLang,
         activePass: state.activePass,
+        activePasses: state.activePasses,
+        activeTickets: state.activeTickets,
         ncmcCard: state.ncmcCard
       }),
     }

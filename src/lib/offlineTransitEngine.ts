@@ -10,9 +10,9 @@ import {
   getOfficialStopByName,
   getRoutesPassingThroughStop,
   getStopsForRoute
-} from "@/data/bmtcOfficialData";
+} from "../data/bmtcOfficialData";
 
-import nammaMetroData from "@/data/namma_metro.json";
+import nammaMetroData from "../data/namma_metro.json";
 
 // Quick Metro Stations lookup map
 const METRO_STATIONS = (nammaMetroData.stations || []).map((s: any) => ({

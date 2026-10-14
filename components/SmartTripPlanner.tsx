@@ -23,6 +23,7 @@ import {
   Search,
   X,
 } from "lucide-react";
+import { useAppStore } from "@/lib/store";
 
 interface SmartTripPlannerProps {
   userLocation?: [number, number] | null;
@@ -148,6 +149,8 @@ export default function SmartTripPlanner({
   // Origin Coordinates (defaults to Yelahanka New Town or live GPS)
   const originCoords: [number, number] = userLocation || [13.1007, 77.5963];
   const originName = userLocation ? "Your Current Live Location" : "Yelahanka, Bengaluru";
+
+  const { addRideHistory } = useAppStore();
 
   // Selected Corridor or Destination
   const [selectedCorridor, setSelectedCorridor] = useState<CorridorDestination>(
@@ -300,12 +303,44 @@ export default function SmartTripPlanner({
       if (onSelectBusRoute) {
         onSelectBusRoute(selectedCorridor.primaryBus);
       }
+
+      addRideHistory({
+        id: `BMTC-${selectedCorridor.primaryBus}-${Date.now().toString().slice(-4)}`,
+        category: "bus",
+        type: `BMTC Direct Bus (Route ${selectedCorridor.primaryBus})`,
+        network: "BMTC Bengaluru",
+        origin: originName,
+        destination: selectedCorridor.destinationName,
+        route: `${selectedCorridor.roadName} Corridor`,
+        ticketId: `BMTC-${Math.floor(100000 + Math.random() * 900000)}`,
+        fare: planCalculations.cheapestPlan.totalFareRupees,
+        dateString: `Today, ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`,
+        timestamp: Date.now(),
+        status: "Active"
+      });
+
       setBookingSuccessMsg(
         `BMTC Route ${selectedCorridor.primaryBus} selected! Tracking live vehicles on the map.`
       );
       // Smooth scroll up to the map
       window.scrollTo({ top: 180, behavior: "smooth" });
     } else {
+      addRideHistory({
+        id: `SMART-${Math.floor(100000 + Math.random() * 900000)}`,
+        category: "auto",
+        type: `Smart Multi-Modal (Auto + ${selectedCorridor.hasMetro ? "Metro" : "Express"})`,
+        network: "ONDC Beckn & BMRCL Unified",
+        origin: originName,
+        destination: selectedCorridor.destinationName,
+        route: `Auto First-Mile ➔ ${selectedCorridor.hasMetro ? "Namma Metro" : "Express Flyover"} ➔ Skywalk`,
+        driver: "ONDC First-Mile Auto Captain",
+        ticketId: `BDL-${Math.floor(1000 + Math.random() * 9000)}`,
+        fare: planCalculations.smartPlan.totalFareRupees,
+        dateString: `Today, ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`,
+        timestamp: Date.now(),
+        status: "Active"
+      });
+
       setBookingSuccessMsg(
         `ONDC Auto & Transit Bundle Initiated! Fare ₹${planCalculations.smartPlan.totalFareRupees} locked. Driver dispatching to your location.`
       );

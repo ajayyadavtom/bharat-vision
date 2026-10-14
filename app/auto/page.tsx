@@ -37,13 +37,27 @@ export default function AutoCabBooking() {
     }
     deductBalance(ride.fare);
     
-    // Generate PIN once and save to the ride object
-    const rideWithPin = {
+    const generatedPin = Math.floor(1000 + Math.random() * 9000);
+    const vehicleNumber = "KA-04-AB-" + Math.floor(1000 + Math.random() * 9000);
+    const rideWithDetails = {
       ...ride,
-      pin: Math.floor(1000 + Math.random() * 9000)
+      id: `ONDC-${Math.floor(100000 + Math.random() * 900000)}`,
+      category: "auto",
+      pickup: pickup || "Current Location",
+      dropoff: dropoff || "Destination Point",
+      origin: pickup || "Current Location",
+      destination: dropoff || "Destination Point",
+      route: `${pickup || "Current Location"} ➔ ${dropoff || "Destination Point"}`,
+      vehicleNo: vehicleNumber,
+      pin: generatedPin,
+      ticketId: `PIN: ${generatedPin}`,
+      fare: ride.fare,
+      dateString: `Today, ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`,
+      timestamp: Date.now(),
+      status: "Active"
     };
     
-    setBookedRide(rideWithPin);
+    setBookedRide(rideWithDetails);
   };
 
   return (

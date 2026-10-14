@@ -29,7 +29,7 @@ import UpiGateway from "@/components/UpiGateway";
 import NcmcCardModal from "@/components/NcmcCardModal";
 import NcmcTopUpModal from "@/components/NcmcTopUpModal";
 
-import { useAppStore } from "@/lib/store";
+import { useAppStore, UserPass } from "@/lib/store";
 import { getCityData } from "@/lib/cityData";
 
 export default function PassScreen() {
@@ -41,6 +41,9 @@ export default function PassScreen() {
     deductBalance,
     activePass,
     setActivePass,
+    activePasses,
+    addActivePass,
+    removeActivePass,
     mockDeviceToggle,
     setMockDeviceToggle,
     ncmcCard,
@@ -49,6 +52,7 @@ export default function PassScreen() {
   } = useAppStore();
   const cityData = getCityData(currentCity);
   const [activeTab, setActiveTab] = useState<"digital" | "ncmc">("ncmc");
+  const [selectedPassId, setSelectedPassId] = useState<string | null>(null);
 
   const [showUpi, setShowUpi] = useState(false);
   const [pendingAmount, setPendingAmount] = useState(0);
@@ -336,120 +340,180 @@ export default function PassScreen() {
       {/* Tab Content: Digital Wallet Mode */}
       {activeTab === "digital" && (
         <>
-          {activePass ? (
-            activePass.boundDeviceId === deviceFingerprint ? (
-              <div
-                onMouseMove={handleMouseMove}
-                className="mb-8 relative rounded-3xl overflow-hidden shadow-2xl border border-teal-500/30 dark:border-teal-500/40 bg-white dark:bg-slate-900 p-6 flex flex-col items-center justify-center"
-              >
-                {/* Gyroscope Shimmer Hologram */}
-                <div
-                  className="absolute inset-0 pointer-events-none z-0 opacity-50 mix-blend-color-dodge transition-transform duration-75 ease-out"
-                  style={{
-                    background: `radial-gradient(circle at ${tilt.x}% ${tilt.y}%, rgba(20,184,166,0.6) 0%, rgba(59,130,246,0.3) 40%, transparent 80%)`,
-                  }}
-                />
-                <div className="absolute inset-0 pointer-events-none z-0 opacity-[0.04] dark:opacity-[0.1] flex items-center justify-center overflow-hidden">
-                  <p
-                    className="text-slate-900 dark:text-white font-black text-6xl uppercase tracking-widest whitespace-nowrap transition-transform duration-75"
-                    style={{
-                      transform: `translate(${(tilt.x - 50) * -1.5}px, ${
-                        (tilt.y - 50) * -1.5
-                      }px) rotate(-30deg)`,
-                    }}
-                  >
-                    BHARAT VISION • LIVE TICKET •
+          {(() => {
+            const allActivePasses: UserPass[] = (activePasses && activePasses.length > 0)
+              ? activePasses
+              : (activePass ? [activePass as UserPass] : []);
+
+            const currentDisplayPass: UserPass | null = allActivePasses.length > 0
+              ? (allActivePasses.find((p) => p.id === selectedPassId) || allActivePasses[0])
+              : null;
+
+            if (!currentDisplayPass) {
+              return (
+                <div className="mb-8 bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-200 dark:border-slate-800 text-center flex flex-col items-center justify-center shadow-xs">
+                  <Ticket size={48} className="text-slate-400 dark:text-slate-600 mb-4 opacity-50" />
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white">No Active Passes</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    Select a pass below to generate your QR ticket. You can hold multiple active passes simultaneously.
                   </p>
                 </div>
+              );
+            }
 
-                {isSecureBlocked ? (
-                  <div className="absolute inset-0 z-50 bg-black flex flex-col items-center justify-center text-center p-6">
-                    <ShieldCheck size={48} className="text-red-500 mb-4" />
-                    <h2 className="text-xl font-bold text-white mb-2">FLAG_SECURE ENFORCED</h2>
-                    <p className="text-xs text-gray-400">OS-Level Screenshot & Screen Recording Blocked.</p>
+            return (
+              <div className="mb-8 flex flex-col gap-3">
+                {/* Multi-Pass Switcher Bar if holding multiple passes */}
+                {allActivePasses.length > 1 && (
+                  <div className="bg-slate-200/50 dark:bg-slate-900/60 p-2 rounded-2xl border border-slate-200 dark:border-slate-800">
+                    <div className="flex items-center justify-between mb-1.5 px-1">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                        Active Passes ({allActivePasses.length})
+                      </span>
+                      <span className="text-[9px] font-bold text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/60 px-2 py-0.5 rounded-full border border-teal-200 dark:border-teal-800">
+                        Multi-Pass Active
+                      </span>
+                    </div>
+
+                    <div className="flex gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+                      {allActivePasses.map((p, idx) => {
+                        const isSelected = p.id === currentDisplayPass.id;
+                        return (
+                          <button
+                            key={p.id || idx}
+                            type="button"
+                            onClick={() => setSelectedPassId(p.id || null)}
+                            className={`flex-1 min-w-[120px] px-3 py-2 rounded-xl text-xs font-black transition-all flex items-center justify-between gap-1.5 border cursor-pointer ${
+                              isSelected
+                                ? "bg-teal-600 text-white border-teal-600 shadow-md shadow-teal-600/20 scale-101"
+                                : "bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-teal-500/50"
+                            }`}
+                          >
+                            <span className="truncate">{p.name}</span>
+                            <span
+                              className={`text-[9px] px-1.5 py-0.5 rounded font-mono ${
+                                isSelected
+                                  ? "bg-white/20 text-white"
+                                  : "bg-slate-100 dark:bg-slate-800 text-slate-500"
+                              }`}
+                            >
+                              #{idx + 1}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Selected Active Pass Card */}
+                {currentDisplayPass.boundDeviceId === deviceFingerprint ? (
+                  <div
+                    onMouseMove={handleMouseMove}
+                    className="relative rounded-3xl overflow-hidden shadow-2xl border border-teal-500/30 dark:border-teal-500/40 bg-white dark:bg-slate-900 p-6 flex flex-col items-center justify-center"
+                  >
+                    {/* Gyroscope Shimmer Hologram */}
+                    <div
+                      className="absolute inset-0 pointer-events-none z-0 opacity-50 mix-blend-color-dodge transition-transform duration-75 ease-out"
+                      style={{
+                        background: `radial-gradient(circle at ${tilt.x}% ${tilt.y}%, rgba(20,184,166,0.6) 0%, rgba(59,130,246,0.3) 40%, transparent 80%)`,
+                      }}
+                    />
+                    <div className="absolute inset-0 pointer-events-none z-0 opacity-[0.04] dark:opacity-[0.1] flex items-center justify-center overflow-hidden">
+                      <p
+                        className="text-slate-900 dark:text-white font-black text-6xl uppercase tracking-widest whitespace-nowrap transition-transform duration-75"
+                        style={{
+                          transform: `translate(${(tilt.x - 50) * -1.5}px, ${
+                            (tilt.y - 50) * -1.5
+                          }px) rotate(-30deg)`,
+                        }}
+                      >
+                        BHARAT VISION • LIVE PASS •
+                      </p>
+                    </div>
+
+                    {isSecureBlocked ? (
+                      <div className="absolute inset-0 z-50 bg-black flex flex-col items-center justify-center text-center p-6">
+                        <ShieldCheck size={48} className="text-red-500 mb-4" />
+                        <h2 className="text-xl font-bold text-white mb-2">FLAG_SECURE ENFORCED</h2>
+                        <p className="text-xs text-gray-400">OS-Level Screenshot & Screen Recording Blocked.</p>
+                      </div>
+                    ) : (
+                      <div className="relative z-10 flex flex-col items-center w-full">
+                        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2 text-center drop-shadow-sm">
+                          {currentDisplayPass.name}
+                        </h2>
+                        <div className="bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs font-bold px-3 py-1 rounded-full mb-6 flex items-center gap-1 shadow-sm">
+                          <ShieldCheck size={14} /> Active & Anchored
+                        </div>
+                        <div className="bg-white p-2 rounded-2xl mb-4 w-full flex justify-center items-center h-[232px] border-4 border-slate-100 dark:border-slate-800 shadow-inner relative overflow-hidden">
+                          {qrPayload ? (
+                            <QRCode value={qrPayload} size={200} level="H" />
+                          ) : (
+                            <RefreshCcw className="animate-spin text-slate-400" size={32} />
+                          )}
+                        </div>
+                        <div className="text-center w-full mt-2">
+                          <p className="text-sm font-bold text-slate-700 dark:text-slate-300 drop-shadow-sm">
+                            Valid until: {new Date(currentDisplayPass.expiry).toLocaleString()}
+                          </p>
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-widest font-mono">
+                            Enclave: {deviceFingerprint.split("-").pop()} · Pass #{(currentDisplayPass.id || "").slice(-6)}
+                          </p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ) : (
-                  <div className="relative z-10 flex flex-col items-center w-full">
-                    <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2 text-center drop-shadow-sm">
-                      {activePass.name}
+                  <div className="relative rounded-3xl overflow-hidden shadow-xl border border-rose-500/50 bg-rose-50 dark:bg-rose-950/30 p-6 flex flex-col items-center justify-center text-center">
+                    <div className="bg-rose-100 dark:bg-rose-900/50 p-4 rounded-full mb-4 shadow-inner">
+                      <Lock size={40} className="text-rose-600 dark:text-rose-400" />
+                    </div>
+                    <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-2">
+                      Pass Bound to Another Device
                     </h2>
-                    <div className="bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs font-bold px-3 py-1 rounded-full mb-6 flex items-center gap-1 shadow-sm">
-                      <ShieldCheck size={14} /> Active & Anchored
-                    </div>
-                    <div className="bg-white p-2 rounded-2xl mb-4 w-full flex justify-center items-center h-[232px] border-4 border-slate-100 dark:border-slate-800 shadow-inner relative overflow-hidden">
-                      {qrPayload ? (
-                        <QRCode value={qrPayload} size={200} level="H" />
-                      ) : (
-                        <RefreshCcw className="animate-spin text-slate-400" size={32} />
-                      )}
-                    </div>
-                    <div className="text-center w-full mt-2">
-                      <p className="text-sm font-bold text-slate-700 dark:text-slate-300 drop-shadow-sm">
-                        Valid until: {new Date(activePass.expiry).toLocaleString()}
+                    <p className="text-xs text-slate-600 dark:text-rose-200/70 mb-6">
+                      Your <b>{currentDisplayPass.name}</b> is cryptographically anchored to hardware ID:{" "}
+                      <code className="bg-rose-200 dark:bg-rose-900/50 px-1 rounded text-slate-900 dark:text-white">
+                        {currentDisplayPass.boundDeviceId.split("-").pop()}
+                      </code>
+                      .
+                    </p>
+                    <button
+                      onClick={() => {
+                        const now = Date.now();
+                        if (
+                          currentDisplayPass.lastMigratedAt &&
+                          now - currentDisplayPass.lastMigratedAt < 24 * 3600 * 1000
+                        ) {
+                          alert(
+                            "SECURITY PROTOCOL: You can only migrate a pass once every 24 hours to prevent account-sharing fraud.\n\nPlease try again later."
+                          );
+                          return;
+                        }
+                        addActivePass({
+                          ...currentDisplayPass,
+                          boundDeviceId: deviceFingerprint,
+                          lastMigratedAt: now,
+                        });
+                        alert(
+                          "SUCCESS! The pass has been cryptographically re-anchored to this device's Secure Enclave."
+                        );
+                      }}
+                      className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold px-6 py-3 rounded-xl w-full flex items-center justify-center gap-2 active:scale-95 transition-transform cursor-pointer"
+                    >
+                      <RotateCcw size={16} /> Migrate Pass Here
+                    </button>
+                    {currentDisplayPass.lastMigratedAt && (
+                      <p className="text-[9px] text-rose-500 mt-3 flex items-center gap-1 justify-center">
+                        <AlertTriangle size={10} /> Migrated recently. 24h cooldown active.
                       </p>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-widest font-mono">
-                        Enclave: {deviceFingerprint.split("-").pop()}
-                      </p>
-                    </div>
+                    )}
                   </div>
                 )}
               </div>
-            ) : (
-              <div className="mb-8 relative rounded-3xl overflow-hidden shadow-xl border border-rose-500/50 bg-rose-50 dark:bg-rose-950/30 p-6 flex flex-col items-center justify-center text-center">
-                <div className="bg-rose-100 dark:bg-rose-900/50 p-4 rounded-full mb-4 shadow-inner">
-                  <Lock size={40} className="text-rose-600 dark:text-rose-400" />
-                </div>
-                <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-2">
-                  Pass Bound to Another Device
-                </h2>
-                <p className="text-xs text-slate-600 dark:text-rose-200/70 mb-6">
-                  Your <b>{activePass.name}</b> is cryptographically anchored to hardware ID:{" "}
-                  <code className="bg-rose-200 dark:bg-rose-900/50 px-1 rounded text-slate-900 dark:text-white">
-                    {activePass.boundDeviceId.split("-").pop()}
-                  </code>
-                  .
-                </p>
-                <button
-                  onClick={() => {
-                    const now = Date.now();
-                    if (
-                      activePass.lastMigratedAt &&
-                      now - activePass.lastMigratedAt < 24 * 3600 * 1000
-                    ) {
-                      alert(
-                        "SECURITY PROTOCOL: You can only migrate a pass once every 24 hours to prevent account-sharing fraud.\n\nPlease try again later."
-                      );
-                      return;
-                    }
-                    setActivePass({
-                      ...activePass,
-                      boundDeviceId: deviceFingerprint,
-                      lastMigratedAt: now,
-                    });
-                    alert(
-                      "SUCCESS! The pass has been cryptographically re-anchored to this device's Secure Enclave."
-                    );
-                  }}
-                  className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold px-6 py-3 rounded-xl w-full flex items-center justify-center gap-2 active:scale-95 transition-transform"
-                >
-                  <RotateCcw size={16} /> Migrate Pass Here
-                </button>
-                {activePass.lastMigratedAt && (
-                  <p className="text-[9px] text-rose-500 mt-3 flex items-center gap-1 justify-center">
-                    <AlertTriangle size={10} /> Migrated recently. 24h cooldown active.
-                  </p>
-                )}
-              </div>
-            )
-          ) : (
-            <div className="mb-8 bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-200 dark:border-slate-800 text-center flex flex-col items-center justify-center shadow-xs">
-              <Ticket size={48} className="text-slate-400 dark:text-slate-600 mb-4 opacity-50" />
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white">No Active Tickets</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                Select a pass below to generate your QR ticket.
-              </p>
-            </div>
-          )}
+            );
+          })()}
         </>
       )}
 
@@ -741,12 +805,21 @@ export default function PassScreen() {
 
                   if (walletBalance >= amt) {
                     deductBalance(amt);
-                    setActivePass({
+                    const newPassId = `PASS-${Math.floor(100000 + Math.random() * 900000)}`;
+                    const passObj: UserPass = {
+                      id: newPassId,
                       name: pass.name + (activeTab === "ncmc" ? " (NCMC Card)" : ""),
+                      type: pass.type || "Daily Pass",
+                      price: amt,
+                      isNcmc: activeTab === "ncmc",
+                      network: activeTab === "ncmc" ? "RuPay NCMC Smart Mobility" : "BMTC Bangalore Transit",
                       boundDeviceId: deviceFingerprint,
                       expiry: Date.now() + 24 * 3600 * 1000,
                       lastMigratedAt: null,
-                    });
+                      qrPayload: `BV-PASS:${pass.name}:${deviceFingerprint}:${Date.now() + 24 * 3600 * 1000}`
+                    };
+                    addActivePass(passObj);
+                    setSelectedPassId(newPassId);
                     if (activeTab === "ncmc") {
                       alert(
                         `PASS ACTIVATED: "${pass.name}" has been loaded onto your physical NCMC card chip!`
@@ -828,15 +901,25 @@ export default function PassScreen() {
             addMoney(pendingAmount);
             alert(`SUCCESS: ₹${pendingAmount} added to your App Wallet!`);
           } else {
-            setActivePass({
-              name: activePassName || passCatalog[0]?.name || "Pass",
+            const newPassId = `PASS-${Math.floor(100000 + Math.random() * 900000)}`;
+            const finalPassName = (activePassName || passCatalog[0]?.name || "Transit Pass") + (activeTab === "ncmc" && !activePassName.includes("NCMC") ? " (NCMC Card)" : "");
+            const passObj: UserPass = {
+              id: newPassId,
+              name: finalPassName,
+              type: "Daily Pass",
+              price: pendingAmount,
+              isNcmc: activeTab === "ncmc",
+              network: activeTab === "ncmc" ? "RuPay NCMC Smart Mobility" : "BMTC Bangalore Transit",
               boundDeviceId: deviceFingerprint,
               expiry: Date.now() + 24 * 3600 * 1000,
               lastMigratedAt: null,
-            });
+              qrPayload: `BV-PASS:${finalPassName}:${deviceFingerprint}:${Date.now() + 24 * 3600 * 1000}`
+            };
+            addActivePass(passObj);
+            setSelectedPassId(newPassId);
             if (activeTab === "ncmc" && ncmcCard.isLinked) {
               alert(
-                `SUCCESS: "${activePassName}" has been loaded onto your physical NCMC card chip!`
+                `SUCCESS: "${finalPassName}" has been loaded onto your physical NCMC card chip!`
               );
             }
           }

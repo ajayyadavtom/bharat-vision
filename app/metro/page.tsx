@@ -13,13 +13,20 @@ import {
   Wallet, 
   ChevronDown, 
   ChevronUp, 
-  Navigation,
-  Search,
-  X,
-  Compass
+  Navigation, 
+  Search, 
+  X, 
+  Compass,
+  Users,
+  QrCode,
+  Plus,
+  Minus,
+  ShieldCheck,
+  RefreshCcw
 } from "lucide-react";
+import QRCode from "react-qr-code";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAppStore } from "@/lib/store";
+import { useAppStore, TransitTicketRecord } from "@/lib/store";
 import metroData from "@/data/namma_metro.json";
 
 // Dynamic import of Leaflet Metro Map (Client-side only)
@@ -100,7 +107,7 @@ function findShortestRoute(startId: string, endId: string) {
 }
 
 export default function MetroScreen() {
-  const { walletBalance, deductBalance, fetchUserData } = useAppStore();
+  const { walletBalance, deductBalance, fetchUserData, activeTickets, addActiveTickets, markTicketValidated } = useAppStore();
   const ALL_STATIONS: MetroStationNode[] = metroData.stations;
 
   // Real BMRCL Lines
@@ -130,6 +137,9 @@ export default function MetroScreen() {
   const [destination, setDestination] = useState<string>("majestic");
   const [stationSearch, setStationSearch] = useState<string>("");
   const [bookedToken, setBookedToken] = useState<string | null>(null);
+  const [ticketQuantity, setTicketQuantity] = useState<number>(1);
+  const [activeTokenList, setActiveTokenList] = useState<TransitTicketRecord[]>([]);
+  const [selectedPaxIndex, setSelectedPaxIndex] = useState<number>(0);
   const [showStationList, setShowStationList] = useState(false);
 
   useEffect(() => {
@@ -256,15 +266,53 @@ export default function MetroScreen() {
     };
   }, [originStation, destStation, ALL_STATIONS]);
 
+  const totalFare = trip.fare * ticketQuantity;
+
   const handleBuyToken = () => {
-    if (walletBalance < trip.fare) {
+    if (walletBalance < totalFare) {
       alert(
-        `Insufficient balance! Your wallet has ₹${walletBalance.toFixed(2)}, but the fare is ₹${trip.fare}. Please add money from the Home screen.`
+        `Insufficient balance! Your wallet has ₹${walletBalance.toFixed(2)}, but the total fare for ${ticketQuantity} passenger${ticketQuantity > 1 ? "s" : ""} is ₹${totalFare} (₹${trip.fare} × ${ticketQuantity}). Please add money from the Home screen.`
       );
       return;
     }
-    deductBalance(trip.fare);
-    setBookedToken(`NMM-${Math.floor(100000 + Math.random() * 900000)}`);
+    deductBalance(totalFare);
+
+    const now = Date.now();
+    const newTokens: TransitTicketRecord[] = [];
+
+    for (let i = 0; i < ticketQuantity; i++) {
+      const tokenId = `NMM-${Math.floor(100000 + Math.random() * 900000)}`;
+      newTokens.push({
+        id: tokenId,
+        category: "metro",
+        type: `Namma Metro QR Token (${trip.mainLine || "Purple"} Line)`,
+        network: "BMRCL Namma Metro",
+        origin: originStation.name,
+        destination: destStation.name,
+        route: `${originStation.name} ➔ ${destStation.name} (${trip.stops} Stations)`,
+        ticketId: tokenId,
+        fare: trip.fare,
+        quantity: ticketQuantity,
+        passengerIndex: i + 1,
+        dateString: `Today, ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`,
+        timestamp: now,
+        status: "Active",
+        qrPayload: `BMRCL-TOKEN:${tokenId}:${originStation.id}:${destStation.id}:PAX${i + 1}:${now}`,
+        expiryTimestamp: now + 120 * 60 * 1000,
+      });
+    }
+
+    addActiveTickets(newTokens);
+    setActiveTokenList(newTokens);
+    setSelectedPaxIndex(0);
+    setBookedToken(newTokens[0].id);
+  };
+
+  const handleValidateCurrentToken = (tokenId: string) => {
+    markTicketValidated(tokenId);
+    setActiveTokenList((prev) =>
+      prev.map((t) => (t.id === tokenId ? { ...t, status: "Validated" } : t))
+    );
   };
 
   const lineFilters: {
@@ -627,26 +675,196 @@ export default function MetroScreen() {
             </AnimatePresence>
           </div>
 
-          {/* Book Token Button / Active Token View */}
+          {/* Passenger Quantity & Ticket Booking Panel */}
           {!bookedToken ? (
-            <button
-              type="button"
-              onClick={handleBuyToken}
-              className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3.5 rounded-2xl shadow-md active:scale-95 transition-all flex items-center justify-center gap-2 text-sm cursor-pointer"
-            >
-              <Ticket size={18} /> Buy Metro Single Journey QR (₹{trip.fare})
-            </button>
+            <div className="space-y-3">
+              {/* Passenger Counter */}
+              <div className="bg-slate-50 dark:bg-slate-950 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-purple-100 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold">
+                    <Users size={16} />
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-black block">Passenger Count</span>
+                    <span className="text-xs font-bold text-slate-900 dark:text-white">
+                      {ticketQuantity} {ticketQuantity > 1 ? "Passengers" : "Passenger"} · ₹{trip.fare} each
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setTicketQuantity(Math.max(1, ticketQuantity - 1))}
+                    disabled={ticketQuantity <= 1}
+                    className="w-8 h-8 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-300 disabled:opacity-30 active:scale-95 transition-all cursor-pointer shadow-xs"
+                    title="Decrease passengers"
+                  >
+                    <Minus size={14} />
+                  </button>
+                  <span className="w-6 text-center font-black text-sm text-slate-900 dark:text-white">
+                    {ticketQuantity}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setTicketQuantity(Math.min(6, ticketQuantity + 1))}
+                    disabled={ticketQuantity >= 6}
+                    className="w-8 h-8 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-300 disabled:opacity-30 active:scale-95 transition-all cursor-pointer shadow-xs"
+                    title="Increase passengers (Max 6)"
+                  >
+                    <Plus size={14} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Quick Pax Badges */}
+              <div className="flex items-center justify-between gap-1.5 px-0.5">
+                {[1, 2, 3, 4, 6].map((count) => (
+                  <button
+                    key={`pax-${count}`}
+                    type="button"
+                    onClick={() => setTicketQuantity(count)}
+                    className={`flex-1 py-1 rounded-lg text-[10px] font-bold transition-all border ${
+                      ticketQuantity === count
+                        ? "bg-purple-600 text-white border-purple-600 shadow-xs"
+                        : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700"
+                    }`}
+                  >
+                    {count} Pax
+                  </button>
+                ))}
+              </div>
+
+              {/* Buy Tokens CTA */}
+              <button
+                type="button"
+                onClick={handleBuyToken}
+                className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3.5 rounded-2xl shadow-md active:scale-95 transition-all flex items-center justify-center gap-2 text-sm cursor-pointer"
+              >
+                <Ticket size={18} /> Buy {ticketQuantity} Metro {ticketQuantity > 1 ? "QR Tokens" : "QR Token"} (₹{totalFare})
+              </button>
+            </div>
           ) : (
-            <div className="bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-500/40 p-4 rounded-2xl flex flex-col items-center gap-2 text-center">
-              <CheckCircle2 size={32} className="text-emerald-500 dark:text-emerald-400" />
-              <h4 className="text-sm font-black text-slate-900 dark:text-white">Active BMRCL Single Journey Token</h4>
-              <p className="text-sm text-emerald-700 dark:text-emerald-300 font-mono font-black tracking-widest bg-emerald-100 dark:bg-emerald-950 px-3 py-1 rounded-xl border border-emerald-300 dark:border-emerald-500/30">
-                {bookedToken}
-              </p>
-              <p className="text-[11px] text-slate-700 dark:text-slate-300 font-semibold">
-                {originStation.name} ➔ {destStation.name}
-              </p>
-              <span className="text-[10px] text-slate-500 dark:text-slate-400">Scan at automatic AFC gates. Valid for 120 minutes.</span>
+            /* Multi-Ticket Active QR Tokens Visualizer */
+            <div className="bg-slate-50 dark:bg-slate-950/80 border border-emerald-300 dark:border-emerald-500/40 p-4 rounded-3xl flex flex-col items-center gap-3">
+              {/* Header with Ticket Counter & Status */}
+              <div className="w-full flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                    <CheckCircle2 size={16} />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-black text-slate-900 dark:text-white">
+                      Active Metro Tokens ({activeTokenList.length})
+                    </h4>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400">
+                      BMRCL AFC Gate QR · 120m Validity
+                    </span>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setBookedToken(null);
+                    setTicketQuantity(1);
+                  }}
+                  className="text-[10px] font-bold text-slate-500 hover:text-slate-900 dark:hover:text-white bg-white dark:bg-slate-800 px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700"
+                >
+                  Book More
+                </button>
+              </div>
+
+              {/* Multi-Passenger Tab Pills if quantity > 1 */}
+              {activeTokenList.length > 1 && (
+                <div className="w-full flex gap-1.5 overflow-x-auto no-scrollbar py-1">
+                  {activeTokenList.map((token, idx) => {
+                    const isSelected = idx === selectedPaxIndex;
+                    const isValidated = token.status === "Validated";
+                    return (
+                      <button
+                        key={token.id}
+                        type="button"
+                        onClick={() => setSelectedPaxIndex(idx)}
+                        className={`flex-1 min-w-[75px] py-1.5 px-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all border ${
+                          isSelected
+                            ? "bg-purple-600 text-white border-purple-600 shadow-sm"
+                            : "bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800"
+                        }`}
+                      >
+                        <span>Pax {idx + 1}</span>
+                        {isValidated ? (
+                          <span className="w-2 h-2 rounded-full bg-emerald-400" title="Validated" />
+                        ) : (
+                          <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" title="Active" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Selected Token Details & Live QR Code */}
+              {(() => {
+                const curToken = activeTokenList[selectedPaxIndex] || activeTokenList[0];
+                if (!curToken) return null;
+                const isValidated = curToken.status === "Validated";
+
+                return (
+                  <div className="w-full flex flex-col items-center bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shadow-xs">
+                    <div className="w-full flex items-center justify-between mb-3 text-xs">
+                      <span className="font-bold text-slate-500 dark:text-slate-400">
+                        Passenger {selectedPaxIndex + 1} of {activeTokenList.length}
+                      </span>
+                      <span
+                        className={`text-[10px] font-black px-2 py-0.5 rounded-full border ${
+                          isValidated
+                            ? "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800"
+                            : "bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800"
+                        }`}
+                      >
+                        {isValidated ? "✓ Exit Gate Validated" : "● Scan at Entry Gate"}
+                      </span>
+                    </div>
+
+                    {/* QR Code Container */}
+                    <div className="bg-white p-3 rounded-2xl border-2 border-slate-200 dark:border-slate-700 shadow-sm mb-3 flex items-center justify-center">
+                      <QRCode
+                        value={curToken.qrPayload || `BMRCL-TOKEN:${curToken.id}:${curToken.origin}:${curToken.destination}`}
+                        size={160}
+                        level="M"
+                      />
+                    </div>
+
+                    {/* Token ID pill */}
+                    <p className="text-xs font-mono font-black tracking-widest text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 px-3 py-1 rounded-xl border border-emerald-300 dark:border-emerald-500/30 mb-2">
+                      {curToken.id}
+                    </p>
+
+                    <p className="text-xs font-bold text-slate-900 dark:text-white text-center">
+                      {curToken.origin} ➔ {curToken.destination}
+                    </p>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 text-center mt-0.5">
+                      Fare: ₹{curToken.fare} · Saved to Ride History
+                    </p>
+
+                    {/* Simulation AFC Gate action */}
+                    {!isValidated ? (
+                      <button
+                        type="button"
+                        onClick={() => handleValidateCurrentToken(curToken.id)}
+                        className="mt-3 w-full bg-slate-900 dark:bg-white hover:bg-slate-800 dark:hover:bg-slate-100 text-white dark:text-slate-900 font-bold py-2 rounded-xl text-xs active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                      >
+                        <ShieldCheck size={14} /> Simulate Tap & Validate at Gate
+                      </button>
+                    ) : (
+                      <div className="mt-3 w-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 py-1.5 rounded-xl text-center text-[11px] font-bold border border-emerald-200 dark:border-emerald-800">
+                        Gate Passed Successfully
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           )}
         </motion.div>
