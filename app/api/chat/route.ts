@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { BMTC_FLEET_STATISTICS, BMTC_DIVISIONAL_FLEET_DATA, getOfficialStopByName } from "@/data/bmtcOfficialData";
 
 // Comprehensive Real Bengaluru Transit Knowledge Base
 interface TransitGuide {
@@ -122,6 +123,43 @@ function generateDetailedTransitReport(query: string, appLang: string, cityName:
     matchedGuide = BENGALURU_REAL_TRANSIT_DATA["any_to_airport"];
   } else if (q.includes("hebbal") || q.includes("250")) {
     matchedGuide = BENGALURU_REAL_TRANSIT_DATA["majestic_to_hebbal"];
+  }
+
+  // Official BMTC Fleet & Divisional Operational Statistics (from 56f6deb2-c7ad-4ade-88fb-92190eafe19b.csv)
+  if (q.includes("fleet") || q.includes("division") || q.includes("buses on road") || q.includes("buses held") || q.includes("utilization") || q.includes("depot count") || q.includes("how many buses")) {
+    return `### 🚌 Official BMTC Fleet & Divisional Operations (Open Data Portal)
+
+* **Bengaluru Total Fleet Held:** **6,514.9 buses** (Active citywide fleet)
+* **Buses on Road Daily:** **5,542.4 buses/day**
+* **Fleet Utilization Rate:** **85.1%** (Road-worthy spare reserve: **504.9 buses**)
+* **Off-Road Maintenance Rate:** **7.1%** (467.4 buses)
+
+#### 🏢 Official Division Breakdown:
+* **North Division (Yelahanka / Hebbal / Doddaballapur):** **1,416.4 held** | 1,239.9 on road (**87.5% utilization**)
+* **West Division (Yeshwantpur / Peenya / Kengeri):** **1,174.8 held** | 1,004.8 on road (**85.5% utilization**)
+* **South Division (Banashankari / Electronic City / Jayanagar):** **1,138.2 held** | 1,003.9 on road (**88.2% utilization**)
+* **East Division (Whitefield / Indiranagar / KR Puram):** **1,026.6 held** | 864.4 on road (**84.2% utilization**)
+* **North East Division (Nagawara / Thanisandra / Kalyan Nagar):** **906.5 held** | 788.7 on road (**87.0% utilization**)
+* **Central Division (Majestic / Shivajinagar / Shantinagar):** **852.2 held** | 640.7 on road (**75.2% utilization**)
+
+* **Total Active Operating Depots:** **50 TTMC Depots** across Bengaluru.`;
+  }
+
+  // Official BMTC Bus Stop & Connecting Route Frequencies (from ac150-stops.csv)
+  const matchedStop = getOfficialStopByName(query);
+  if (matchedStop && matchedStop.routesMap) {
+    const routeList = Object.entries(matchedStop.routesMap).sort((a, b) => b[1] - a[1]);
+    const topList = routeList.slice(0, 10).map(([r, t]) => `**${r}** (${t} trips/day)`).join(" • ");
+
+    return `### 🚏 Official BMTC Bus Stop: ${matchedStop.name}
+
+* **Location Coordinates:** Lat ${matchedStop.lat.toFixed(5)}, Lon ${matchedStop.lng.toFixed(5)}
+* **Daily Trip Density:** **${matchedStop.dailyTrips} bus trips/day** passing through this stop
+* **Connected Routes:** **${matchedStop.routesCount} distinct BMTC routes**
+* **Top Operating Schedules:** ${topList}
+${routeList.length > 10 ? `\n*+${routeList.length - 10} additional feeder & ordinary routes.*` : ""}
+
+💡 *Tip:* Check the **Forecast / Transit Analytics** dashboard in Bharat Vision to view live crowd surges and dispatch standby buses.`;
   }
 
   // Pass or fare inquiries

@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Polyline, CircleMarker, useMap } from "react-leaflet";
 import L from "leaflet";
 
 import { supabase } from "@/lib/supabase";
 import { useAppStore } from "@/lib/store";
 import { getCityData } from "@/lib/cityData";
 import { MAPBOX_PUBLIC_TOKEN, MAPBOX_STYLES, MapboxStyleOption } from "@/lib/mapbox";
-import { useTheme } from "next-themes";
+import metroData from "@/data/namma_metro.json";
 
 interface LiveVehicle {
   v_id: string;
@@ -37,6 +37,12 @@ interface LiveFleetUpdate {
   timestamp: number;
   route_id: string;
   vehicles: LiveVehicle[];
+}
+
+export interface BusStopNode {
+  name: string;
+  lat: number;
+  lon: number;
 }
 
 // Linear Interpolation (Lerp) Engine for smooth vehicle gliding
@@ -85,101 +91,44 @@ function SmoothBusMarker({
     return () => cancelAnimationFrame(animationFrame);
   }, [bus.lat, bus.lng]);
 
-  // Dynamic Crowd Color Coding based on live crowdsourced /api/crowd data:
-  // Green for Low, Yellow for Moderate, Red for High
-  let bgColor = "#10b981"; // Green default
-  let shadowColor = "rgba(16,185,129,0.7)";
-  let crowdBadge = "LOW";
-  let isCrowdsourced = false;
+  const crowdColor = crowdStatus ? crowdStatus.color : bus.occ > 80 ? "#ef4444" : bus.occ > 50 ? "#f59e0b" : "#10b981";
+  const crowdLabel = crowdStatus ? crowdStatus.crowdLevel : bus.occ > 80 ? "High" : bus.occ > 50 ? "Moderate" : "Low";
+  const displayOcc = crowdStatus ? crowdStatus.occupancyPercent : bus.occ;
 
-  if (crowdStatus) {
-    isCrowdsourced = true;
-    if (crowdStatus.crowdLevel === "High") {
-      bgColor = "#ef4444"; // Red for High
-      shadowColor = "rgba(239,68,68,0.75)";
-      crowdBadge = "HIGH";
-    } else if (crowdStatus.crowdLevel === "Moderate") {
-      bgColor = "#f59e0b"; // Yellow for Moderate
-      shadowColor = "rgba(245,158,11,0.75)";
-      crowdBadge = "MOD";
-    } else {
-      bgColor = "#10b981"; // Green for Low
-      shadowColor = "rgba(16,185,129,0.75)";
-      crowdBadge = "LOW";
-    }
-  } else {
-    // Fallback to vehicle occupancy telemetry if no crowdsource reports exist yet
-    if (bus.occ > 80) {
-      bgColor = "#ef4444";
-      shadowColor = "rgba(239,68,68,0.75)";
-      crowdBadge = "HIGH";
-    } else if (bus.occ > 50) {
-      bgColor = "#f59e0b";
-      shadowColor = "rgba(245,158,11,0.75)";
-      crowdBadge = "MOD";
-    } else {
-      bgColor = "#10b981";
-      shadowColor = "rgba(16,185,129,0.75)";
-      crowdBadge = "LOW";
-    }
-  }
-
-  // Custom Leaflet.divIcon with dynamic color encoding & crowd level indicator badge
   const dynamicBusIcon = L.divIcon({
     className: "custom-bus-marker",
     html: `
-      <div style="position: relative; width: 46px; height: 46px; display: flex; align-items: center; justify-content: center;">
-        <div style="position: absolute; width: 100%; height: 100%; border-radius: 50%; background-color: ${bgColor}; opacity: 0.28; transform: scale(1.35); animation: pulse 2s infinite;"></div>
-        <div style="background-color: ${bgColor}; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2.5px solid #ffffff; box-shadow: 0 4px 14px ${shadowColor}; color: #ffffff; font-size: 15px; z-index: 2; transition: background-color 0.4s ease;">🚌</div>
-        <div style="position: absolute; top: -4px; right: -7px; background-color: #0f172a; color: #ffffff; font-size: 9px; font-weight: 800; padding: 1.5px 5px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.4); z-index: 3; box-shadow: 0 2px 6px rgba(0,0,0,0.4);">${bus.spd}kph</div>
-        <div style="position: absolute; bottom: -4px; background-color: ${bgColor}; color: #ffffff; font-size: 8px; font-weight: 900; letter-spacing: 0.5px; padding: 1px 4px; border-radius: 4px; border: 1px solid #ffffff; z-index: 4; box-shadow: 0 2px 4px rgba(0,0,0,0.3); line-height: 1;">${crowdBadge}</div>
+      <div style="position: relative; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;">
+        <div style="position: absolute; width: 100%; height: 100%; border-radius: 50%; background-color: ${crowdColor}; opacity: 0.25; transform: scale(1.4); animation: pulse 2s infinite;"></div>
+        <div style="background-color: ${crowdColor}; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2.5px solid #ffffff; box-shadow: 0 4px 14px rgba(0,0,0,0.3); color: #ffffff; font-size: 15px; z-index: 2;">🚌</div>
+        <div style="position: absolute; top: -4px; right: -6px; background-color: #0f172a; color: #ffffff; font-size: 9px; font-weight: 800; padding: 1.5px 5px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.4); z-index: 3; box-shadow: 0 2px 6px rgba(0,0,0,0.4);">${bus.spd}kph</div>
+        <div style="position: absolute; bottom: -5px; background-color: ${crowdColor}; color: #ffffff; font-size: 8px; font-weight: 900; padding: 1px 4px; border-radius: 9999px; border: 1px solid #ffffff; z-index: 4; white-space: nowrap;">${crowdLabel}</div>
       </div>
     `,
-    iconSize: [46, 46],
-    iconAnchor: [23, 23],
+    iconSize: [44, 44],
+    iconAnchor: [22, 22],
   });
 
   return (
     <Marker position={pos} icon={dynamicBusIcon}>
       <Popup>
-        <div className="text-gray-900 font-sans p-1 min-w-[185px]">
+        <div className="text-gray-900 font-sans p-1 min-w-[170px]">
           <p className="font-black text-sm text-slate-800 border-b border-slate-200 pb-1 mb-2 flex items-center justify-between">
             <span>Route {routeId}</span>
             <span className="text-[10px] font-normal text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
               {bus.v_id.split(" ")[0]}
             </span>
           </p>
-
-          {/* Crowdsourced Real-Time Crowd Badge */}
-          <div className="bg-slate-50 border border-slate-200 rounded-lg p-2 mb-2">
-            <div className="flex justify-between items-center mb-1">
-              <span className="text-[10px] text-slate-500 font-bold uppercase tracking-tight flex items-center gap-1">
-                {isCrowdsourced ? "Geo-Crowdsourced" : "Sensor Telemetry"}
-              </span>
-              <span
-                className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full text-white shadow-xs"
-                style={{ backgroundColor: bgColor }}
-              >
-                {isCrowdsourced ? crowdStatus?.crowdLevel : `${bus.occ}% Full`}
-              </span>
-            </div>
-            {isCrowdsourced && crowdStatus ? (
-              <div className="flex justify-between items-center text-[9px] text-slate-500 font-medium">
-                <span>{crowdStatus.reportCount} reports (30m decay)</span>
-                <span className="text-emerald-600 font-bold">~{crowdStatus.occupancyPercent}% cap</span>
-              </div>
-            ) : (
-              <div className="text-[9px] text-slate-400">
-                Awaiting passenger crowdsource reports
-              </div>
-            )}
-          </div>
-
           <div className="flex justify-between items-center mb-1">
             <span className="text-[10px] text-gray-500 font-bold uppercase">Heading</span>
             <span className="text-xs font-bold text-gray-900">{bus.hdg}°</span>
           </div>
-
+          <div className="flex justify-between items-center mb-1">
+            <span className="text-[10px] text-gray-500 font-bold uppercase">Crowd Level</span>
+            <span className="text-xs font-bold" style={{ color: crowdColor }}>
+              {displayOcc}% ({crowdLabel})
+            </span>
+          </div>
           <div className="bg-slate-50 border border-slate-100 rounded-lg p-2 mt-2">
             <div className="flex justify-between items-center mb-1">
               <span className="text-[10px] text-slate-500 font-bold uppercase">Next Stop</span>
@@ -257,81 +206,91 @@ export default function LiveMap({
   destination = "",
   userLocation = null,
   routePath = null,
+  routeStops = null,
+  initialShowMetro = true,
+  initialShowStops = true,
 }: {
   busCode?: string;
   destination?: string;
   userLocation?: [number, number] | null;
   routePath?: [number, number][] | null;
+  routeStops?: BusStopNode[] | null;
+  initialShowMetro?: boolean;
+  initialShowStops?: boolean;
 }) {
   const { currentCity } = useAppStore();
   const cityData = getCityData(currentCity);
-  const { resolvedTheme } = useTheme();
 
   const [fleetUpdates, setFleetUpdates] = useState<Record<string, LiveFleetUpdate>>({});
   const [wsConnected, setWsConnected] = useState(false);
-  const [crowdStatuses, setCrowdStatuses] = useState<Record<string, CrowdsourcedBusStatus>>({});
-  const [lastCrowdSync, setLastCrowdSync] = useState<number>(Date.now());
-  
-  // Default to Mapbox Streets or Navigation Day for highest visibility
-  const [styleKey, setStyleKey] = useState<string>("streets");
+  const [crowdReports, setCrowdReports] = useState<Record<string, CrowdsourcedBusStatus>>({});
+
+  // Dynamic Route & Stops fetched from BMTC GTFS directory
+  const [bmtcRouteData, setBmtcRouteData] = useState<{
+    routeNumber: string;
+    fullName: string;
+    origin: string;
+    destination: string;
+    stops: BusStopNode[];
+    coordinates: [number, number][];
+  } | null>(null);
+
+  // Toggleable Layers on Map
+  const [showMetro, setShowMetro] = useState<boolean>(initialShowMetro);
+  const [showStops, setShowStops] = useState<boolean>(initialShowStops);
+
+  // Mapbox style configuration
+  const [styleKey, setStyleKey] = useState<string>("navigation");
   const [isStyleMenuOpen, setIsStyleMenuOpen] = useState(false);
   const [tileError, setTileError] = useState(false);
   const [recenterTrigger, setRecenterTrigger] = useState(0);
 
-  // Periodically fetch crowdsourced crowd data from /api/crowd every 15 seconds
-  useEffect(() => {
-    let isMounted = true;
+  const activeStyle: MapboxStyleOption = MAPBOX_STYLES[styleKey] || MAPBOX_STYLES.navigation;
 
-    const fetchCrowdData = async () => {
+  // Fetch real BMTC route alignment and stops when busCode changes
+  useEffect(() => {
+    if (!busCode) {
+      setBmtcRouteData(null);
+      return;
+    }
+
+    let isMounted = true;
+    async function fetchBmtcRoute() {
       try {
-        const res = await fetch("/api/crowd");
-        if (!res.ok) return;
-        const data = await res.json();
-        if (isMounted && data.activeStatuses) {
-          setCrowdStatuses(data.activeStatuses);
-          setLastCrowdSync(Date.now());
+        const res = await fetch(`/api/bmtc?bus=${encodeURIComponent(busCode)}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted && data.found && data.route) {
+            setBmtcRouteData(data.route);
+          }
         }
       } catch (err) {
-        console.warn("LiveMap: Could not fetch /api/crowd data:", err);
+        console.warn("Could not load BMTC route details:", err);
       }
-    };
-
-    fetchCrowdData();
-    const crowdInterval = setInterval(fetchCrowdData, 15000);
-
+    }
+    fetchBmtcRoute();
     return () => {
       isMounted = false;
-      clearInterval(crowdInterval);
     };
-  }, []);
+  }, [busCode]);
 
-  // Helper to match a vehicle to crowdsourced status
-  const getCrowdStatusForBus = useCallback(
-    (vehicle: LiveVehicle, route: string): CrowdsourcedBusStatus | undefined => {
-      const normalizedRoute = route.trim().toUpperCase();
-      if (crowdStatuses[normalizedRoute]) return crowdStatuses[normalizedRoute];
+  // Combine provided route path or fetched BMTC path
+  const effectiveRoutePath: [number, number][] | null =
+    routePath && routePath.length > 0
+      ? routePath
+      : bmtcRouteData?.coordinates && bmtcRouteData.coordinates.length > 0
+      ? bmtcRouteData.coordinates
+      : null;
 
-      const normalizedVid = vehicle.v_id.trim().toUpperCase();
-      if (crowdStatuses[normalizedVid]) return crowdStatuses[normalizedVid];
+  // Combine provided stops or fetched BMTC stops
+  const effectiveStops: BusStopNode[] =
+    routeStops && routeStops.length > 0
+      ? routeStops
+      : bmtcRouteData?.stops && bmtcRouteData.stops.length > 0
+      ? bmtcRouteData.stops
+      : [];
 
-      // Match partial bus corridor prefix (e.g. "500D", "335E", "250")
-      const matched = Object.entries(crowdStatuses).find(([k]) => {
-        const upperK = k.toUpperCase();
-        return (
-          normalizedRoute.includes(upperK) ||
-          normalizedVid.includes(upperK) ||
-          upperK.includes(normalizedRoute)
-        );
-      });
-
-      return matched ? matched[1] : undefined;
-    },
-    [crowdStatuses]
-  );
-
-  const activeStyle: MapboxStyleOption = MAPBOX_STYLES[styleKey] || MAPBOX_STYLES.streets;
-
-  // Calculate dynamic map center
+  // Calculate dynamic map center & bounds
   let mapCenter: [number, number] = cityData.coordinates;
   let mapBounds: L.LatLngBoundsExpression | undefined = undefined;
 
@@ -341,8 +300,8 @@ export default function LiveMap({
       : []
   );
 
-  if (routePath && routePath.length > 0) {
-    mapBounds = L.latLngBounds(routePath);
+  if (effectiveRoutePath && effectiveRoutePath.length > 0) {
+    mapBounds = L.latLngBounds(effectiveRoutePath);
   } else if (busCode && activeVehicles.length > 0) {
     mapCenter = [activeVehicles[0].lat, activeVehicles[0].lng];
   } else if (userLocation) {
@@ -353,7 +312,33 @@ export default function LiveMap({
     setRecenterTrigger((prev) => prev + 1);
   }, []);
 
-  // Establish WebSockets / Server-Sent Events (SSE) Real-time pipeline
+  // Sync Crowdsourced Occupancy
+  useEffect(() => {
+    const fetchCrowdData = () => {
+      try {
+        const stored = localStorage.getItem("crowd_reports_v1");
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          const now = Date.now();
+          const valid: Record<string, CrowdsourcedBusStatus> = {};
+          Object.entries(parsed).forEach(([key, val]: [string, any]) => {
+            if (val.lastUpdated && now - val.lastUpdated < (val.expiresInSec || 1800) * 1000) {
+              valid[key] = val;
+            }
+          });
+          setCrowdReports(valid);
+        }
+      } catch (e) {
+        console.warn("Error reading crowdsource data", e);
+      }
+    };
+
+    fetchCrowdData();
+    const interval = setInterval(fetchCrowdData, 15000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Establish WebSockets / Telemetry Stream
   useEffect(() => {
     const channel = supabase.channel("bengaluru-transit-telemetry", {
       config: { broadcast: { self: true } },
@@ -368,7 +353,6 @@ export default function LiveMap({
         if (status === "SUBSCRIBED") setWsConnected(true);
       });
 
-    // Mock Live WebSocket Stream injecting exactly the requested JSON Structure every 3 seconds
     const interval = setInterval(() => {
       const generatePayload = (
         route_id: string,
@@ -426,8 +410,8 @@ export default function LiveMap({
   }, [fleetUpdates]);
 
   // Start & Destination Markers for navigation routes
-  const startPoint = routePath && routePath.length > 0 ? routePath[0] : null;
-  const destPoint = routePath && routePath.length > 1 ? routePath[routePath.length - 1] : null;
+  const startPoint = effectiveRoutePath && effectiveRoutePath.length > 0 ? effectiveRoutePath[0] : null;
+  const destPoint = effectiveRoutePath && effectiveRoutePath.length > 1 ? effectiveRoutePath[effectiveRoutePath.length - 1] : null;
 
   const startIcon = L.divIcon({
     className: "custom-route-start-marker",
@@ -455,50 +439,83 @@ export default function LiveMap({
 
   return (
     <div className="w-full h-full relative z-0 bg-slate-100 dark:bg-[#09090b]">
-      {/* Mapbox Layer Switcher Overlay */}
-      <div className="absolute top-3 left-3 z-[400] flex flex-col items-start gap-1">
+      {/* Top Map Controls: Style Switcher & Transit Layers */}
+      <div className="absolute top-3 left-3 z-[400] flex items-center gap-1.5 flex-wrap max-w-[85%]">
+        {/* Mapbox Style Selector */}
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setIsStyleMenuOpen((prev) => !prev)}
+            className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-800 shadow-xl flex items-center gap-1.5 text-[11px] font-bold text-slate-800 dark:text-slate-100 hover:border-emerald-500 transition-all cursor-pointer"
+          >
+            <span>{activeStyle.icon}</span>
+            <span>{activeStyle.label}</span>
+            <span className="text-[9px] text-slate-400">▾</span>
+          </button>
+
+          {isStyleMenuOpen && (
+            <div className="absolute top-9 left-0 bg-white/98 dark:bg-slate-900/98 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl p-1.5 shadow-2xl flex flex-col gap-1 min-w-[170px] animate-in fade-in zoom-in-95 duration-150 z-[450]">
+              <div className="px-2.5 py-1 text-[9px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800">
+                Mapbox Styles
+              </div>
+              {Object.values(MAPBOX_STYLES).map((style) => (
+                <button
+                  key={style.id}
+                  type="button"
+                  onClick={() => {
+                    setStyleKey(style.id);
+                    setTileError(false);
+                    setIsStyleMenuOpen(false);
+                  }}
+                  className={`flex items-center justify-between px-2.5 py-1.5 rounded-xl text-[11px] font-semibold transition-all text-left cursor-pointer ${
+                    styleKey === style.id
+                      ? "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 font-bold"
+                      : "text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <span>{style.icon}</span>
+                    <span>{style.label}</span>
+                  </span>
+                  {styleKey === style.id && <span className="text-emerald-500 text-xs">✓</span>}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Toggle Namma Metro Layer */}
         <button
           type="button"
-          onClick={() => setIsStyleMenuOpen((prev) => !prev)}
-          className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-800 shadow-xl flex items-center gap-1.5 text-[11px] font-bold text-slate-800 dark:text-slate-100 hover:border-emerald-500 transition-all cursor-pointer"
+          onClick={() => setShowMetro((prev) => !prev)}
+          className={`px-3 py-1.5 rounded-full border shadow-xl flex items-center gap-1.5 text-[11px] font-bold transition-all cursor-pointer backdrop-blur-md ${
+            showMetro
+              ? "bg-purple-600 text-white border-purple-500 shadow-purple-600/20"
+              : "bg-white/95 dark:bg-slate-900/95 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-purple-400"
+          }`}
+          title="Toggle 121 Namma Metro stations & lines"
         >
-          <span>{activeStyle.icon}</span>
-          <span>{activeStyle.label}</span>
-          <span className="text-[9px] text-slate-400">▾</span>
+          <span>🚇</span>
+          <span>Metro {showMetro ? "ON" : "OFF"}</span>
         </button>
 
-        {isStyleMenuOpen && (
-          <div className="bg-white/98 dark:bg-slate-900/98 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl p-1.5 shadow-2xl flex flex-col gap-1 min-w-[170px] animate-in fade-in zoom-in-95 duration-150">
-            <div className="px-2.5 py-1 text-[9px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800">
-              Mapbox Styles
-            </div>
-            {Object.values(MAPBOX_STYLES).map((style) => (
-              <button
-                key={style.id}
-                type="button"
-                onClick={() => {
-                  setStyleKey(style.id);
-                  setTileError(false);
-                  setIsStyleMenuOpen(false);
-                }}
-                className={`flex items-center justify-between px-2.5 py-1.5 rounded-xl text-[11px] font-semibold transition-all text-left cursor-pointer ${
-                  styleKey === style.id
-                    ? "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 font-bold"
-                    : "text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
-                }`}
-              >
-                <span className="flex items-center gap-2">
-                  <span>{style.icon}</span>
-                  <span>{style.label}</span>
-                </span>
-                {styleKey === style.id && <span className="text-emerald-500 text-xs">✓</span>}
-              </button>
-            ))}
-          </div>
-        )}
+        {/* Toggle BMTC Bus Stops Layer */}
+        <button
+          type="button"
+          onClick={() => setShowStops((prev) => !prev)}
+          className={`px-3 py-1.5 rounded-full border shadow-xl flex items-center gap-1.5 text-[11px] font-bold transition-all cursor-pointer backdrop-blur-md ${
+            showStops
+              ? "bg-emerald-600 text-white border-emerald-500 shadow-emerald-600/20"
+              : "bg-white/95 dark:bg-slate-900/95 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-emerald-400"
+          }`}
+          title="Toggle BMTC bus stops along route"
+        >
+          <span>🚏</span>
+          <span>Stops ({effectiveStops.length})</span>
+        </button>
       </div>
 
-      {/* WebSocket & Crowdsourced Status Badges */}
+      {/* WebSocket Status Badge Overlay */}
       <div className="absolute top-3 right-3 z-[400] flex flex-col items-end gap-1.5">
         <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-800 flex items-center gap-2 shadow-xl">
           <span
@@ -512,25 +529,23 @@ export default function LiveMap({
             {wsConnected ? "Live Telemetry" : "Connecting..."}
           </span>
         </div>
-
-        {/* 15s Crowdsource Sync Indicator Badge */}
-        <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-2.5 py-1 rounded-full border border-slate-200 dark:border-slate-800 flex items-center gap-1.5 shadow-xl text-[9px] font-black text-slate-700 dark:text-slate-300">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
-          <span className="uppercase tracking-wider">Crowd Sync 15s</span>
-          <span className="text-[8px] text-slate-400">·</span>
-          <span className="flex items-center gap-1" title="Crowd Colors: Green=Low, Yellow=Moderate, Red=High">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" title="Low" />
-            <span className="w-2 h-2 rounded-full bg-amber-500 inline-block" title="Moderate" />
-            <span className="w-2 h-2 rounded-full bg-rose-500 inline-block" title="High" />
-          </span>
-        </div>
       </div>
 
-      {/* HD Mapbox Retina Badge */}
-      <div className="absolute bottom-3 left-3 z-[400] bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-800 flex items-center gap-1.5 shadow-xl pointer-events-none">
-        <span className="text-[9px] font-black tracking-wider text-emerald-600 dark:text-emerald-400 uppercase">
-          Mapbox HD · 60 FPS
-        </span>
+      {/* Legend Badge */}
+      <div className="absolute bottom-3 left-3 z-[400] bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center gap-2.5 shadow-xl pointer-events-none text-[8px] font-black">
+        <span className="text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Mapbox HD</span>
+        {showMetro && (
+          <span className="flex items-center gap-1 border-l border-slate-300 dark:border-slate-700 pl-2 text-slate-600 dark:text-slate-300">
+            <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            <span>121 Metro Stns</span>
+          </span>
+        )}
+        {effectiveStops.length > 0 && (
+          <span className="border-l border-slate-300 dark:border-slate-700 pl-2 text-slate-600 dark:text-slate-300">
+            🚏 {effectiveStops.length} Stops
+          </span>
+        )}
       </div>
 
       <MapContainer
@@ -567,6 +582,94 @@ export default function LiveMap({
           />
         )}
 
+        {/* NAMMA METRO NETWORK: All 10 Metro Lines */}
+        {showMetro &&
+          metroData.lines.map((line) => (
+            <Polyline
+              key={`livemap-metro-line-${line.id}`}
+              positions={line.coordinates as [number, number][]}
+              color={line.color}
+              weight={line.lineKey === "purple" || line.lineKey === "green" ? 4.5 : 3.5}
+              opacity={0.85}
+            />
+          ))}
+
+        {/* NAMMA METRO STATIONS: All 121 Metro Stations */}
+        {showMetro &&
+          metroData.stations.map((station) => (
+            <CircleMarker
+              key={`livemap-metro-stn-${station.id}`}
+              center={[station.lat, station.lon]}
+              radius={station.isInterchange ? 6.5 : 4.5}
+              pathOptions={{
+                color: station.isInterchange ? "#f59e0b" : "#ffffff",
+                weight: station.isInterchange ? 2.5 : 1.5,
+                fillColor: station.lines.includes("Purple")
+                  ? "#a855f7"
+                  : station.lines.includes("Green")
+                  ? "#10b981"
+                  : station.lines.includes("Yellow")
+                  ? "#eab308"
+                  : "#3b82f6",
+                fillOpacity: 1,
+              }}
+            >
+              <Popup>
+                <div className="p-1 font-sans text-xs min-w-[150px] text-slate-900">
+                  <div className="flex items-center justify-between gap-1 mb-1 pb-1 border-b border-slate-200">
+                    <span className="font-black text-slate-900 text-sm">🚇 {station.name}</span>
+                    {station.isInterchange && (
+                      <span className="text-[8px] bg-amber-100 text-amber-900 font-extrabold px-1.5 py-0.5 rounded">
+                        Interchange
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-1 mb-1">
+                    {station.lines.map((l) => (
+                      <span key={l} className="text-[8px] font-bold px-1.5 py-0.5 rounded bg-slate-800 text-white">
+                        {l} Line
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </Popup>
+            </CircleMarker>
+          ))}
+
+        {/* BMTC BUS STOPS: All Bus Stops Along Selected Route */}
+        {showStops &&
+          effectiveStops.map((stop, index) => {
+            const isFirst = index === 0;
+            const isLast = index === effectiveStops.length - 1;
+            const stopColor = isFirst ? "#10b981" : isLast ? "#ef4444" : "#0284c7";
+
+            return (
+              <CircleMarker
+                key={`bmtc-stop-${stop.name}-${index}`}
+                center={[stop.lat, stop.lon]}
+                radius={isFirst || isLast ? 7 : 4.5}
+                pathOptions={{
+                  color: "#ffffff",
+                  weight: 2,
+                  fillColor: stopColor,
+                  fillOpacity: 1,
+                }}
+              >
+                <Popup>
+                  <div className="p-1 font-sans text-xs min-w-[160px] text-slate-900">
+                    <span className="text-[9px] font-black uppercase text-slate-400 block">
+                      {isFirst ? "Origin Terminal" : isLast ? "Destination Terminal" : `Bus Stop #${index + 1}`}
+                    </span>
+                    <span className="font-extrabold text-sm text-slate-900 block mb-1">🚏 {stop.name}</span>
+                    <span className="text-[10px] text-slate-500 font-mono block">
+                      Lat: {stop.lat.toFixed(4)}, Lon: {stop.lon.toFixed(4)}
+                    </span>
+                  </div>
+                </Popup>
+              </CircleMarker>
+            );
+          })}
+
         {/* High-visibility pulsating GPS User Location */}
         {userLocation && (
           <Marker
@@ -595,23 +698,23 @@ export default function LiveMap({
             key={bus.v_id}
             bus={bus}
             routeId={bus.route_id}
-            crowdStatus={getCrowdStatusForBus(bus, bus.route_id)}
+            crowdStatus={crowdReports[bus.route_id]}
           />
         ))}
 
-        {/* High-Contrast Navigation Polyline Route */}
-        {routePath && routePath.length > 0 && (
+        {/* High-Contrast Navigation Polyline Route (BMTC or Multi-modal) */}
+        {effectiveRoutePath && effectiveRoutePath.length > 0 && (
           <>
             {/* Dark casing/shadow line for sharp contrast against light/dark tiles */}
             <Polyline
-              positions={routePath}
+              positions={effectiveRoutePath}
               color="#0f172a"
               weight={8}
               opacity={0.8}
             />
             {/* Vivid cyan/blue foreground path */}
             <Polyline
-              positions={routePath}
+              positions={effectiveRoutePath}
               color="#06b6d4"
               weight={5}
               opacity={1}

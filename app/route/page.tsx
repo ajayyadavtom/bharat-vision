@@ -40,6 +40,7 @@ export default function RoutePlannerScreen() {
   const [nlpStatus, setNlpStatus] = useState<string>("");
 
   const [simulatedPath, setSimulatedPath] = useState<[number, number][] | null>(null);
+  const [routeStops, setRouteStops] = useState<{ name: string; lat: number; lon: number }[]>([]);
 
   // Load initial road path from Mapbox Directions
   useEffect(() => {
@@ -99,6 +100,11 @@ export default function RoutePlannerScreen() {
         [dstHub.lat, dstHub.lng]
       ]);
     }
+
+    setRouteStops([
+      { name: origHub.name, lat: origHub.lat, lon: origHub.lng },
+      { name: dstHub.name, lat: dstHub.lat, lon: dstHub.lng },
+    ]);
 
     const currentHour = new Date().getHours();
     const isPeak = (currentHour >= 8 && currentHour <= 11) || (currentHour >= 17 && currentHour <= 20);
@@ -182,7 +188,13 @@ export default function RoutePlannerScreen() {
       
       {/* Top Half: Live Map View */}
       <div className={`absolute top-0 left-0 right-0 transition-all duration-500 ease-in-out ${routeResult ? 'h-[40vh]' : 'h-[60vh]'} z-0`}>
-        <LiveMap routePath={simulatedPath} userLocation={userLoc as [number, number] | null} />
+        <LiveMap
+          routePath={simulatedPath}
+          routeStops={routeStops}
+          userLocation={userLoc as [number, number] | null}
+          initialShowMetro={true}
+          initialShowStops={true}
+        />
         {/* Fog gradient to blend map into bottom sheet */}
         <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-slate-100 dark:from-[#09090b] to-transparent z-10 pointer-events-none"></div>
       </div>

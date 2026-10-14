@@ -2,9 +2,8 @@
   "lines": [
     {
       "id": "purple-1",
+      "name": "Line-1 (Purple): Mysore Road - Baiyappanahalli - 18.10 km",
       "lineKey": "purple",
-      "name": "Line-1 (Purple)",
-      "fullName": "Line-1 (Purple): Mysore Road - Baiyappanahalli\u00a0- 18.10 km",
       "color": "#a855f7",
       "coordinates": [
         [
@@ -615,9 +614,8 @@
     },
     {
       "id": "green-2",
+      "name": "Line-2 (Green): Hessarghatta Cross - Yelachenahalli - 24.20 km",
       "lineKey": "green",
-      "name": "Line-2 (Green)",
-      "fullName": "Line-2 (Green): Hessarghatta Cross - Yelachenahalli - 24.20 km",
       "color": "#10b981",
       "coordinates": [
         [
@@ -1388,9 +1386,8 @@
     },
     {
       "id": "purple-3",
+      "name": "Line-1 (Purple): Mysore Road – Kengeri - 8.814 km",
       "lineKey": "purple",
-      "name": "Line-1 (Purple)",
-      "fullName": "Line-1 (Purple): Mysore Road \u2013 Kengeri - 8.814 km",
       "color": "#a855f7",
       "coordinates": [
         [
@@ -1749,9 +1746,8 @@
     },
     {
       "id": "purple-4",
+      "name": "Line-1 (Purple): Baiyyappanahalli – Whitefield (15.257 km)",
       "lineKey": "purple",
-      "name": "Line-1 (Purple)",
-      "fullName": "Line-1 (Purple): Baiyyappanahalli \u2013 Whitefield (15.257 km)",
       "color": "#a855f7",
       "coordinates": [
         [
@@ -2318,9 +2314,8 @@
     },
     {
       "id": "green-5",
+      "name": "Line-2 (Green): Hesaraghatta Cross - BIEC - 3.031 km",
       "lineKey": "green",
-      "name": "Line-2 (Green)",
-      "fullName": "Line-2 (Green): Hesaraghatta Cross - BIEC - 3.031 km",
       "color": "#10b981",
       "coordinates": [
         [
@@ -2355,9 +2350,8 @@
     },
     {
       "id": "green-6",
+      "name": "Line-2 (Green): Yelachenahalli – Anjanapura - 6.29 km",
       "lineKey": "green",
-      "name": "Line-2 (Green)",
-      "fullName": "Line-2 (Green): Yelachenahalli \u2013 Anjanapura - 6.29 km",
       "color": "#10b981",
       "coordinates": [
         [
@@ -2500,9 +2494,8 @@
     },
     {
       "id": "yellow-7",
+      "name": "Line-3: RV Road – Bommasandra - 19.143 km",
       "lineKey": "yellow",
-      "name": "Line-3",
-      "fullName": "Line-3: RV Road \u2013 Bommasandra - 19.143 km",
       "color": "#eab308",
       "coordinates": [
         [
@@ -2705,9 +2698,8 @@
     },
     {
       "id": "pink-8",
+      "name": "Line-4: Gottigere – Nagavara - 21.415 km",
       "lineKey": "pink",
-      "name": "Line-4",
-      "fullName": "Line-4: Gottigere \u2013 Nagavara - 21.415 km",
       "color": "#ec4899",
       "coordinates": [
         [
@@ -3186,9 +3178,8 @@
     },
     {
       "id": "blue-9",
+      "name": "Line-5 (Blue): Silkboard - KR Puram - 18 kms",
       "lineKey": "blue",
-      "name": "Line-5 (Blue)",
-      "fullName": "Line-5 (Blue): Silkboard - KR Puram - 18 kms",
       "color": "#3b82f6",
       "coordinates": [
         [
@@ -3587,9 +3578,8 @@
     },
     {
       "id": "blue-10",
+      "name": "Line-5: KR Puram - KIAL (38.8 kms)",
       "lineKey": "blue",
-      "name": "Line-5",
-      "fullName": "Line-5: KR Puram - KIAL (38.8 kms)",
       "color": "#3b82f6",
       "coordinates": [
         [
@@ -3854,7 +3844,7 @@
   "stations": [
     {
       "id": "hesaraghatta-cross--nagasandra",
-      "name": "Hesaraghatta Cross (Nagasandra)",
+      "name": "Nagasandra (Hesaraghatta Cross)",
       "lat": 13.04802,
       "lon": 77.50011,
       "lines": [
@@ -3978,10 +3968,9 @@
       "lat": 12.9905,
       "lon": 77.57077,
       "lines": [
-        "Purple",
         "Green"
       ],
-      "isInterchange": true
+      "isInterchange": false
     },
     {
       "id": "majestic",
@@ -4000,10 +3989,9 @@
       "lat": 12.96666,
       "lon": 77.57468,
       "lines": [
-        "Purple",
         "Green"
       ],
-      "isInterchange": true
+      "isInterchange": false
     },
     {
       "id": "kr-market",
@@ -4011,10 +3999,9 @@
       "lat": 12.96111,
       "lon": 77.57483,
       "lines": [
-        "Purple",
         "Green"
       ],
-      "isInterchange": true
+      "isInterchange": false
     },
     {
       "id": "national-college",
@@ -4042,10 +4029,9 @@
       "lat": 12.93838,
       "lon": 77.5801,
       "lines": [
-        "Yellow",
         "Green"
       ],
-      "isInterchange": true
+      "isInterchange": false
     },
     {
       "id": "jayanagar",
@@ -4053,10 +4039,9 @@
       "lat": 12.92964,
       "lon": 77.58016,
       "lines": [
-        "Yellow",
         "Green"
       ],
-      "isInterchange": true
+      "isInterchange": false
     },
     {
       "id": "rashtreeya-vidyalaya-road",
@@ -4064,8 +4049,8 @@
       "lat": 12.92146,
       "lon": 77.58013,
       "lines": [
-        "Yellow",
-        "Green"
+        "Green",
+        "Yellow"
       ],
       "isInterchange": true
     },
@@ -4075,10 +4060,9 @@
       "lat": 12.91565,
       "lon": 77.57359,
       "lines": [
-        "Yellow",
         "Green"
       ],
-      "isInterchange": true
+      "isInterchange": false
     },
     {
       "id": "jayaprakash-nagar",
@@ -4086,10 +4070,9 @@
       "lat": 12.90738,
       "lon": 77.57321,
       "lines": [
-        "Yellow",
         "Green"
       ],
-      "isInterchange": true
+      "isInterchange": false
     },
     {
       "id": "yelachenahalli",
@@ -4163,25 +4146,23 @@
     },
     {
       "id": "city-railway-station",
-      "name": "City Railway Station",
+      "name": "KSR Bengaluru (City Railway Station)",
       "lat": 12.97584,
       "lon": 77.56602,
       "lines": [
-        "Purple",
-        "Green"
+        "Purple"
       ],
-      "isInterchange": true
+      "isInterchange": false
     },
     {
       "id": "sir-m--visveshwaraya",
-      "name": "Sir M. Visveshwaraya",
+      "name": "Sir M. Visveshwaraya (Central College)",
       "lat": 12.97434,
       "lon": 77.584,
       "lines": [
-        "Purple",
-        "Green"
+        "Purple"
       ],
-      "isInterchange": true
+      "isInterchange": false
     },
     {
       "id": "vidhana-soudha",
@@ -4189,10 +4170,9 @@
       "lat": 12.97879,
       "lon": 77.59175,
       "lines": [
-        "Purple",
-        "Pink"
+        "Purple"
       ],
-      "isInterchange": true
+      "isInterchange": false
     },
     {
       "id": "cubbon-park",
@@ -4200,10 +4180,9 @@
       "lat": 12.98123,
       "lon": 77.59664,
       "lines": [
-        "Purple",
-        "Pink"
+        "Purple"
       ],
-      "isInterchange": true
+      "isInterchange": false
     },
     {
       "id": "mahatma-gandhi-road",
@@ -4211,10 +4190,9 @@
       "lat": 12.97551,
       "lon": 77.60676,
       "lines": [
-        "Purple",
-        "Pink"
+        "Purple"
       ],
-      "isInterchange": true
+      "isInterchange": false
     },
     {
       "id": "trinity",
@@ -4222,10 +4200,9 @@
       "lat": 12.97303,
       "lon": 77.61698,
       "lines": [
-        "Purple",
-        "Pink"
+        "Purple"
       ],
-      "isInterchange": true
+      "isInterchange": false
     },
     {
       "id": "halasuru",
@@ -4263,10 +4240,9 @@
       "lat": 12.99074,
       "lon": 77.6525,
       "lines": [
-        "Purple",
-        "Blue"
+        "Purple"
       ],
-      "isInterchange": true
+      "isInterchange": false
     },
     {
       "id": "north-ramp",
@@ -4274,10 +4250,9 @@
       "lat": 12.98653,
       "lon": 77.57202,
       "lines": [
-        "Purple",
         "Green"
       ],
-      "isInterchange": true
+      "isInterchange": false
     },
     {
       "id": "south-ramp",
@@ -4295,10 +4270,9 @@
       "lat": 12.97878,
       "lon": 77.60094,
       "lines": [
-        "Purple",
-        "Pink"
+        "Purple"
       ],
-      "isInterchange": true
+      "isInterchange": false
     },
     {
       "id": "west-ramp",
@@ -4306,10 +4280,9 @@
       "lat": 12.97563,
       "lon": 77.56347,
       "lines": [
-        "Purple",
-        "Green"
+        "Purple"
       ],
-      "isInterchange": true
+      "isInterchange": false
     },
     {
       "id": "baiyappanahalli-depot",
@@ -4317,10 +4290,9 @@
       "lat": 12.99212,
       "lon": 77.65612,
       "lines": [
-        "Purple",
-        "Blue"
+        "Purple"
       ],
-      "isInterchange": true
+      "isInterchange": false
     },
     {
       "id": "peenya-depot",
@@ -4338,10 +4310,9 @@
       "lat": 12.9965,
       "lon": 77.66832,
       "lines": [
-        "Purple",
-        "Blue"
+        "Purple"
       ],
-      "isInterchange": true
+      "isInterchange": false
     },
     {
       "id": "mahadevapura",
@@ -4349,10 +4320,9 @@
       "lat": 12.99662,
       "lon": 77.69253,
       "lines": [
-        "Purple",
-        "Blue"
+        "Purple"
       ],
-      "isInterchange": true
+      "isInterchange": false
     },
     {
       "id": "gurudacharpalya",
@@ -4380,10 +4350,9 @@
       "lat": 12.98104,
       "lon": 77.70879,
       "lines": [
-        "Purple",
-        "Blue"
+        "Purple"
       ],
-      "isInterchange": true
+      "isInterchange": false
     },
     {
       "id": "kundalahalli",
@@ -4497,7 +4466,7 @@
     },
     {
       "id": "kengeri",
-      "name": "Kengeri*",
+      "name": "Kengeri",
       "lat": 12.90796,
       "lon": 77.47647,
       "lines": [
@@ -4507,7 +4476,7 @@
     },
     {
       "id": "challegatta",
-      "name": "Challegatta*",
+      "name": "Challegatta",
       "lat": 12.89793,
       "lon": 77.4627,
       "lines": [
@@ -4517,7 +4486,7 @@
     },
     {
       "id": "manjunathanagar",
-      "name": "Manjunathanagar*",
+      "name": "Manjunathanagar",
       "lat": 13.05126,
       "lon": 77.4914,
       "lines": [
@@ -4527,7 +4496,7 @@
     },
     {
       "id": "jindal",
-      "name": "Jindal*",
+      "name": "Jindal",
       "lat": 13.05415,
       "lon": 77.48304,
       "lines": [
@@ -4537,7 +4506,7 @@
     },
     {
       "id": "biec",
-      "name": "BIEC*",
+      "name": "BIEC (Madavara)",
       "lat": 13.05744,
       "lon": 77.47277,
       "lines": [
@@ -4547,7 +4516,7 @@
     },
     {
       "id": "anjanapura-cross-road",
-      "name": "Anjanapura Cross Road",
+      "name": "Konanakunte Cross",
       "lat": 12.88887,
       "lon": 77.5626,
       "lines": [
@@ -4557,7 +4526,7 @@
     },
     {
       "id": "krishna-leela-park",
-      "name": "Krishna Leela Park",
+      "name": "Doddakallasandra",
       "lat": 12.88464,
       "lon": 77.55268,
       "lines": [
@@ -4587,7 +4556,7 @@
     },
     {
       "id": "anjanapura-township",
-      "name": "Anjanapura Township",
+      "name": "Silk Institute (Anjanapura)",
       "lat": 12.86181,
       "lon": 77.52987,
       "lines": [
@@ -4601,11 +4570,9 @@
       "lat": 12.91718,
       "lon": 77.58832,
       "lines": [
-        "Pink",
-        "Yellow",
-        "Green"
+        "Yellow"
       ],
-      "isInterchange": true
+      "isInterchange": false
     },
     {
       "id": "jayadeva-hospital",
@@ -4613,8 +4580,8 @@
       "lat": 12.91675,
       "lon": 77.59992,
       "lines": [
-        "Pink",
-        "Yellow"
+        "Yellow",
+        "Pink"
       ],
       "isInterchange": true
     },
@@ -4624,10 +4591,9 @@
       "lat": 12.91658,
       "lon": 77.60824,
       "lines": [
-        "Pink",
         "Yellow"
       ],
-      "isInterchange": true
+      "isInterchange": false
     },
     {
       "id": "hsr-layout",
@@ -4646,10 +4612,9 @@
       "lat": 12.90163,
       "lon": 77.63204,
       "lines": [
-        "Yellow",
-        "Blue"
+        "Yellow"
       ],
-      "isInterchange": true
+      "isInterchange": false
     },
     {
       "id": "muneshwara-nagar",
@@ -4743,7 +4708,7 @@
     },
     {
       "id": "gottigere",
-      "name": "Gottigere*",
+      "name": "Gottigere (Kalena Agrahara)",
       "lat": 12.86749,
       "lon": 77.59233,
       "lines": [
@@ -4753,7 +4718,7 @@
     },
     {
       "id": "hulimavu",
-      "name": "Hulimavu*",
+      "name": "Hulimavu",
       "lat": 12.88294,
       "lon": 77.59624,
       "lines": [
@@ -4763,7 +4728,7 @@
     },
     {
       "id": "iim-bangalore",
-      "name": "IIM-Bangalore*",
+      "name": "IIM-Bangalore",
       "lat": 12.89781,
       "lon": 77.60024,
       "lines": [
@@ -4773,14 +4738,13 @@
     },
     {
       "id": "jp-nagar-4th-phase",
-      "name": "JP Nagar 4th Phase*",
+      "name": "JP Nagar 4th Phase",
       "lat": 12.90676,
       "lon": 77.60105,
       "lines": [
-        "Pink",
-        "Yellow"
+        "Pink"
       ],
-      "isInterchange": true
+      "isInterchange": false
     },
     {
       "id": "swagath-road-cross",
@@ -4788,10 +4752,9 @@
       "lat": 12.92738,
       "lon": 77.6004,
       "lines": [
-        "Pink",
-        "Yellow"
+        "Pink"
       ],
-      "isInterchange": true
+      "isInterchange": false
     },
     {
       "id": "dairy-circle",
@@ -4829,10 +4792,9 @@
       "lat": 12.9653,
       "lon": 77.607,
       "lines": [
-        "Purple",
         "Pink"
       ],
-      "isInterchange": true
+      "isInterchange": false
     },
     {
       "id": "mg-road",
@@ -4851,10 +4813,9 @@
       "lat": 12.98371,
       "lon": 77.60218,
       "lines": [
-        "Purple",
         "Pink"
       ],
-      "isInterchange": true
+      "isInterchange": false
     },
     {
       "id": "cantonment",
@@ -4862,10 +4823,9 @@
       "lat": 12.99179,
       "lon": 77.60631,
       "lines": [
-        "Purple",
         "Pink"
       ],
-      "isInterchange": true
+      "isInterchange": false
     },
     {
       "id": "pottery-town",
@@ -4903,10 +4863,9 @@
       "lat": 13.02752,
       "lon": 77.6201,
       "lines": [
-        "Pink",
-        "Blue"
+        "Pink"
       ],
-      "isInterchange": true
+      "isInterchange": false
     },
     {
       "id": "nagawara",
@@ -4935,10 +4894,9 @@
       "lat": 13.04498,
       "lon": 77.62696,
       "lines": [
-        "Pink",
-        "Blue"
+        "Pink"
       ],
-      "isInterchange": true
+      "isInterchange": false
     },
     {
       "id": "challegatta-depot",
@@ -5057,10 +5015,9 @@
       "lat": 12.96779,
       "lon": 77.70178,
       "lines": [
-        "Purple",
         "Blue"
       ],
-      "isInterchange": true
+      "isInterchange": false
     },
     {
       "id": "doddanakundi",
@@ -5068,10 +5025,9 @@
       "lat": 12.97503,
       "lon": 77.6975,
       "lines": [
-        "Purple",
         "Blue"
       ],
-      "isInterchange": true
+      "isInterchange": false
     },
     {
       "id": "drdo-sports-complex",
@@ -5079,10 +5035,9 @@
       "lat": 12.98279,
       "lon": 77.6928,
       "lines": [
-        "Purple",
         "Blue"
       ],
-      "isInterchange": true
+      "isInterchange": false
     },
     {
       "id": "mahadevpura",
@@ -5090,10 +5045,9 @@
       "lat": 12.99395,
       "lon": 77.68544,
       "lines": [
-        "Purple",
         "Blue"
       ],
-      "isInterchange": true
+      "isInterchange": false
     },
     {
       "id": "kr-puram",
@@ -5106,5 +5060,132 @@
       ],
       "isInterchange": true
     }
-  ]
+  ],
+  "lineSequences": {
+    "purple": [
+      "challegatta",
+      "kengeri",
+      "mailasandra",
+      "pattanagere",
+      "bangalore-university",
+      "rajarajeshwari-nagar",
+      "nayandahalli",
+      "mysore-road",
+      "deepanjali-nagar",
+      "attiguppe",
+      "vijayanagar",
+      "hosahalli",
+      "magadi-road",
+      "city-railway-station",
+      "majestic",
+      "sir-m--visveshwaraya",
+      "vidhana-soudha",
+      "cubbon-park",
+      "mg-road",
+      "trinity",
+      "halasuru",
+      "indiranagar",
+      "swami-vivekananda-road",
+      "baiyappanahalli",
+      "jyothipuram",
+      "kr-puram",
+      "mahadevapura",
+      "gurudacharpalya",
+      "doddanakundi-industrial-area",
+      "visvesvaraya-industrial-area",
+      "kundalahalli",
+      "vydehi-hospital",
+      "sri-satya-sai-hospital",
+      "itpl",
+      "kadugodi",
+      "whitefield"
+    ],
+    "green": [
+      "biec",
+      "jindal",
+      "manjunathanagar",
+      "hesaraghatta-cross--nagasandra",
+      "dasarahalli",
+      "jalahalli",
+      "peenya-industry",
+      "peenya",
+      "yeshwanthpur-industry",
+      "yeshwanthpur",
+      "sandal-soap-factory",
+      "mahalakshmi",
+      "rajajinagar",
+      "kuvempu-road",
+      "srirampura",
+      "sampige-road",
+      "majestic",
+      "chickpet",
+      "kr-market",
+      "national-college",
+      "lalbagh",
+      "southend-circle",
+      "jayanagar",
+      "rashtreeya-vidyalaya-road",
+      "banashankari",
+      "jayaprakash-nagar",
+      "yelachenahalli",
+      "anjanapura-cross-road",
+      "krishna-leela-park",
+      "vajrahalli",
+      "thalgattapura",
+      "anjanapura-township"
+    ],
+    "yellow": [
+      "rashtreeya-vidyalaya-road",
+      "ragigudda",
+      "jayadeva-hospital",
+      "btm-layout",
+      "central-silkboard",
+      "hsr-layout",
+      "oxford-college",
+      "muneshwara-nagar",
+      "chikkabegur",
+      "basapura-road",
+      "hosa-road",
+      "electronic-city-i",
+      "electronic-city-ii",
+      "huskur-road",
+      "hebbagodi",
+      "bommasandra"
+    ],
+    "pink": [
+      "gottigere",
+      "hulimavu",
+      "iim-bangalore",
+      "jp-nagar-4th-phase",
+      "jayadeva-hospital",
+      "swagath-road-cross",
+      "dairy-circle",
+      "mico-industries",
+      "langford-town",
+      "vellara-road",
+      "mg-road",
+      "shivaji-nagar",
+      "cantonment",
+      "pottery-town",
+      "tannery-road",
+      "venkateshpura",
+      "arabic-college",
+      "nagawara"
+    ],
+    "blue": [
+      "central-silkboard",
+      "hsr-layout",
+      "agara-lake",
+      "ibbalur",
+      "bellandur",
+      "kadubeesanahalli",
+      "kodibisanahalli",
+      "marathahalli",
+      "isro",
+      "doddanakundi",
+      "drdo-sports-complex",
+      "mahadevpura",
+      "kr-puram"
+    ]
+  }
 }

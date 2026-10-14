@@ -1,0 +1,359 @@
+{
+  "dataSource": "BMTC Open Data - Divisional Fleet Utilisation & Operational Status",
+  "recordsCount": 28,
+  "latestYear": "2019-20",
+  "divisionBreakdown2020": [
+    {
+      "division": "East",
+      "year": "2019-20",
+      "busesHeld": 1026.6,
+      "busesOnRoad": 864.4,
+      "busesOffRoad": 57.2,
+      "roadWorthySpare": 105,
+      "offRoadPercent": 5.6,
+      "fleetUtilisation": 84.2
+    },
+    {
+      "division": "West",
+      "year": "2019-20",
+      "busesHeld": 1174.8,
+      "busesOnRoad": 1004.8,
+      "busesOffRoad": 103.7,
+      "roadWorthySpare": 66.3,
+      "offRoadPercent": 8.8,
+      "fleetUtilisation": 85.5
+    },
+    {
+      "division": "North",
+      "year": "2019-20",
+      "busesHeld": 1416.4,
+      "busesOnRoad": 1239.9,
+      "busesOffRoad": 110.1,
+      "roadWorthySpare": 66.4,
+      "offRoadPercent": 7.8,
+      "fleetUtilisation": 87.5
+    },
+    {
+      "division": "South",
+      "year": "2019-20",
+      "busesHeld": 1138.2,
+      "busesOnRoad": 1003.9,
+      "busesOffRoad": 76.1,
+      "roadWorthySpare": 58.2,
+      "offRoadPercent": 6.7,
+      "fleetUtilisation": 88.2
+    },
+    {
+      "division": "North East",
+      "year": "2019-20",
+      "busesHeld": 906.5,
+      "busesOnRoad": 788.7,
+      "busesOffRoad": 47.4,
+      "roadWorthySpare": 70.4,
+      "offRoadPercent": 5.2,
+      "fleetUtilisation": 87
+    },
+    {
+      "division": "Central",
+      "year": "2019-20",
+      "busesHeld": 852.2,
+      "busesOnRoad": 640.7,
+      "busesOffRoad": 72.9,
+      "roadWorthySpare": 138.6,
+      "offRoadPercent": 8.6,
+      "fleetUtilisation": 75.2
+    }
+  ],
+  "bengaluruTotal2020": {
+    "division": "Total",
+    "year": "2019-20",
+    "busesHeld": 6514.9,
+    "busesOnRoad": 5542.4,
+    "busesOffRoad": 467.4,
+    "roadWorthySpare": 504.9,
+    "offRoadPercent": 7.1,
+    "fleetUtilisation": 85.1
+  },
+  "historicalRecords": [
+    {
+      "division": "East",
+      "year": "2019-20",
+      "busesHeld": 1026.6,
+      "busesOnRoad": 864.4,
+      "busesOffRoad": 57.2,
+      "roadWorthySpare": 105,
+      "offRoadPercent": 5.6,
+      "fleetUtilisation": 84.2
+    },
+    {
+      "division": "East",
+      "year": "2018-19",
+      "busesHeld": 1037.4,
+      "busesOnRoad": 867.6,
+      "busesOffRoad": 99,
+      "roadWorthySpare": 70.8,
+      "offRoadPercent": 9.5,
+      "fleetUtilisation": 83.6
+    },
+    {
+      "division": "East",
+      "year": "2017-18",
+      "busesHeld": 961,
+      "busesOnRoad": 838.6,
+      "busesOffRoad": 62.4,
+      "roadWorthySpare": 60,
+      "offRoadPercent": 6.5,
+      "fleetUtilisation": 87.3
+    },
+    {
+      "division": "East",
+      "year": "2016-17",
+      "busesHeld": 1118.8,
+      "busesOnRoad": 995.9,
+      "busesOffRoad": 66.2,
+      "roadWorthySpare": 56.7,
+      "offRoadPercent": 5.9,
+      "fleetUtilisation": 89
+    },
+    {
+      "division": "West",
+      "year": "2019-20",
+      "busesHeld": 1174.8,
+      "busesOnRoad": 1004.8,
+      "busesOffRoad": 103.7,
+      "roadWorthySpare": 66.3,
+      "offRoadPercent": 8.8,
+      "fleetUtilisation": 85.5
+    },
+    {
+      "division": "West",
+      "year": "2018-19",
+      "busesHeld": 1208.1,
+      "busesOnRoad": 1021.6,
+      "busesOffRoad": 150.2,
+      "roadWorthySpare": 36.3,
+      "offRoadPercent": 12.4,
+      "fleetUtilisation": 84.6
+    },
+    {
+      "division": "West",
+      "year": "2017-18",
+      "busesHeld": 1143.9,
+      "busesOnRoad": 1025.7,
+      "busesOffRoad": 84.4,
+      "roadWorthySpare": 33.8,
+      "offRoadPercent": 7.4,
+      "fleetUtilisation": 89.7
+    },
+    {
+      "division": "West",
+      "year": "2016-17",
+      "busesHeld": 1132.4,
+      "busesOnRoad": 1024.9,
+      "busesOffRoad": 63,
+      "roadWorthySpare": 44.5,
+      "offRoadPercent": 5.6,
+      "fleetUtilisation": 90.5
+    },
+    {
+      "division": "North",
+      "year": "2019-20",
+      "busesHeld": 1416.4,
+      "busesOnRoad": 1239.9,
+      "busesOffRoad": 110.1,
+      "roadWorthySpare": 66.4,
+      "offRoadPercent": 7.8,
+      "fleetUtilisation": 87.5
+    },
+    {
+      "division": "North",
+      "year": "2018-19",
+      "busesHeld": 1452.8,
+      "busesOnRoad": 1267.8,
+      "busesOffRoad": 155.3,
+      "roadWorthySpare": 29.7,
+      "offRoadPercent": 10.7,
+      "fleetUtilisation": 87.3
+    },
+    {
+      "division": "North",
+      "year": "2017-18",
+      "busesHeld": 1375.2,
+      "busesOnRoad": 1247.3,
+      "busesOffRoad": 95.2,
+      "roadWorthySpare": 32.7,
+      "offRoadPercent": 6.9,
+      "fleetUtilisation": 90.7
+    },
+    {
+      "division": "North",
+      "year": "2016-17",
+      "busesHeld": 1788.8,
+      "busesOnRoad": 1622.9,
+      "busesOffRoad": 109.7,
+      "roadWorthySpare": 56.2,
+      "offRoadPercent": 6.1,
+      "fleetUtilisation": 90.7
+    },
+    {
+      "division": "South",
+      "year": "2019-20",
+      "busesHeld": 1138.2,
+      "busesOnRoad": 1003.9,
+      "busesOffRoad": 76.1,
+      "roadWorthySpare": 58.2,
+      "offRoadPercent": 6.7,
+      "fleetUtilisation": 88.2
+    },
+    {
+      "division": "South",
+      "year": "2018-19",
+      "busesHeld": 1198.8,
+      "busesOnRoad": 1022.2,
+      "busesOffRoad": 151.3,
+      "roadWorthySpare": 25.3,
+      "offRoadPercent": 12.6,
+      "fleetUtilisation": 85.3
+    },
+    {
+      "division": "South",
+      "year": "2017-18",
+      "busesHeld": 1239.3,
+      "busesOnRoad": 1109.1,
+      "busesOffRoad": 89.6,
+      "roadWorthySpare": 40.6,
+      "offRoadPercent": 7.2,
+      "fleetUtilisation": 89.5
+    },
+    {
+      "division": "South",
+      "year": "2016-17",
+      "busesHeld": 1524,
+      "busesOnRoad": 1379.5,
+      "busesOffRoad": 92.5,
+      "roadWorthySpare": 52,
+      "offRoadPercent": 6.1,
+      "fleetUtilisation": 90.5
+    },
+    {
+      "division": "North East",
+      "year": "2019-20",
+      "busesHeld": 906.5,
+      "busesOnRoad": 788.7,
+      "busesOffRoad": 47.4,
+      "roadWorthySpare": 70.4,
+      "offRoadPercent": 5.2,
+      "fleetUtilisation": 87
+    },
+    {
+      "division": "North East",
+      "year": "2018-19",
+      "busesHeld": 925.5,
+      "busesOnRoad": 786,
+      "busesOffRoad": 96.4,
+      "roadWorthySpare": 43.1,
+      "offRoadPercent": 10.4,
+      "fleetUtilisation": 84.9
+    },
+    {
+      "division": "North East",
+      "year": "2017-18",
+      "busesHeld": 895,
+      "busesOnRoad": 790.8,
+      "busesOffRoad": 59.9,
+      "roadWorthySpare": 44.3,
+      "offRoadPercent": 6.7,
+      "fleetUtilisation": 88.4
+    },
+    {
+      "division": "North East",
+      "year": "2016-17",
+      "busesHeld": 0,
+      "busesOnRoad": 0,
+      "busesOffRoad": 0,
+      "roadWorthySpare": 0,
+      "offRoadPercent": 0,
+      "fleetUtilisation": 0
+    },
+    {
+      "division": "Central",
+      "year": "2019-20",
+      "busesHeld": 852.2,
+      "busesOnRoad": 640.7,
+      "busesOffRoad": 72.9,
+      "roadWorthySpare": 138.6,
+      "offRoadPercent": 8.6,
+      "fleetUtilisation": 75.2
+    },
+    {
+      "division": "Central",
+      "year": "2018-19",
+      "busesHeld": 851.7,
+      "busesOnRoad": 649.5,
+      "busesOffRoad": 97.2,
+      "roadWorthySpare": 105,
+      "offRoadPercent": 11.4,
+      "fleetUtilisation": 76.3
+    },
+    {
+      "division": "Central",
+      "year": "2017-18",
+      "busesHeld": 779.7,
+      "busesOnRoad": 586,
+      "busesOffRoad": 90.4,
+      "roadWorthySpare": 103.3,
+      "offRoadPercent": 11.6,
+      "fleetUtilisation": 75.2
+    },
+    {
+      "division": "Central",
+      "year": "2016-17",
+      "busesHeld": 705.7,
+      "busesOnRoad": 556.2,
+      "busesOffRoad": 85.2,
+      "roadWorthySpare": 64.3,
+      "offRoadPercent": 12.1,
+      "fleetUtilisation": 78.8
+    },
+    {
+      "division": "Total",
+      "year": "2019-20",
+      "busesHeld": 6514.9,
+      "busesOnRoad": 5542.4,
+      "busesOffRoad": 467.4,
+      "roadWorthySpare": 504.9,
+      "offRoadPercent": 7.1,
+      "fleetUtilisation": 85.1
+    },
+    {
+      "division": "Total",
+      "year": "2018-19",
+      "busesHeld": 6674.3,
+      "busesOnRoad": 5614.7,
+      "busesOffRoad": 749.4,
+      "roadWorthySpare": 310.2,
+      "offRoadPercent": 11.2,
+      "fleetUtilisation": 84.1
+    },
+    {
+      "division": "Total",
+      "year": "2017-18",
+      "busesHeld": 6394.1,
+      "busesOnRoad": 5597.5,
+      "busesOffRoad": 481.9,
+      "roadWorthySpare": 314.7,
+      "offRoadPercent": 7.7,
+      "fleetUtilisation": 86.8
+    },
+    {
+      "division": "Total",
+      "year": "2016-17",
+      "busesHeld": 6269.7,
+      "busesOnRoad": 5579.4,
+      "busesOffRoad": 416.6,
+      "roadWorthySpare": 273.7,
+      "offRoadPercent": 7.2,
+      "fleetUtilisation": 87.9
+    }
+  ]
+}
