@@ -82,31 +82,35 @@ export default function MetroMap({
 
   return (
     <div className={`relative ${isExpanded ? "fixed inset-0 z-50 bg-slate-950 p-4" : className}`}>
-      {/* Top Filter Buttons & Controls */}
-      <div className="absolute top-2 left-2 z-[400] flex items-center gap-1 bg-slate-900/90 backdrop-blur-md p-1 rounded-2xl border border-slate-800 shadow-xl">
-        {["All", "Purple", "Green", "Yellow", "Blue"].map((line) => (
-          <button
-            key={line}
-            type="button"
-            onClick={() => setSelectedFilter(line)}
-            className={`text-[9px] font-black px-2 py-1 rounded-xl transition-all ${
-              selectedFilter === line
-                ? line === "Purple"
-                  ? "bg-purple-600 text-white shadow-sm"
-                  : line === "Green"
-                  ? "bg-emerald-600 text-white shadow-sm"
-                  : line === "Yellow"
-                  ? "bg-amber-500 text-slate-950 shadow-sm"
-                  : line === "Blue"
-                  ? "bg-blue-600 text-white shadow-sm"
-                  : "bg-slate-700 text-white shadow-sm"
-                : "text-slate-400 hover:text-white"
-            }`}
-          >
-            {line === "Purple" ? "🟣" : line === "Green" ? "🟢" : line === "Yellow" ? "🟡" : line === "Blue" ? "🔵" : "🌐"} {line}
-          </button>
-        ))}
-      </div>
+      {/* Top Filter Buttons & Controls (Shown in Fullscreen/Expanded mode) */}
+      {isExpanded && (
+        <div className="absolute top-3 left-3 z-[400] flex items-center gap-1 bg-slate-900/95 backdrop-blur-md p-1.5 rounded-2xl border border-slate-800 shadow-xl overflow-x-auto no-scrollbar max-w-[80%]">
+          {["All", "Purple", "Green", "Yellow", "Blue", "Pink"].map((line) => (
+            <button
+              key={line}
+              type="button"
+              onClick={() => setSelectedFilter(line)}
+              className={`text-[10px] font-black px-2.5 py-1.5 rounded-xl transition-all whitespace-nowrap cursor-pointer ${
+                selectedFilter === line
+                  ? line === "Purple"
+                    ? "bg-purple-600 text-white shadow-sm"
+                    : line === "Green"
+                    ? "bg-emerald-600 text-white shadow-sm"
+                    : line === "Yellow"
+                    ? "bg-amber-500 text-slate-950 shadow-sm"
+                    : line === "Blue"
+                    ? "bg-blue-600 text-white shadow-sm"
+                    : line === "Pink"
+                    ? "bg-pink-600 text-white shadow-sm"
+                    : "bg-slate-700 text-white shadow-sm"
+                  : "text-slate-400 hover:text-white"
+              }`}
+            >
+              {line === "Purple" ? "🟣" : line === "Green" ? "🟢" : line === "Yellow" ? "🟡" : line === "Blue" ? "🔵" : line === "Pink" ? "🌸" : "🌐"} {line}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Expand / Minimize Toggle Button */}
       <div className="absolute top-2 right-2 z-[400] flex items-center gap-1.5">
