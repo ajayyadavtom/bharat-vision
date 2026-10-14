@@ -20,6 +20,11 @@ import {
   ShieldCheck,
   Zap,
   RefreshCw,
+  Maximize2,
+  Minimize2,
+  ChevronUp,
+  ChevronDown,
+  SlidersHorizontal,
 } from "lucide-react";
 import {
   StopTarget,
@@ -151,6 +156,9 @@ export default function ProximityChime({
 
   // Stop Search & Filter
   const [stopFilter, setStopFilter] = useState<string>("");
+
+  // Compact Notification vs Full View (All Stops & Settings)
+  const [isFullView, setIsFullView] = useState<boolean>(false);
 
   const prevBusCodeRef = useRef<string>(busCode);
   const prevPosRef = useRef<{ lat: number; lng: number; time: number } | null>(null);
@@ -436,6 +444,18 @@ export default function ProximityChime({
     }
   };
 
+  // Test pleasant transit chime and vibration feedback
+  const handleTestChime = () => {
+    playTransitChime();
+    if (typeof window !== "undefined" && "vibrate" in navigator) {
+      try {
+        navigator.vibrate([300, 150, 300]);
+      } catch (e) {
+        console.warn("Vibration test warning:", e);
+      }
+    }
+  };
+
   // Filtered stops for search
   const filteredStops = useMemo(() => {
     const q = stopFilter.toLowerCase().trim();
@@ -465,302 +485,432 @@ export default function ProximityChime({
       {/* Background ambient glow */}
       <div className="absolute -top-12 -right-12 w-36 h-36 bg-teal-500/10 rounded-full blur-2xl pointer-events-none" />
 
-      {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-full bg-teal-100 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0">
-            <BellRing size={16} />
-          </div>
-          <div>
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
-                Next Stop Proximity Alarm
-              </h3>
-              <span className="bg-teal-100 dark:bg-teal-950/80 text-teal-700 dark:text-teal-300 text-[10px] font-black px-2 py-0.5 rounded-md border border-teal-200 dark:border-teal-800/60">
-                Route {busCode}
-              </span>
-            </div>
-            <p className="text-[10px] text-slate-500 dark:text-slate-400">
-              Auto-vibrates & chimes 300m before your deboarding stop
-            </p>
-          </div>
-        </div>
-
-        {/* Navigation State Badge */}
-        <span
-          className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-tight flex items-center gap-1 border shrink-0 ${
-            isNavigatingBus
-              ? "bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/40"
-              : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700"
-          }`}
-        >
-          <span
-            className={`w-1.5 h-1.5 rounded-full ${
-              isNavigatingBus ? "bg-emerald-500 animate-ping" : "bg-slate-400"
-            }`}
-          />
-          {isNavigatingBus ? `Riding Bus (${speedKmh} km/h)` : "Stationary"}
-        </span>
-      </div>
-
-      {/* DYNAMIC ROUTE CHANGE NOTIFICATION (Automatically alerts when bus/route changes) */}
-      <AnimatePresence>
-        {routeChangeAlert && (
-          <motion.div
-            initial={{ opacity: 0, y: -8, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -8, scale: 0.98 }}
-            className={`mb-3 p-3 rounded-2xl border text-xs flex items-start justify-between gap-2 shadow-sm ${
-              routeChangeAlert.wasReset
-                ? "bg-amber-50 dark:bg-amber-950/50 border-amber-200 dark:border-amber-800/60 text-amber-900 dark:text-amber-200"
-                : "bg-teal-50 dark:bg-teal-950/50 border-teal-200 dark:border-teal-800/60 text-teal-900 dark:text-teal-200"
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <Zap size={15} className="shrink-0 text-teal-600 dark:text-teal-400" />
-              <div>
-                <p className="font-extrabold text-[11px] leading-snug">
-                  Route Switched to <span className="underline font-black">{routeChangeAlert.busCode}</span>
-                </p>
-                <p className="text-[10px] opacity-85 mt-0.5">
-                  {routeChangeAlert.wasReset
-                    ? "Previous alarm disarmed. All " + routeChangeAlert.stopsCount + " stops loaded — choose your new deboard stop below."
-                    : `${routeChangeAlert.stopsCount} official stops loaded along this corridor. Pick any stop to arm your 300m alarm.`}
-                </p>
+      {/* COMPACT NOTIFICATION VIEW (Default: small, clean, unobtrusive) */}
+      {!isFullView ? (
+        <div className="flex flex-col gap-2">
+          {/* Top row: Bell Icon, Title, Route Badge & Actions */}
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-8 h-8 rounded-full bg-teal-100 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0">
+                <BellRing size={16} />
               </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => setRouteChangeAlert(null)}
-              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 cursor-pointer"
-            >
-              <X size={13} />
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* MAIN CONTENT: ARMED TRACKING vs. STOP CHOOSER */}
-      {isArmed && !hasTriggered ? (
-        /* STATE 3: Armed Alarm - Tracking Distance from the Moving Bus */
-        <div className="relative pt-1">
-          <div className="flex justify-between items-start mb-3">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center border border-teal-500/30">
-                <Bus size={20} className="animate-pulse" />
-              </div>
-              <div>
-                <span className="text-[10px] font-black uppercase tracking-wider text-teal-600 dark:text-teal-400 flex items-center gap-1">
-                  <Radio size={10} className="animate-ping" /> Bus Approaching Deboard Stop:
-                </span>
-                <h4 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-                  {selectedStop.name}
-                  {selectedStop.seq && (
-                    <span className="text-[9px] bg-slate-100 dark:bg-slate-800 text-slate-500 px-1.5 py-0.2 rounded font-bold">
-                      Stop #{selectedStop.seq}
-                    </span>
-                  )}
-                </h4>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleDisarmAlarm}
-              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs font-bold px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-800 cursor-pointer transition-colors"
-            >
-              Cancel Alarm
-            </button>
-          </div>
-
-          {/* Telemetry Metrics */}
-          <div className="grid grid-cols-3 gap-2 bg-slate-50 dark:bg-slate-800/60 p-3 rounded-2xl border border-slate-200 dark:border-slate-700/60 mb-3 text-center">
-            <div>
-              <p className="text-[9px] uppercase font-bold text-slate-400">Live Distance</p>
-              <p className="text-base font-black text-slate-900 dark:text-white">
-                {distanceMeters !== null ? `${distanceMeters}m` : "Calculating..."}
-              </p>
-            </div>
-            <div>
-              <p className="text-[9px] uppercase font-bold text-slate-400">Bus Velocity</p>
-              <p className="text-base font-black text-teal-600 dark:text-teal-400">
-                {speedKmh} km/h
-              </p>
-            </div>
-            <div>
-              <p className="text-[9px] uppercase font-bold text-slate-400">Arrival ETA</p>
-              <p className="text-base font-black text-slate-900 dark:text-white">
-                {etaSec !== null ? `${Math.floor(etaSec / 60)}m ${etaSec % 60}s` : "--"}
-              </p>
-            </div>
-          </div>
-
-          {/* Geofence Progress to 300m threshold */}
-          <div className="w-full bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden border border-slate-200 dark:border-slate-700">
-            <motion.div
-              className="h-full bg-teal-500"
-              animate={{
-                width: `${Math.min(
-                  100,
-                  Math.max(
-                    0,
-                    distanceMeters !== null ? 100 - (distanceMeters / 1200) * 100 : 20
-                  )
-                )}%`,
-              }}
-              transition={{ ease: "linear", duration: 0.5 }}
-            />
-          </div>
-          <div className="flex justify-between items-center text-[9px] text-slate-400 font-bold mt-1.5 px-0.5">
-            <span>En Route (1.2 km)</span>
-            <span className="text-teal-600 dark:text-teal-400 font-extrabold flex items-center gap-0.5">
-              <Zap size={9} /> 300m Alarm Trigger Zone
-            </span>
-            <span>Deboard Exit</span>
-          </div>
-
-          {/* Change Deboard Stop Quick Action */}
-          <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center text-xs">
-            <span className="text-[10px] text-slate-500">Need a different stop on Route {busCode}?</span>
-            <button
-              type="button"
-              onClick={handleDisarmAlarm}
-              className="text-teal-600 dark:text-teal-400 font-bold hover:underline cursor-pointer text-[11px]"
-            >
-              Change Deboard Stop
-            </button>
-          </div>
-        </div>
-      ) : (
-        /* STOP CHOOSER: Displays all stops for chosen route with search filter & arming */
-        <div className="space-y-3">
-          {/* Search Filter for Route Stops */}
-          <div className="relative">
-            <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5">
-              <Search size={14} className="text-slate-400 shrink-0" />
-              <input
-                type="text"
-                value={stopFilter}
-                onChange={(e) => setStopFilter(e.target.value)}
-                placeholder={`Search ${activeStops.length} stops on Route ${busCode}...`}
-                className="bg-transparent text-xs text-slate-900 dark:text-white outline-none w-full font-medium placeholder-slate-400"
-              />
-              {stopFilter && (
-                <button
-                  type="button"
-                  onClick={() => setStopFilter("")}
-                  className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-bold px-1"
-                >
-                  ✕
-                </button>
-              )}
-            </div>
-            <div className="flex justify-between items-center mt-1 px-1 text-[9px] text-slate-400 font-bold uppercase tracking-wider">
-              <span>
-                {filteredStops.length} of {activeStops.length} Stops Available
-              </span>
-              <span>Tap stop to set alarm</span>
-            </div>
-          </div>
-
-          {/* Stops List (All Stops where commuter can choose to deboard) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-48 overflow-y-auto no-scrollbar pr-1 border-y border-slate-100 dark:border-slate-800 py-1.5">
-            {filteredStops.map((stop, idx) => {
-              const isSelected = selectedStop.name === stop.name;
-              const isStart = stop.seq === 1 || idx === 0;
-              const isEnd = stop.seq === activeStops.length || idx === activeStops.length - 1;
-
-              // Compute distance to stop if user GPS is available
-              const distToStop = userCoords
-                ? Math.round(haversineDistance(userCoords.lat, userCoords.lng, stop.lat, stop.lng))
-                : null;
-
-              return (
-                <button
-                  key={`${stop.name}-${stop.seq ?? idx}`}
-                  type="button"
-                  onClick={() => setSelectedStop(stop)}
-                  className={`p-2.5 rounded-xl text-left border transition-all cursor-pointer flex items-center justify-between gap-2 ${
-                    isSelected
-                      ? "bg-teal-50 dark:bg-teal-950/70 border-teal-500 text-teal-900 dark:text-teal-100 shadow-xs ring-1 ring-teal-500/30"
-                      : "bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/80 text-slate-700 dark:text-slate-300 hover:border-teal-400"
-                  }`}
-                >
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span
-                      className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 ${
-                        isSelected
-                          ? "bg-teal-600 text-white"
-                          : isStart
-                          ? "bg-emerald-500 text-white"
-                          : isEnd
-                          ? "bg-rose-500 text-white"
-                          : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
-                      }`}
-                    >
-                      {stop.seq ?? idx + 1}
-                    </span>
-                    <div className="min-w-0">
-                      <p className="text-[11px] font-black truncate leading-tight">{stop.name}</p>
-                      <p className="text-[9px] text-slate-400 flex items-center gap-1 mt-0.5">
-                        {isStart ? "Origin" : isEnd ? "Terminal" : "Intermediate"}
-                        {distToStop !== null && (
-                          <span>
-                            • {distToStop >= 1000 ? `${(distToStop / 1000).toFixed(1)} km` : `${distToStop}m`}
-                          </span>
-                        )}
-                      </p>
-                    </div>
-                  </div>
-
-                  {isSelected && (
-                    <span className="shrink-0 bg-teal-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded flex items-center gap-1">
-                      <CheckCircle2 size={10} /> Target
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Selected Deboard Summary & Arm Action */}
-          <div className="bg-slate-50 dark:bg-slate-800/70 rounded-2xl p-3 border border-slate-200 dark:border-slate-700/80">
-            <div className="flex items-center justify-between mb-2">
               <div className="min-w-0">
-                <span className="text-[9px] font-black uppercase tracking-wider text-teal-600 dark:text-teal-400 block">
-                  Deboard Stop Target:
-                </span>
-                <h4 className="text-xs font-black text-slate-900 dark:text-white truncate">
-                  {selectedStop.name}
-                  {selectedStop.seq && (
-                    <span className="text-[10px] text-slate-400 font-bold ml-1">
-                      (Stop #{selectedStop.seq})
-                    </span>
-                  )}
-                </h4>
-              </div>
-              {selectedStopDist !== null && (
-                <div className="text-right shrink-0">
-                  <span className="text-[9px] uppercase font-bold text-slate-400 block">Est. Distance</span>
-                  <span className="text-xs font-extrabold text-slate-800 dark:text-slate-200">
-                    {selectedStopDist >= 1000
-                      ? `${(selectedStopDist / 1000).toFixed(1)} km`
-                      : `${selectedStopDist} m`}
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
+                    Next Stop Proximity Alarm
+                  </h3>
+                  <span className="bg-teal-100 dark:bg-teal-950/80 text-teal-700 dark:text-teal-300 text-[10px] font-black px-2 py-0.5 rounded-md border border-teal-200 dark:border-teal-800/60 shrink-0">
+                    Route {busCode}
                   </span>
                 </div>
-              )}
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                  Auto-vibrates & chimes 300m before your deboarding stop
+                </p>
+              </div>
             </div>
 
-            {/* Arm Button & Simulation Trigger */}
-            <div className="flex flex-col sm:flex-row gap-2">
+            {/* Quick Full View Button */}
+            <div className="flex items-center gap-1.5 shrink-0">
               <button
                 type="button"
-                onClick={handleArmAlarm}
-                className="flex-1 bg-teal-600 hover:bg-teal-700 text-white font-extrabold py-2.5 px-3 rounded-xl text-xs active:scale-95 transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer"
+                onClick={() => setIsFullView(true)}
+                className="flex items-center gap-1 text-[11px] font-bold text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/70 hover:bg-teal-100 dark:hover:bg-teal-900/60 px-2.5 py-1.5 rounded-xl border border-teal-200 dark:border-teal-800/70 transition-all cursor-pointer shadow-xs active:scale-95"
+                title="Open full view: All stops, search & settings"
               >
-                <BellRing size={14} /> Arm 300m Alarm for {selectedStop.name}
+                <Maximize2 size={12} />
+                <span className="hidden xs:inline">Full View</span>
               </button>
+            </div>
+          </div>
 
+          {/* Bottom compact action strip */}
+          {isArmed && !hasTriggered ? (
+            /* Compact Armed State */
+            <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2 text-xs">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="w-2 h-2 rounded-full bg-teal-500 animate-ping shrink-0" />
+                <div className="min-w-0">
+                  <span className="text-[11px] font-black text-slate-900 dark:text-white truncate block">
+                    Approaching: {selectedStop.name}
+                  </span>
+                  <span className="text-[10px] text-teal-600 dark:text-teal-400 font-bold">
+                    {distanceMeters !== null ? `${distanceMeters}m away` : "Tracking..."} · ETA{" "}
+                    {etaSec !== null ? `${Math.floor(etaSec / 60)}m ${etaSec % 60}s` : "--"}
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setIsFullView(true)}
+                  className="text-[11px] font-bold text-teal-600 dark:text-teal-400 hover:underline px-1.5 py-1 cursor-pointer"
+                >
+                  All Stops
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDisarmAlarm}
+                  className="text-[10px] font-bold text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 px-2 py-1 rounded-lg border border-rose-200 dark:border-rose-900/60 cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : !hasTriggered ? (
+            /* Compact Idle State with Set Alarm button */
+            <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2 text-xs">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <MapPin size={13} className="text-teal-600 dark:text-teal-400 shrink-0" />
+                <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 shrink-0">
+                  Target:
+                </span>
+                <span className="text-[11px] font-bold text-slate-900 dark:text-white truncate">
+                  {selectedStop.name}
+                </span>
+                {selectedStopDist !== null && (
+                  <span className="text-[10px] text-slate-400 shrink-0 hidden xs:inline">
+                    ({selectedStopDist >= 1000 ? `${(selectedStopDist / 1000).toFixed(1)} km` : `${selectedStopDist}m`})
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-1.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setIsFullView(true)}
+                  className="bg-teal-600 hover:bg-teal-700 text-white font-black text-xs px-3.5 py-1.5 rounded-xl flex items-center gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer"
+                >
+                  <BellRing size={12} />
+                  <span>Set Alarm</span>
+                </button>
+              </div>
+            </div>
+          ) : null}
+        </div>
+      ) : (
+        /* FULL VIEW (Expanded view: all stops, search, settings, and telemetry) */
+        <div>
+          {/* Full View Header with Minimize Button */}
+          <div className="flex items-center justify-between gap-2 mb-3 pb-2.5 border-b border-slate-100 dark:border-slate-800">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-8 h-8 rounded-full bg-teal-100 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0">
+                <BellRing size={16} />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
+                    Next Stop Proximity Alarm
+                  </h3>
+                  <span className="bg-teal-100 dark:bg-teal-950/80 text-teal-700 dark:text-teal-300 text-[10px] font-black px-2 py-0.5 rounded-md border border-teal-200 dark:border-teal-800/60 shrink-0">
+                    Route {busCode}
+                  </span>
+                </div>
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                  Full View · All {activeStops.length} Stops & Proximity Settings
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1.5 shrink-0">
+              <span
+                className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-tight flex items-center gap-1 border shrink-0 ${
+                  isNavigatingBus
+                    ? "bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/40"
+                    : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700"
+                }`}
+              >
+                <span
+                  className={`w-1.5 h-1.5 rounded-full ${
+                    isNavigatingBus ? "bg-emerald-500 animate-ping" : "bg-slate-400"
+                  }`}
+                />
+                {isNavigatingBus ? `${speedKmh} km/h` : "Stationary"}
+              </span>
+
+              <button
+                type="button"
+                onClick={() => setIsFullView(false)}
+                className="flex items-center gap-1 text-[11px] font-bold text-slate-700 dark:text-slate-300 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-700 transition-all cursor-pointer shadow-xs active:scale-95"
+                title="Minimize to small notification"
+              >
+                <Minimize2 size={12} />
+                <span>Minimize</span>
+              </button>
+            </div>
+          </div>
+
+          {/* DYNAMIC ROUTE CHANGE NOTIFICATION (Automatically alerts when bus/route changes) */}
+          <AnimatePresence>
+            {routeChangeAlert && (
+              <motion.div
+                initial={{ opacity: 0, y: -8, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -8, scale: 0.98 }}
+                className={`mb-3 p-3 rounded-2xl border text-xs flex items-start justify-between gap-2 shadow-sm ${
+                  routeChangeAlert.wasReset
+                    ? "bg-amber-50 dark:bg-amber-950/50 border-amber-200 dark:border-amber-800/60 text-amber-900 dark:text-amber-200"
+                    : "bg-teal-50 dark:bg-teal-950/50 border-teal-200 dark:border-teal-800/60 text-teal-900 dark:text-teal-200"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Zap size={15} className="shrink-0 text-teal-600 dark:text-teal-400" />
+                  <div>
+                    <p className="font-extrabold text-[11px] leading-snug">
+                      Route Switched to <span className="underline font-black">{routeChangeAlert.busCode}</span>
+                    </p>
+                    <p className="text-[10px] opacity-85 mt-0.5">
+                      {routeChangeAlert.wasReset
+                        ? "Previous alarm disarmed. All " + routeChangeAlert.stopsCount + " stops loaded — choose your new deboard stop below."
+                        : `${routeChangeAlert.stopsCount} official stops loaded along this corridor. Pick any stop to arm your 300m alarm.`}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setRouteChangeAlert(null)}
+                  className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 cursor-pointer"
+                >
+                  <X size={13} />
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* MAIN CONTENT: ARMED TRACKING vs. STOP CHOOSER */}
+          {isArmed && !hasTriggered ? (
+            /* STATE 3: Armed Alarm - Tracking Distance from the Moving Bus */
+            <div className="relative pt-1 space-y-3">
+              <div className="flex justify-between items-start">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center border border-teal-500/30">
+                    <Bus size={20} className="animate-pulse" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-black uppercase tracking-wider text-teal-600 dark:text-teal-400 flex items-center gap-1">
+                      <Radio size={10} className="animate-ping" /> Bus Approaching Deboard Stop:
+                    </span>
+                    <h4 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                      {selectedStop.name}
+                      {selectedStop.seq && (
+                        <span className="text-[9px] bg-slate-100 dark:bg-slate-800 text-slate-500 px-1.5 py-0.2 rounded font-bold">
+                          Stop #{selectedStop.seq}
+                        </span>
+                      )}
+                    </h4>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleDisarmAlarm}
+                  className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs font-bold px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-800 cursor-pointer transition-colors"
+                >
+                  Cancel Alarm
+                </button>
+              </div>
+
+              {/* Telemetry Metrics */}
+              <div className="grid grid-cols-3 gap-2 bg-slate-50 dark:bg-slate-800/60 p-3 rounded-2xl border border-slate-200 dark:border-slate-700/60 text-center">
+                <div>
+                  <p className="text-[9px] uppercase font-bold text-slate-400">Live Distance</p>
+                  <p className="text-base font-black text-slate-900 dark:text-white">
+                    {distanceMeters !== null ? `${distanceMeters}m` : "Calculating..."}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[9px] uppercase font-bold text-slate-400">Bus Velocity</p>
+                  <p className="text-base font-black text-teal-600 dark:text-teal-400">
+                    {speedKmh} km/h
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[9px] uppercase font-bold text-slate-400">Arrival ETA</p>
+                  <p className="text-base font-black text-slate-900 dark:text-white">
+                    {etaSec !== null ? `${Math.floor(etaSec / 60)}m ${etaSec % 60}s` : "--"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Geofence Progress to 300m threshold */}
+              <div className="w-full bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden border border-slate-200 dark:border-slate-700">
+                <motion.div
+                  className="h-full bg-teal-500"
+                  animate={{
+                    width: `${Math.min(
+                      100,
+                      Math.max(
+                        0,
+                        distanceMeters !== null ? 100 - (distanceMeters / 1200) * 100 : 20
+                      )
+                    )}%`,
+                  }}
+                  transition={{ ease: "linear", duration: 0.5 }}
+                />
+              </div>
+              <div className="flex justify-between items-center text-[9px] text-slate-400 font-bold px-0.5">
+                <span>En Route (1.2 km)</span>
+                <span className="text-teal-600 dark:text-teal-400 font-extrabold flex items-center gap-0.5">
+                  <Zap size={9} /> 300m Alarm Trigger Zone
+                </span>
+                <span>Deboard Exit</span>
+              </div>
+
+              {/* Change Deboard Stop Quick Action */}
+              <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center text-xs">
+                <span className="text-[10px] text-slate-500">Need a different stop on Route {busCode}?</span>
+                <button
+                  type="button"
+                  onClick={handleDisarmAlarm}
+                  className="text-teal-600 dark:text-teal-400 font-bold hover:underline cursor-pointer text-[11px]"
+                >
+                  Change Deboard Stop
+                </button>
+              </div>
+            </div>
+          ) : (
+            /* STOP CHOOSER: Displays all stops for chosen route with search filter & arming */
+            <div className="space-y-3">
+              {/* Search Filter for Route Stops */}
+              <div className="relative">
+                <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5">
+                  <Search size={14} className="text-slate-400 shrink-0" />
+                  <input
+                    type="text"
+                    value={stopFilter}
+                    onChange={(e) => setStopFilter(e.target.value)}
+                    placeholder={`Search ${activeStops.length} stops on Route ${busCode}...`}
+                    className="bg-transparent text-xs text-slate-900 dark:text-white outline-none w-full font-medium placeholder-slate-400"
+                  />
+                  {stopFilter && (
+                    <button
+                      type="button"
+                      onClick={() => setStopFilter("")}
+                      className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-bold px-1"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+                <div className="flex justify-between items-center mt-1 px-1 text-[9px] text-slate-400 font-bold uppercase tracking-wider">
+                  <span>
+                    {filteredStops.length} of {activeStops.length} Stops Available
+                  </span>
+                  <span>Tap stop to set as deboard target</span>
+                </div>
+              </div>
+
+              {/* Stops List (All Stops where commuter can choose to deboard) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-52 overflow-y-auto no-scrollbar pr-1 border-y border-slate-100 dark:border-slate-800 py-1.5">
+                {filteredStops.map((stop, idx) => {
+                  const isSelected = selectedStop.name === stop.name;
+                  const isStart = stop.seq === 1 || idx === 0;
+                  const isEnd = stop.seq === activeStops.length || idx === activeStops.length - 1;
+
+                  // Compute distance to stop if user GPS is available
+                  const distToStop = userCoords
+                    ? Math.round(haversineDistance(userCoords.lat, userCoords.lng, stop.lat, stop.lng))
+                    : null;
+
+                  return (
+                    <button
+                      key={`${stop.name}-${stop.seq ?? idx}`}
+                      type="button"
+                      onClick={() => setSelectedStop(stop)}
+                      className={`p-2.5 rounded-xl text-left border transition-all cursor-pointer flex items-center justify-between gap-2 ${
+                        isSelected
+                          ? "bg-teal-50 dark:bg-teal-950/70 border-teal-500 text-teal-900 dark:text-teal-100 shadow-xs ring-1 ring-teal-500/30"
+                          : "bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/80 text-slate-700 dark:text-slate-300 hover:border-teal-400"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span
+                          className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 ${
+                            isSelected
+                              ? "bg-teal-600 text-white"
+                              : isStart
+                              ? "bg-emerald-500 text-white"
+                              : isEnd
+                              ? "bg-rose-500 text-white"
+                              : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
+                          }`}
+                        >
+                          {stop.seq ?? idx + 1}
+                        </span>
+                        <div className="min-w-0">
+                          <p className="text-[11px] font-black truncate leading-tight">{stop.name}</p>
+                          <p className="text-[9px] text-slate-400 flex items-center gap-1 mt-0.5">
+                            {isStart ? "Origin" : isEnd ? "Terminal" : "Intermediate"}
+                            {distToStop !== null && (
+                              <span>
+                                • {distToStop >= 1000 ? `${(distToStop / 1000).toFixed(1)} km` : `${distToStop}m`}
+                              </span>
+                            )}
+                          </p>
+                        </div>
+                      </div>
+
+                      {isSelected && (
+                        <span className="shrink-0 bg-teal-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded flex items-center gap-1">
+                          <CheckCircle2 size={10} /> Target
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Selected Deboard Summary & Arm Action */}
+              <div className="bg-slate-50 dark:bg-slate-800/70 rounded-2xl p-3 border border-slate-200 dark:border-slate-700/80">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="min-w-0">
+                    <span className="text-[9px] font-black uppercase tracking-wider text-teal-600 dark:text-teal-400 block">
+                      Deboard Stop Target:
+                    </span>
+                    <h4 className="text-xs font-black text-slate-900 dark:text-white truncate">
+                      {selectedStop.name}
+                      {selectedStop.seq && (
+                        <span className="text-[10px] text-slate-400 font-bold ml-1">
+                          (Stop #{selectedStop.seq})
+                        </span>
+                      )}
+                    </h4>
+                  </div>
+                  {selectedStopDist !== null && (
+                    <div className="text-right shrink-0">
+                      <span className="text-[9px] uppercase font-bold text-slate-400 block">Est. Distance</span>
+                      <span className="text-xs font-extrabold text-slate-800 dark:text-slate-200">
+                        {selectedStopDist >= 1000
+                          ? `${(selectedStopDist / 1000).toFixed(1)} km`
+                          : `${selectedStopDist} m`}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Arm Button */}
+                <button
+                  type="button"
+                  onClick={handleArmAlarm}
+                  className="w-full bg-teal-600 hover:bg-teal-700 text-white font-extrabold py-2.5 px-3 rounded-xl text-xs active:scale-95 transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer"
+                >
+                  <BellRing size={14} /> Arm 300m Alarm for {selectedStop.name}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* SETTINGS & TELEMETRY CONTROLS SECTION */}
+          <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 flex items-center gap-1">
+                <SlidersHorizontal size={11} /> Proximity Settings & Testing
+              </span>
+              <span className="text-[9px] font-bold text-teal-600 dark:text-teal-400">
+                300m Trigger Threshold
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={handleToggleBusNavigation}
@@ -774,7 +924,31 @@ export default function ProximityChime({
                 <Navigation size={13} className={isSimulatingBus ? "animate-spin" : ""} />
                 {isSimulatingBus ? "Stop Simulation" : "Simulate In-Bus Approach"}
               </button>
+
+              <button
+                type="button"
+                onClick={handleTestChime}
+                className="py-2 px-3 rounded-xl text-[11px] font-bold border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-teal-400 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                title="Test chime sound and haptic vibration pattern"
+              >
+                <Volume2 size={13} className="text-teal-600 dark:text-teal-400" />
+                <span>Test 300m Chime & Vibration</span>
+              </button>
             </div>
+          </div>
+
+          {/* Collapse to Small Notification View Button */}
+          <div className="mt-3 pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center text-xs">
+            <span className="text-[10px] text-slate-400">
+              Auto-vibrates & chimes within 300m of deboard stop
+            </span>
+            <button
+              type="button"
+              onClick={() => setIsFullView(false)}
+              className="text-xs font-bold text-teal-600 dark:text-teal-400 hover:underline flex items-center gap-1 cursor-pointer py-1 px-1.5"
+            >
+              <ChevronUp size={14} /> Minimize View
+            </button>
           </div>
         </div>
       )}

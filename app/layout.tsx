@@ -36,7 +36,7 @@ export const metadata: Metadata = {
   },
 };
 
-import { ThemeProvider } from "next-themes";
+import { ThemeProvider } from "../components/ThemeProvider";
 import AuthGuard from "../components/AuthGuard";
 import MobileScrollLock from "../components/MobileScrollLock";
 
@@ -50,8 +50,11 @@ export default function RootLayout({
       <head>
         <link rel="stylesheet" href="/leaflet/leaflet.css" />
       </head>
-      <body className={`${inter.className} bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased`}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <body 
+        className={`${inter.className} bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased`}
+        suppressHydrationWarning
+      >
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange={false}>
           <AuthGuard>
             <PwaRegistry />
             <MobileScrollLock />

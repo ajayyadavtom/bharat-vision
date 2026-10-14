@@ -11,7 +11,7 @@ import { useAppStore } from "@/lib/store";
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { theme, setTheme, systemTheme } = useTheme();
+  const { theme, setTheme, systemTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const { privacyLiveLocation, setPrivacyLiveLocation, privacyCamera, setPrivacyCamera } = useAppStore();
   
@@ -178,22 +178,37 @@ export default function SettingsScreen() {
                   <p className="text-xs text-slate-500">Adjust the app's appearance</p>
                 </div>
               </div>
-              <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
+              <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl gap-0.5">
                 <button
+                  type="button"
                   onClick={() => setTheme("light")}
-                  className={`px-3 py-1 text-xs font-bold rounded-md transition-colors ${theme === "light" ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm" : "text-slate-500"}`}
+                  className={`px-3 py-1.5 text-xs font-extrabold rounded-lg transition-all cursor-pointer ${
+                    theme === "light"
+                      ? "bg-white text-slate-900 shadow-sm"
+                      : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
+                  }`}
                 >
                   Light
                 </button>
                 <button
+                  type="button"
                   onClick={() => setTheme("dark")}
-                  className={`px-3 py-1 text-xs font-bold rounded-md transition-colors ${theme === "dark" ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm" : "text-slate-500"}`}
+                  className={`px-3 py-1.5 text-xs font-extrabold rounded-lg transition-all cursor-pointer ${
+                    theme === "dark"
+                      ? "bg-slate-700 text-white shadow-sm"
+                      : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
+                  }`}
                 >
                   Dark
                 </button>
                 <button
+                  type="button"
                   onClick={() => setTheme("system")}
-                  className={`px-3 py-1 text-xs font-bold rounded-md transition-colors ${theme === "system" ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm" : "text-slate-500"}`}
+                  className={`px-3 py-1.5 text-xs font-extrabold rounded-lg transition-all cursor-pointer ${
+                    theme === "system"
+                      ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"
+                      : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
+                  }`}
                 >
                   System
                 </button>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   CreditCard,
   WifiOff,
@@ -21,6 +21,8 @@ import {
   Zap,
   CheckCircle2,
   ChevronRight,
+  GraduationCap,
+  Sparkles,
 } from "lucide-react";
 import QRCode from "react-qr-code";
 import { motion, AnimatePresence } from "framer-motion";
@@ -49,6 +51,8 @@ export default function PassScreen() {
     ncmcCard,
     unlinkNcmcCard,
     topUpNcmcCard,
+    isStudentVerified,
+    studentDetails,
   } = useAppStore();
   const cityData = getCityData(currentCity);
   const [activeTab, setActiveTab] = useState<"digital" | "ncmc">("ncmc");
@@ -79,7 +83,53 @@ export default function PassScreen() {
   const [isSecureBlocked, setIsSecureBlocked] = useState(false);
   const [deviceFingerprint, setDeviceFingerprint] = useState("BV-BINDING-PENDING");
 
-  const passCatalog = cityData.passes;
+  const effectivePassCatalog = useMemo(() => {
+    if (!isStudentVerified) return cityData.passes;
+
+    return [
+      {
+        name: "Student Monthly Concession Pass",
+        price: "₹250",
+        originalPrice: "₹1,200",
+        discount: "79% OFF",
+        type: "BMTC Student Subsidized",
+        color: "text-emerald-500",
+        isConcession: true,
+      },
+      {
+        name: "Student Daily Concession Pass",
+        price: "₹25",
+        originalPrice: "₹80",
+        discount: "69% OFF",
+        type: "BMTC Ordinary",
+        color: "text-emerald-500",
+        isConcession: true,
+      },
+      {
+        name: "Student Vajra AC Day Pass",
+        price: "₹45",
+        originalPrice: "₹140",
+        discount: "68% OFF",
+        type: "Volvo AC",
+        color: "text-indigo-400",
+        isConcession: true,
+      },
+      ...cityData.passes.map((p) => {
+        const raw = parseInt(p.price.replace(/[^0-9]/g, "")) || 100;
+        const discounted = Math.max(20, Math.round(raw * 0.25));
+        return {
+          ...p,
+          name: `${p.name} (Student)`,
+          price: `₹${discounted}`,
+          originalPrice: p.price,
+          discount: "75% OFF",
+          isConcession: true,
+        };
+      }),
+    ];
+  }, [cityData.passes, isStudentVerified]);
+
+  const passCatalog = effectivePassCatalog;
 
   useEffect(() => {
     setMounted(true);
@@ -774,6 +824,57 @@ export default function PassScreen() {
         </button>
       </div>
 
+      {/* Student Concession Status Banner */}
+      {isStudentVerified ? (
+        <div className="mb-4 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-500/40 rounded-2xl p-4 flex items-center justify-between shadow-xs">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-emerald-600 text-white rounded-xl shadow-xs">
+              <GraduationCap size={20} />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-black text-emerald-950 dark:text-emerald-100">
+                  Student Concession Applied
+                </span>
+                <span className="bg-emerald-600 text-white text-[9px] font-black px-1.5 py-0.2 rounded">
+                  75% OFF
+                </span>
+              </div>
+              <p className="text-[11px] text-emerald-700 dark:text-emerald-300 font-medium truncate max-w-[230px] mt-0.5">
+                {studentDetails?.college || "Verified Institutional ID"}
+              </p>
+            </div>
+          </div>
+          <Link 
+            href="/profile" 
+            className="text-[11px] text-emerald-700 dark:text-emerald-300 font-bold hover:underline shrink-0"
+          >
+            View ID
+          </Link>
+        </div>
+      ) : (
+        <Link 
+          href="/profile"
+          className="mb-4 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-500/40 rounded-2xl p-3.5 flex items-center justify-between group active:scale-98 transition-all shadow-xs"
+        >
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 rounded-xl">
+              <GraduationCap size={18} />
+            </div>
+            <div>
+              <p className="text-xs text-indigo-950 dark:text-indigo-100 font-extrabold flex items-center gap-1.5">
+                <span>Are you a student?</span>
+                <span className="text-[9px] bg-indigo-600 text-white font-black px-1.5 py-0.2 rounded">75% Concession</span>
+              </p>
+              <p className="text-[11px] text-indigo-600 dark:text-indigo-300 mt-0.5">
+                Verify your student ID in Profile to unlock 75% transit pass discounts.
+              </p>
+            </div>
+          </div>
+          <ChevronRight size={16} className="text-indigo-400 group-hover:translate-x-1 transition-transform shrink-0" />
+        </Link>
+      )}
+
       {/* Passes Catalog */}
       <div>
         <div className="flex justify-between items-center mb-3">
@@ -791,8 +892,8 @@ export default function PassScreen() {
         </div>
 
         <div className="flex flex-col gap-3">
-          {passCatalog.map((pass, index) => {
-            const isAc = pass.type === "AC";
+          {passCatalog.map((pass: any, index: number) => {
+            const isAc = pass.type === "AC" || (pass.type && pass.type.includes("AC"));
             return (
               <div
                 key={index}
@@ -836,28 +937,46 @@ export default function PassScreen() {
               >
                 <div className="flex items-center gap-3">
                   <div className="bg-slate-100 dark:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 group-hover:border-teal-500 transition-colors">
-                    <Ticket
-                      size={20}
-                      className={
-                        isAc
-                          ? "text-indigo-600 dark:text-indigo-400"
-                          : "text-teal-600 dark:text-teal-400"
-                      }
-                    />
+                    {pass.isConcession ? (
+                      <GraduationCap size={20} className="text-emerald-600 dark:text-emerald-400" />
+                    ) : (
+                      <Ticket
+                        size={20}
+                        className={
+                          isAc
+                            ? "text-indigo-600 dark:text-indigo-400"
+                            : "text-teal-600 dark:text-teal-400"
+                        }
+                      />
+                    )}
                   </div>
                   <div>
-                    <h4 className="text-sm font-bold text-slate-900 dark:text-white">{pass.name}</h4>
+                    <div className="flex items-center gap-1.5">
+                      <h4 className="text-sm font-bold text-slate-900 dark:text-white">{pass.name}</h4>
+                      {pass.discount && (
+                        <span className="text-[9px] font-black bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 px-1.5 py-0.2 rounded">
+                          {pass.discount}
+                        </span>
+                      )}
+                    </div>
                     <p className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider font-semibold">
                       {activeTab === "ncmc" ? "Physical Chip Pass" : pass.type}
                     </p>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  className="bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 text-xs font-extrabold px-3 py-1.5 rounded-xl border border-emerald-300 dark:border-emerald-800/60 group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-xs"
-                >
-                  {pass.price}
-                </button>
+                <div className="flex flex-col items-end">
+                  {pass.originalPrice && (
+                    <span className="text-[10px] line-through text-slate-400 font-bold">
+                      {pass.originalPrice}
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    className="bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 text-xs font-extrabold px-3 py-1.5 rounded-xl border border-emerald-300 dark:border-emerald-800/60 group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-xs"
+                  >
+                    {pass.price}
+                  </button>
+                </div>
               </div>
             );
           })}

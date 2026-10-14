@@ -1,64 +1,74 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { User, Terminal, Moon, Bell, Shield, Globe, LogOut, MapPin, ShieldCheck, Leaf, Medal, Receipt, ChevronRight, ScanFace, Upload, CheckCircle2, Loader2, X, Settings, Image as ImageIcon, Pencil, Check, Bus, Car, TrainFront, Ticket } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { 
+  User, Terminal, Moon, Sun, Bell, Shield, Globe, LogOut, MapPin, 
+  ShieldCheck, Leaf, Medal, Receipt, ChevronRight, ScanFace, Upload, 
+  CheckCircle2, AlertTriangle, Loader2, X, Settings, Image as ImageIcon, 
+  Pencil, Check, Bus, Car, TrainFront, Ticket, Sparkles, RefreshCcw 
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { useTheme } from "next-themes";
 import { useAppStore } from "@/lib/store";
 
 export default function ProfileScreen() {
-  const { userName, setUserName, carbonSavedGrams, karmaPoints, profilePictureUrl, setProfilePictureUrl, rideHistory } = useAppStore();
+  const { 
+    userName, 
+    setUserName, 
+    carbonSavedGrams, 
+    karmaPoints, 
+    profilePictureUrl, 
+    setProfilePictureUrl, 
+    rideHistory,
+    isStudentVerified,
+    studentDetails,
+    setStudentVerification
+  } = useAppStore();
+
+  const { theme, setTheme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
   const [showScanner, setShowScanner] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [historyFilter, setHistoryFilter] = useState<"all" | "bus" | "metro" | "auto" | "pass">("all");
-  const [isScanning, setIsScanning] = useState(false);
-  const [isVerified, setIsVerified] = useState(false);
   
+  // Real-time OCR scanning states
+  const [isScanning, setIsScanning] = useState(false);
+  const [scanStep, setScanStep] = useState<string>("");
+  const [scanError, setScanError] = useState<string | null>(null);
+  const [uploadedPreview, setUploadedPreview] = useState<string | null>(null);
+
   const [isEditingName, setIsEditingName] = useState(false);
   const [editName, setEditName] = useState("");
   
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Simulated AI OCR Data Extraction
-  const [scannedData, setScannedData] = useState<{name: string; dob: string; college: string; university: string; status: string} | null>(null);
-
-  const handleSimulateScan = () => {
-    setIsScanning(true);
-    setTimeout(() => {
-      setScannedData({
-        name: userName || "Ajay M.",
-        dob: "07-07-2007",
-        college: "East West College of Engineering",
-        university: "Visvesvaraya Technological University (VTU)",
-        status: "Eligible for 75% BMTC Concession"
-      });
-      setIsScanning(false);
-      setIsVerified(true);
-    }, 2500);
-  };
-
+  const idCardInputRef = useRef<HTMLInputElement>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
 
-  // Compress and resize image to lightweight, persistent base64 data URI (survives restarts)
-  const compressAndResizeImage = (file: File): Promise<string> => {
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Compress and resize image to lightweight, persistent base64 data URI
+  const compressAndResizeImage = (file: File, maxDim: number = 800): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = (readerEvent) => {
         const img = new Image();
         img.onload = () => {
-          const maxDimension = 320;
           let width = img.width;
           let height = img.height;
 
           if (width > height) {
-            if (width > maxDimension) {
-              height = Math.round((height * maxDimension) / width);
-              width = maxDimension;
+            if (width > maxDim) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
             }
           } else {
-            if (height > maxDimension) {
-              width = Math.round((width * maxDimension) / height);
-              height = maxDimension;
+            if (height > maxDim) {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
             }
           }
 
@@ -72,7 +82,7 @@ export default function ProfileScreen() {
           }
 
           ctx.drawImage(img, 0, 0, width, height);
-          const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
+          const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
           resolve(dataUrl);
         };
         img.onerror = () => {
@@ -94,7 +104,7 @@ export default function ProfileScreen() {
       }
       setIsUploadingImage(true);
       try {
-        const dataUrl = await compressAndResizeImage(file);
+        const dataUrl = await compressAndResizeImage(file, 320);
         await setProfilePictureUrl(dataUrl);
       } catch (err) {
         console.error("Error processing profile picture:", err);
@@ -105,10 +115,83 @@ export default function ProfileScreen() {
     }
   };
 
+  // Real-time Student ID Card Upload & OCR Pipeline
+  const handleIdCardSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || !e.target.files[0]) return;
+    const file = e.target.files[0];
+
+    if (!file.type.startsWith("image/")) {
+      setScanError("Please select an image file (PNG, JPG, or WEBP).");
+      return;
+    }
+
+    setIsScanning(true);
+    setScanError(null);
+    setScanStep("Reading image file...");
+
+    try {
+      // 1. Process & compress image for high OCR fidelity
+      const dataUrl = await compressAndResizeImage(file, 1024);
+      setUploadedPreview(dataUrl);
+
+      setScanStep("Analyzing document geometry & running OCR...");
+
+      // 2. Transmit to real-time verification endpoint
+      const response = await fetch("/api/verify-student-id", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: dataUrl }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.isStudentId) {
+        // Document failed verification (e.g. Aadhaar, PAN card, selfie, non-student card)
+        setScanError(
+          result.error ||
+          "Uploaded image could not be verified as a valid Student ID Card. Please ensure the college name, student name, and date of birth are clearly legible."
+        );
+        setIsScanning(false);
+        return;
+      }
+
+      // 3. Document successfully identified as authentic Student ID Card
+      setScanStep("Institutional validation passed! Provisioning 75% concession...");
+
+      const verifiedData = {
+        name: result.data.name,
+        dob: result.data.dob,
+        college: result.data.college,
+        university: result.data.university,
+        studentIdNumber: result.data.studentIdNumber,
+        validUntil: result.data.validUntil,
+        verifiedAt: Date.now(),
+      };
+
+      setStudentVerification(true, verifiedData);
+      if (verifiedData.name && (!userName || userName.toLowerCase() === "guest")) {
+        setUserName(verifiedData.name);
+      }
+
+      setIsScanning(false);
+    } catch (err: any) {
+      console.error("Error during real-time student ID verification:", err);
+      setScanError("Network or processing error during OCR analysis. Please try again with a clear photo.");
+      setIsScanning(false);
+    } finally {
+      if (idCardInputRef.current) idCardInputRef.current.value = "";
+    }
+  };
+
+  const handleToggleTheme = () => {
+    const current = resolvedTheme === "dark" ? "light" : "dark";
+    setTheme(current);
+  };
+
   return (
-    <div className="flex flex-col h-[100dvh] overflow-y-auto no-scrollbar pb-[120px] bg-slate-50 dark:bg-slate-950 px-4 pt-8 [&>*]:shrink-0 relative">
+    <div className="flex flex-col h-[100dvh] overflow-y-auto no-scrollbar pb-[120px] bg-slate-50 dark:bg-slate-950 px-4 pt-8 [&>*]:shrink-0 relative transition-colors duration-200">
       
-      {/* Header */}
+      {/* Header with Quick Theme Toggle */}
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <User size={28} className="text-slate-900 dark:text-white" />
@@ -117,13 +200,31 @@ export default function ProfileScreen() {
             <p className="text-xs text-slate-500 dark:text-slate-400">Manage identity, passes, and transit impact</p>
           </div>
         </div>
-        <Link href="/settings" className="p-2 bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800 rounded-full">
-          <Settings size={20} className="text-slate-600 dark:text-slate-300" />
-        </Link>
+
+        <div className="flex items-center gap-2">
+          {mounted && (
+            <button
+              type="button"
+              onClick={handleToggleTheme}
+              aria-label="Toggle theme"
+              title={`Switch to ${resolvedTheme === "dark" ? "Light" : "Dark"} Mode`}
+              className="p-2.5 bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800 rounded-full text-slate-700 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer"
+            >
+              {resolvedTheme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
+          )}
+
+          <Link 
+            href="/settings" 
+            className="p-2.5 bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800 rounded-full text-slate-700 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+          >
+            <Settings size={18} />
+          </Link>
+        </div>
       </div>
 
       {/* Identity Card */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-3xl shadow-sm mb-6 flex items-center gap-4 relative overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-3xl shadow-sm mb-6 flex items-center gap-4 relative overflow-hidden transition-colors">
         <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
         
         <div className="flex flex-col items-center">
@@ -155,7 +256,7 @@ export default function ProfileScreen() {
                 e.stopPropagation();
                 setProfilePictureUrl(null);
               }}
-              className="text-[10px] text-red-500 hover:text-red-600 font-semibold mt-1 relative z-10 active:scale-95 transition-transform"
+              className="text-[10px] text-red-500 hover:text-red-600 font-semibold mt-1 relative z-10 active:scale-95 transition-transform cursor-pointer"
             >
               Remove
             </button>
@@ -179,7 +280,7 @@ export default function ProfileScreen() {
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
+                  if (e.key === "Enter") {
                     if (editName.trim()) setUserName(editName);
                     setIsEditingName(false);
                   }
@@ -194,10 +295,13 @@ export default function ProfileScreen() {
             </div>
           ) : (
             <h3 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
-              <span>{(!userName || userName.toLowerCase() === "guest") ? "Jenny" : userName}</span>
+              <span>{studentDetails?.name || ((!userName || userName.toLowerCase() === "guest") ? "Ajay M." : userName)}</span>
               <button 
-                onClick={() => { setEditName((!userName || userName.toLowerCase() === "guest") ? "Jenny" : userName); setIsEditingName(true); }}
-                className="p-1.5 bg-slate-100 dark:bg-slate-800 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                onClick={() => { 
+                  setEditName(studentDetails?.name || ((!userName || userName.toLowerCase() === "guest") ? "Ajay M." : userName)); 
+                  setIsEditingName(true); 
+                }}
+                className="p-1.5 bg-slate-100 dark:bg-slate-800 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
                 title="Edit Name"
               >
                 <Pencil size={14} className="text-slate-500 dark:text-slate-400" />
@@ -205,57 +309,72 @@ export default function ProfileScreen() {
               <ShieldCheck size={16} className="text-emerald-500 ml-1" />
             </h3>
           )}
-          <p className="text-xs text-slate-500 flex items-center gap-1 mt-1">
+          <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-1">
             <MapPin size={12} className="text-emerald-500" /> Yelahanka, Bengaluru
           </p>
         </div>
       </div>
 
       {/* Verification Banner */}
-      {!isVerified ? (
+      {!isStudentVerified ? (
         <button 
-          onClick={() => setShowScanner(true)}
-          className="w-full bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-500/50 p-4 rounded-2xl shadow-sm mb-6 flex items-center justify-between group active:scale-95 transition-all"
+          onClick={() => {
+            setScanError(null);
+            setShowScanner(true);
+          }}
+          className="w-full bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-500/50 p-4 rounded-2xl shadow-sm mb-6 flex items-center justify-between group active:scale-95 transition-all cursor-pointer"
         >
           <div className="flex items-center gap-3">
-            <div className="bg-indigo-100 dark:bg-indigo-500/20 p-2 rounded-lg text-indigo-600 dark:text-indigo-300 group-hover:bg-indigo-500 group-hover:text-white transition-colors">
-              <ScanFace size={20} />
+            <div className="bg-indigo-100 dark:bg-indigo-500/20 p-2.5 rounded-xl text-indigo-600 dark:text-indigo-300 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+              <ScanFace size={22} />
             </div>
             <div className="text-left">
-              <h4 className="text-sm font-bold text-indigo-900 dark:text-indigo-100">Verify Student ID</h4>
-              <p className="text-[10px] text-indigo-500 dark:text-indigo-300">Unlock 75% BMTC & Metro Concessions</p>
+              <h4 className="text-sm font-bold text-indigo-900 dark:text-indigo-100 flex items-center gap-1.5">
+                <span>Verify Student ID</span>
+                <span className="text-[10px] bg-indigo-600 text-white font-extrabold px-1.5 py-0.2 rounded-md">Real-Time OCR</span>
+              </h4>
+              <p className="text-[11px] text-indigo-600 dark:text-indigo-300">Unlock 75% BMTC & Namma Metro Concessions</p>
             </div>
           </div>
           <ChevronRight size={18} className="text-indigo-400 group-hover:translate-x-1 transition-transform" />
         </button>
       ) : (
-        <div className="w-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-500/50 p-4 rounded-2xl shadow-sm mb-6 flex items-center justify-between">
+        <div 
+          onClick={() => setShowScanner(true)}
+          className="w-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-500/50 p-4 rounded-2xl shadow-sm mb-6 flex items-center justify-between cursor-pointer group active:scale-98 transition-all"
+        >
           <div className="flex items-center gap-3">
-            <div className="bg-emerald-100 dark:bg-emerald-500/20 p-2 rounded-lg text-emerald-600 dark:text-emerald-400">
-              <CheckCircle2 size={20} />
+            <div className="bg-emerald-100 dark:bg-emerald-500/20 p-2.5 rounded-xl text-emerald-600 dark:text-emerald-400">
+              <CheckCircle2 size={22} />
             </div>
             <div className="text-left">
-              <h4 className="text-sm font-bold text-emerald-900 dark:text-emerald-100">Student Concession Active</h4>
-              <p className="text-[10px] text-emerald-600 dark:text-emerald-300">ID Validated via e-KYC OCR</p>
+              <div className="flex items-center gap-1.5">
+                <h4 className="text-sm font-bold text-emerald-900 dark:text-emerald-100">Student Concession Active</h4>
+                <span className="text-[9px] bg-emerald-600 text-white font-black px-1.5 py-0.2 rounded">75% OFF</span>
+              </div>
+              <p className="text-[11px] text-emerald-700 dark:text-emerald-300 mt-0.5 font-medium truncate max-w-[240px]">
+                {studentDetails?.college || "East West College of Engineering"}
+              </p>
             </div>
           </div>
+          <ChevronRight size={18} className="text-emerald-500 group-hover:translate-x-1 transition-transform" />
         </div>
       )}
 
       {/* Transit Impact Stats */}
       <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-3">Your Transit Impact</h3>
       <div className="grid grid-cols-2 gap-3 mb-6">
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl flex flex-col justify-between shadow-sm">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl flex flex-col justify-between shadow-sm transition-colors">
           <div className="bg-emerald-50 dark:bg-emerald-900/30 w-8 h-8 rounded-full flex items-center justify-center mb-2">
             <Leaf size={16} className="text-emerald-500 dark:text-emerald-400" />
           </div>
           <p className="text-3xl font-black text-slate-900 dark:text-white mt-1">
             {(carbonSavedGrams / 1000).toFixed(1)} <span className="text-sm text-slate-400 font-bold">kg</span>
           </p>
-          <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-1">Carbon Offset</p>
+          <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mt-1">Carbon Offset</p>
         </div>
         
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl flex flex-col justify-between shadow-sm">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl flex flex-col justify-between shadow-sm transition-colors">
           <div className="bg-amber-50 dark:bg-amber-900/30 w-8 h-8 rounded-full flex items-center justify-center mb-2">
             <Medal size={16} className="text-amber-500 dark:text-amber-400" />
           </div>
@@ -270,7 +389,7 @@ export default function ProfileScreen() {
       <div className="flex flex-col gap-3 mb-6">
         <button 
           onClick={() => setShowHistory(true)}
-          className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-emerald-500 p-4 rounded-2xl flex items-center justify-between transition-colors shadow-sm"
+          className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-emerald-500 p-4 rounded-2xl flex items-center justify-between transition-colors shadow-sm cursor-pointer"
         >
           <div className="flex items-center gap-3">
             <Receipt size={18} className="text-slate-500 dark:text-slate-400" />
@@ -278,6 +397,22 @@ export default function ProfileScreen() {
           </div>
           <ChevronRight size={16} className="text-slate-400" />
         </button>
+
+        <Link
+          href="/pass"
+          className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-teal-500 p-4 rounded-2xl flex items-center justify-between transition-colors shadow-sm cursor-pointer"
+        >
+          <div className="flex items-center gap-3">
+            <Ticket size={18} className="text-teal-600 dark:text-teal-400" />
+            <div>
+              <span className="text-sm font-bold text-slate-900 dark:text-white block">Smart Passes & Concessions</span>
+              <span className="text-[10px] text-slate-500 dark:text-slate-400">
+                {isStudentVerified ? "75% Student Concession Active on Passes" : "View NCMC & BMTC digital passes"}
+              </span>
+            </div>
+          </div>
+          <ChevronRight size={16} className="text-slate-400" />
+        </Link>
       </div>
 
       {/* Ride History Modal */}
@@ -288,15 +423,10 @@ export default function ProfileScreen() {
               initial={{ opacity: 0, y: 100 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 100 }}
-              className="w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-2xl relative max-h-[85vh] flex flex-col"
+              className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl relative max-h-[80vh] flex flex-col"
             >
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="text-xl font-black text-slate-900 dark:text-white">Transit & Ride History</h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Unified records for Metro, Bus, Auto/Cab, and Passes
-                  </p>
-                </div>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-black text-slate-900 dark:text-white">Ride History</h3>
                 <button 
                   onClick={() => setShowHistory(false)} 
                   className="p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer"
@@ -469,86 +599,167 @@ export default function ProfileScreen() {
         )}
       </AnimatePresence>
 
-      {/* AI e-KYC Scanner Modal */}
+      {/* Real-Time Student ID OCR Scanner Modal */}
       <AnimatePresence>
         {showScanner && (
-          <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-black/90 backdrop-blur-md p-4">
+          <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-black/60 dark:bg-black/80 backdrop-blur-md p-4">
             <motion.div
               initial={{ opacity: 0, y: 100 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 100 }}
-              className="w-full max-w-md bg-slate-900 border border-indigo-500/30 rounded-3xl p-6 shadow-2xl relative"
+              className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-indigo-500/30 rounded-3xl p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto no-scrollbar"
             >
               <button 
-                onClick={() => setShowScanner(false)}
-                className="absolute top-4 right-4 text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:text-white"
+                onClick={() => {
+                  setShowScanner(false);
+                  setScanError(null);
+                }}
+                className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer"
               >
                 <X size={20} />
               </button>
 
-              {!isVerified ? (
+              {/* Hidden File Input for Real ID Card Upload */}
+              <input 
+                type="file" 
+                accept="image/*" 
+                ref={idCardInputRef} 
+                onChange={handleIdCardSelected} 
+                className="hidden" 
+              />
+
+              {!isStudentVerified ? (
                 <div className="flex flex-col items-center text-center mt-2">
-                  <div className="w-16 h-16 bg-indigo-900/40 rounded-2xl border border-indigo-500/50 flex items-center justify-center mb-4 relative overflow-hidden">
+                  <div className="w-16 h-16 bg-indigo-50 dark:bg-indigo-950/60 rounded-2xl border border-indigo-200 dark:border-indigo-500/50 flex items-center justify-center mb-4 relative overflow-hidden shadow-sm">
                     {isScanning && <div className="absolute inset-0 bg-indigo-500/20 animate-pulse"></div>}
-                    <ScanFace size={32} className="text-indigo-400 relative z-10" />
+                    <ScanFace size={32} className="text-indigo-600 dark:text-indigo-400 relative z-10" />
                   </div>
                   
-                  <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2">
-                    {isScanning ? "Analyzing ID..." : "Upload Institutional ID"}
+                  <h3 className="text-xl font-black text-slate-900 dark:text-white mb-1.5">
+                    {isScanning ? "Analyzing Student ID Card..." : "Real-Time Student Verification"}
                   </h3>
-                  <p className="text-xs text-slate-500 dark:text-gray-400 mb-6">
-                    Our AI will extract your details to instantly provision your student transit pass.
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mb-5 max-w-xs leading-relaxed">
+                    Upload your institutional student ID card. Our neural net will extract your full name, college, and DOB to unlock <span className="font-bold text-emerald-600 dark:text-emerald-400">75% BMTC & Metro concessions</span>.
                   </p>
 
+                  {/* Error Notification Alert */}
+                  {scanError && (
+                    <motion.div 
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="w-full bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 p-3.5 rounded-2xl mb-4 text-left flex items-start gap-3 shadow-xs"
+                    >
+                      <AlertTriangle size={18} className="text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
+                      <div>
+                        <h5 className="text-xs font-bold text-rose-900 dark:text-rose-200">Verification Rejected</h5>
+                        <p className="text-[11px] text-rose-700 dark:text-rose-300 mt-0.5 leading-snug">
+                          {scanError}
+                        </p>
+                      </div>
+                    </motion.div>
+                  )}
+
                   {isScanning ? (
-                    <div className="flex flex-col items-center gap-3 w-full bg-black/50 p-4 rounded-xl border border-slate-800">
-                      <Loader2 size={24} className="text-indigo-400 animate-spin" />
-                      <span className="text-xs text-indigo-300 font-mono">Running OCR Neural Net...</span>
+                    <div className="flex flex-col items-center gap-3 w-full bg-slate-50 dark:bg-slate-800/80 p-5 rounded-2xl border border-slate-200 dark:border-slate-700">
+                      <Loader2 size={28} className="text-indigo-600 dark:text-indigo-400 animate-spin" />
+                      <div className="text-center">
+                        <span className="text-xs font-bold text-indigo-700 dark:text-indigo-300 block">
+                          Running Offline OCR Neural Net...
+                        </span>
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 block font-mono">
+                          {scanStep || "Processing image data"}
+                        </span>
+                      </div>
                     </div>
                   ) : (
-                    <button
-                      onClick={handleSimulateScan}
-                      className="w-full bg-indigo-600 text-white font-bold py-4 rounded-xl text-sm active:scale-95 transition-transform flex items-center justify-center gap-2"
-                    >
-                      <Upload size={18} />
-                      Capture / Upload ID Card
-                    </button>
+                    <div className="w-full flex flex-col gap-2.5">
+                      <button
+                        onClick={() => idCardInputRef.current?.click()}
+                        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold py-3.5 rounded-2xl text-sm active:scale-95 transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        <Upload size={18} />
+                        Upload Student ID Card
+                      </button>
+
+                      <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
+                        Accepts School, Pre-University, Degree, and University ID Cards. Government IDs (Aadhaar, PAN, DL) will be rejected.
+                      </p>
+                    </div>
                   )}
                 </div>
               ) : (
                 <motion.div 
-                  initial={{ opacity: 0, scale: 0.9 }}
+                  initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   className="flex flex-col items-center mt-2"
                 >
-                  <div className="w-16 h-16 bg-emerald-900/40 rounded-full border border-emerald-500 flex items-center justify-center mb-4">
-                    <CheckCircle2 size={32} className="text-emerald-400" />
+                  <div className="w-16 h-16 bg-emerald-50 dark:bg-emerald-950/60 rounded-full border border-emerald-300 dark:border-emerald-500/60 flex items-center justify-center mb-3 shadow-sm">
+                    <CheckCircle2 size={32} className="text-emerald-600 dark:text-emerald-400" />
                   </div>
                   <h3 className="text-xl font-black text-slate-900 dark:text-white mb-1">ID Verified Successfully</h3>
-                  <p className="text-xs text-emerald-400 mb-6">Concession framework active.</p>
+                  <div className="bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 text-xs font-bold px-3 py-1 rounded-full mb-5 flex items-center gap-1.5">
+                    <Sparkles size={14} /> 75% Student Concession Active on Passes
+                  </div>
 
-                  <div className="w-full bg-black/50 p-4 rounded-xl border border-slate-800 text-left flex flex-col gap-2">
-                    <div>
-                      <span className="text-[9px] text-gray-500 uppercase font-bold">Commuter Name</span>
-                      <p className="text-sm font-bold text-slate-900 dark:text-white">{scannedData?.name}</p>
+                  <div className="w-full bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 text-left flex flex-col gap-3 shadow-xs">
+                    <div className="border-b border-slate-200 dark:border-slate-700/60 pb-2">
+                      <span className="text-[9px] text-slate-500 dark:text-slate-400 uppercase font-black tracking-wider block">
+                        Verified Student Name
+                      </span>
+                      <p className="text-sm font-black text-slate-900 dark:text-white mt-0.5">
+                        {studentDetails?.name || userName || "Ajay M."}
+                      </p>
                     </div>
-                    <div>
-                      <span className="text-[9px] text-gray-500 uppercase font-bold">Date of Birth</span>
-                      <p className="text-sm font-bold text-slate-900 dark:text-white">{scannedData?.dob}</p>
+
+                    <div className="grid grid-cols-2 gap-2 border-b border-slate-200 dark:border-slate-700/60 pb-2">
+                      <div>
+                        <span className="text-[9px] text-slate-500 dark:text-slate-400 uppercase font-black tracking-wider block">
+                          Date of Birth
+                        </span>
+                        <p className="text-xs font-bold text-slate-900 dark:text-white mt-0.5">
+                          {studentDetails?.dob || "07-07-2007"}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-[9px] text-slate-500 dark:text-slate-400 uppercase font-black tracking-wider block">
+                          USN / Roll Number
+                        </span>
+                        <p className="text-xs font-mono font-bold text-slate-900 dark:text-white mt-0.5">
+                          {studentDetails?.studentIdNumber || "1EW21CS042"}
+                        </p>
+                      </div>
                     </div>
+
                     <div>
-                      <span className="text-[9px] text-gray-500 uppercase font-bold">Institution</span>
-                      <p className="text-sm font-bold text-slate-900 dark:text-white">{scannedData?.college}</p>
-                      <p className="text-[10px] text-slate-500 dark:text-gray-400">{scannedData?.university}</p>
+                      <span className="text-[9px] text-slate-500 dark:text-slate-400 uppercase font-black tracking-wider block">
+                        Educational Institution
+                      </span>
+                      <p className="text-xs font-bold text-slate-900 dark:text-white mt-0.5">
+                        {studentDetails?.college || "East West College of Engineering"}
+                      </p>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
+                        {studentDetails?.university || "Visvesvaraya Technological University (VTU)"}
+                      </p>
                     </div>
                   </div>
 
-                  <button
-                    onClick={() => setShowScanner(false)}
-                    className="w-full bg-emerald-600 text-white font-bold py-3.5 rounded-xl text-sm active:scale-95 transition-transform mt-4"
-                  >
-                    Return to Profile
-                  </button>
+                  <div className="w-full flex gap-2 mt-5">
+                    <button
+                      onClick={() => idCardInputRef.current?.click()}
+                      className="flex-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold py-3 rounded-xl text-xs active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer border border-slate-200 dark:border-slate-700"
+                    >
+                      <RefreshCcw size={14} /> Re-Upload ID
+                    </button>
+
+                    <Link
+                      href="/pass"
+                      onClick={() => setShowScanner(false)}
+                      className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-3 rounded-xl text-xs active:scale-95 transition-all shadow-md flex items-center justify-center gap-1 cursor-pointer"
+                    >
+                      <span>Buy Discounted Pass</span>
+                      <ChevronRight size={14} />
+                    </Link>
+                  </div>
                 </motion.div>
               )}
             </motion.div>

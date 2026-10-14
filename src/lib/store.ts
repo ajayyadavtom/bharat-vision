@@ -340,6 +340,15 @@ export const useAppStore = create<AppState>()(
           lastSyncedAt: Date.now()
         }
       })),
+
+      // Student Concession Verification
+      isStudentVerified: false,
+      studentDetails: null,
+      setStudentVerification: (isVerified, details = null) => set((state) => ({
+        isStudentVerified: isVerified,
+        studentDetails: details,
+        ...(details?.name ? { userName: details.name } : {})
+      })),
       
       setCurrentCity: (cityId: string) => {
         set({ currentCity: cityId });
