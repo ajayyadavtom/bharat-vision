@@ -287,39 +287,182 @@ export default function ProfileScreen() {
               initial={{ opacity: 0, y: 100 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 100 }}
-              className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl relative max-h-[80vh] flex flex-col"
+              className="w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-2xl relative max-h-[85vh] flex flex-col"
             >
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-black text-slate-900 dark:text-white">Ride History</h3>
-                <button onClick={() => setShowHistory(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-900 dark:text-white">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h3 className="text-xl font-black text-slate-900 dark:text-white">Transit & Ride History</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Unified records for Metro, Bus, Auto/Cab, and Passes
+                  </p>
+                </div>
+                <button 
+                  onClick={() => setShowHistory(false)} 
+                  className="p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer"
+                  title="Close history"
+                >
                   <X size={20} />
                 </button>
               </div>
 
-              <div className="overflow-y-auto no-scrollbar flex-1">
-                {rideHistory.length === 0 ? (
-                  <div className="text-center py-10 text-slate-500">
-                    <Receipt size={48} className="mx-auto mb-3 opacity-20" />
-                    <p className="font-bold">No rides yet.</p>
-                    <p className="text-xs">Book a cab or pass to see history.</p>
-                  </div>
-                ) : (
-                  <div className="flex flex-col gap-3">
-                    {rideHistory.map((ride, idx) => (
-                      <div key={idx} className="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 flex justify-between items-center">
-                        <div>
-                          <p className="font-bold text-sm text-slate-900 dark:text-white">{ride.type}</p>
-                          <p className="text-xs text-slate-500">{ride.network} • Driver: {ride.driver}</p>
+              {/* Mode Filter Tabs */}
+              {(() => {
+                const historyList = rideHistory || [];
+                const busCount = historyList.filter((r) => r.category === "bus").length;
+                const metroCount = historyList.filter((r) => r.category === "metro").length;
+                const autoCount = historyList.filter((r) => r.category === "auto").length;
+                const passCount = historyList.filter((r) => r.category === "pass").length;
+
+                const filterButtons: { key: "all" | "metro" | "bus" | "auto" | "pass"; label: string; count: number }[] = [
+                  { key: "all", label: "All", count: historyList.length },
+                  { key: "metro", label: "Metro", count: metroCount },
+                  { key: "bus", label: "Bus", count: busCount },
+                  { key: "auto", label: "Auto/Cab", count: autoCount },
+                  { key: "pass", label: "Passes", count: passCount },
+                ];
+
+                const filtered = historyList.filter((ride) => {
+                  if (historyFilter === "all") return true;
+                  return ride.category === historyFilter;
+                });
+
+                return (
+                  <>
+                    <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-3 mb-2 border-b border-slate-100 dark:border-slate-800">
+                      {filterButtons.map((btn) => (
+                        <button
+                          key={btn.key}
+                          type="button"
+                          onClick={() => setHistoryFilter(btn.key)}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer border flex items-center gap-1.5 ${
+                            historyFilter === btn.key
+                              ? "bg-slate-900 text-white dark:bg-white dark:text-slate-950 border-slate-900 dark:border-white shadow-xs"
+                              : "bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-slate-400"
+                          }`}
+                        >
+                          <span>{btn.label}</span>
+                          <span
+                            className={`text-[9px] px-1.5 py-0.2 rounded font-mono ${
+                              historyFilter === btn.key
+                                ? "bg-white/20 text-white dark:bg-black/20 dark:text-slate-900 font-bold"
+                                : "bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400"
+                            }`}
+                          >
+                            {btn.count}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="overflow-y-auto no-scrollbar flex-1 pr-0.5 space-y-2.5">
+                      {filtered.length === 0 ? (
+                        <div className="text-center py-12 text-slate-400">
+                          <Receipt size={40} className="mx-auto mb-2 opacity-30" />
+                          <p className="font-bold text-sm text-slate-700 dark:text-slate-300">
+                            No {historyFilter === "all" ? "" : historyFilter} records found
+                          </p>
+                          <p className="text-xs text-slate-400 mt-0.5">
+                            Purchased tickets and booked rides will be automatically tracked here.
+                          </p>
                         </div>
-                        <div className="text-right">
-                          <p className="font-black text-emerald-600 dark:text-emerald-400">₹{ride.fare}</p>
-                          <p className="text-[10px] text-slate-400">Paid</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+                      ) : (
+                        filtered.map((ride, idx) => {
+                          const isMetro = ride.category === "metro";
+                          const isBus = ride.category === "bus";
+                          const isAuto = ride.category === "auto";
+                          const isPass = ride.category === "pass";
+
+                          const iconBg = isMetro
+                            ? "bg-purple-100 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400"
+                            : isBus
+                            ? "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400"
+                            : isAuto
+                            ? "bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400"
+                            : "bg-teal-100 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400";
+
+                          return (
+                            <div
+                              key={ride.id || idx}
+                              className="p-3.5 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600 transition-all flex items-start justify-between gap-3 shadow-xs"
+                            >
+                              <div className="flex items-start gap-3 min-w-0">
+                                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${iconBg}`}>
+                                  {isMetro && <TrainFront size={18} />}
+                                  {isBus && <Bus size={18} />}
+                                  {isAuto && <Car size={18} />}
+                                  {isPass && <Ticket size={18} />}
+                                </div>
+
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-1.5 flex-wrap">
+                                    <h4 className="font-bold text-sm text-slate-900 dark:text-white truncate">
+                                      {ride.type}
+                                    </h4>
+                                    {ride.quantity && ride.quantity > 1 && (
+                                      <span className="text-[9px] font-black bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300 px-1.5 py-0.2 rounded">
+                                        {ride.quantity} Pax
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+                                    {ride.network}
+                                  </p>
+
+                                  {(ride.origin || ride.destination || ride.route) && (
+                                    <p className="text-xs font-semibold text-slate-700 dark:text-slate-300 mt-1 truncate">
+                                      {ride.origin && ride.destination
+                                        ? `${ride.origin} ➔ ${ride.destination}`
+                                        : ride.route}
+                                    </p>
+                                  )}
+
+                                  {ride.driver && (
+                                    <p className="text-[10px] text-amber-700 dark:text-amber-400 font-semibold mt-0.5">
+                                      Driver: {ride.driver}
+                                    </p>
+                                  )}
+
+                                  <div className="flex items-center gap-2 mt-2 flex-wrap">
+                                    {ride.ticketId && (
+                                      <span className="text-[9px] font-mono font-bold bg-slate-200/80 dark:bg-slate-700 text-slate-700 dark:text-slate-300 px-1.5 py-0.5 rounded">
+                                        {ride.ticketId}
+                                      </span>
+                                    )}
+                                    <span className="text-[10px] text-slate-400 dark:text-slate-500">
+                                      {ride.dateString || (ride.timestamp ? new Date(ride.timestamp).toLocaleDateString() : "Recent")}
+                                    </span>
+                                    {ride.status && (
+                                      <span
+                                        className={`text-[9px] font-bold px-1.5 py-0.2 rounded ${
+                                          ride.status === "Active"
+                                            ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
+                                            : ride.status === "Validated"
+                                            ? "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300"
+                                            : "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400"
+                                        }`}
+                                      >
+                                        {ride.status}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="text-right shrink-0">
+                                <span className="font-black text-base text-emerald-600 dark:text-emerald-400 block">
+                                  ₹{ride.fare}
+                                </span>
+                                <span className="text-[10px] font-semibold text-slate-400 block">Paid</span>
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  </>
+                );
+              })()}
             </motion.div>
           </div>
         )}
