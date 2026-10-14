@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Leaf, Ticket, TrainFront, CreditCard, ShieldAlert, Zap, CloudRain, Sun, Cloud, User, MapPin, Medal } from "lucide-react";
+import { Search, Leaf, Ticket, TrainFront, CreditCard, ShieldAlert, Zap, CloudRain, Sun, Cloud, User, MapPin, Medal, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -229,6 +229,17 @@ export default function VisionHome() {
               </div>
               <span className="text-xs font-bold text-slate-700 dark:text-slate-300">SafeKeep</span>
             </Link>
+
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new CustomEvent("bv-trigger-habit-ai"))}
+              className="group flex flex-col items-center justify-center bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-teal-500 transition-all shadow-sm cursor-pointer"
+            >
+              <div className="bg-teal-50 dark:bg-teal-900/30 p-3 rounded-full mb-2 group-hover:scale-110 transition-transform">
+                <Sparkles size={24} className="text-teal-600 dark:text-teal-400" />
+              </div>
+              <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Habit AI</span>
+            </button>
           </div>
         </motion.div>
       </motion.div>

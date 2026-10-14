@@ -11,6 +11,7 @@ import RouteDeviationAI from "../../components/RouteDeviationAI";
 import ProximityChime from "../../components/ProximityChime";
 import SmartBoardingCard from "../../components/SmartBoardingCard";
 import CrowdReportPrompt from "../../components/CrowdReportPrompt";
+import SmartTripPlanner from "../../components/SmartTripPlanner";
 
 interface BmtcSearchResult {
   routeNumber: string;
@@ -170,9 +171,14 @@ export default function TrackScreen() {
         />
       </div>
 
-      {/* Proximity Deboarding Chime Engine (Active only when navigating on moving bus) */}
+      {/* Proximity Deboarding Chime Engine (Active for all routes, auto-notifies on route switch) */}
       <div className="px-4">
-        <ProximityChime busCode={busCode || "500D"} userLocation={userLoc} />
+        <ProximityChime
+          busCode={busCode || "500D"}
+          userLocation={userLoc}
+          routeStops={activeRouteDetails?.stops}
+          routeName={activeRouteDetails?.fullName || activeRouteDetails?.routeNumber}
+        />
       </div>
 
       {/* Interactive BMTC 4400+ Routes Autocomplete Search */}
@@ -356,8 +362,20 @@ export default function TrackScreen() {
       </div>
 
       {/* Tokyo & Singapore Crowd Density Engine */}
-      <div className="px-4 mb-4">
+      <div className="px-4 mb-3">
         <SmartBoardingCard />
+      </div>
+
+      {/* Real-time Smart vs Cheap Destination Planner (Automated Bus/Walk/Auto/Metro Calculation) */}
+      <div className="px-4 mb-4">
+        <SmartTripPlanner
+          userLocation={userLoc}
+          currentBusCode={busCode}
+          onSelectBusRoute={(code) => {
+            setBusCode(code);
+            setSearchQuery(code);
+          }}
+        />
       </div>
     </div>
   );
