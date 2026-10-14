@@ -72,6 +72,16 @@ export interface TransitTicketRecord {
   expiryTimestamp?: number;
 }
 
+export interface StudentVerificationDetails {
+  name: string;
+  dob: string;
+  college: string;
+  university: string;
+  studentIdNumber?: string;
+  validUntil?: string;
+  verifiedAt: number;
+}
+
 interface AppState {
   appLang: string;
   setAppLang: (lang: string) => void;
@@ -135,6 +145,11 @@ interface AppState {
   linkNcmcCard: (card: Omit<NcmcCardInfo, "isLinked">) => void;
   unlinkNcmcCard: () => void;
   topUpNcmcCard: (amount: number) => void;
+
+  // Student Concession Verification
+  isStudentVerified: boolean;
+  studentDetails: StudentVerificationDetails | null;
+  setStudentVerification: (isVerified: boolean, details?: StudentVerificationDetails | null) => void;
 }
 
 export const useAppStore = create<AppState>()(

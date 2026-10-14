@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { User, Terminal, Moon, Bell, Shield, Globe, LogOut, MapPin, ShieldCheck, Leaf, Medal, Receipt, ChevronRight, ScanFace, Upload, CheckCircle2, Loader2, X, Settings, Image as ImageIcon, Pencil, Check } from "lucide-react";
+import { User, Terminal, Moon, Bell, Shield, Globe, LogOut, MapPin, ShieldCheck, Leaf, Medal, Receipt, ChevronRight, ScanFace, Upload, CheckCircle2, Loader2, X, Settings, Image as ImageIcon, Pencil, Check, Bus, Car, TrainFront, Ticket } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useAppStore } from "@/lib/store";
@@ -10,6 +10,7 @@ export default function ProfileScreen() {
   const { userName, setUserName, carbonSavedGrams, karmaPoints, profilePictureUrl, setProfilePictureUrl, rideHistory } = useAppStore();
   const [showScanner, setShowScanner] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [historyFilter, setHistoryFilter] = useState<"all" | "bus" | "metro" | "auto" | "pass">("all");
   const [isScanning, setIsScanning] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
   
