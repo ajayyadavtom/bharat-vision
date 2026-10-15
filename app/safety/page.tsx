@@ -214,7 +214,7 @@ export default function SafetyScreen() {
   ];
 
   return (
-    <div className="flex flex-col h-[100dvh] overflow-y-auto no-scrollbar pb-28 bg-slate-50 dark:bg-slate-950 px-4 pt-8 [&>*]:shrink-0 relative">
+    <div className="flex flex-col h-[100dvh] md:h-full overflow-y-auto no-scrollbar pb-28 md:pb-8 bg-slate-50 dark:bg-slate-950 px-4 md:px-8 pt-8 md:pt-6 [&>*]:shrink-0 relative md:max-w-5xl md:mx-auto md:w-full">
       {/* Background Pulse Effect when SOS is active */}
       {sosActive && (
         <motion.div

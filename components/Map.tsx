@@ -65,6 +65,43 @@ function MapClickHandler({ onMapClick }: { onMapClick: (coords: [number, number]
   return null;
 }
 
+function MapFloatingControls() {
+  const map = useMap();
+  const [currentZoom, setCurrentZoom] = useState(map.getZoom());
+
+  useMapEvents({
+    zoomend() {
+      setCurrentZoom(map.getZoom());
+    },
+  });
+
+  return (
+    <div className="absolute bottom-20 right-4 z-[400] flex flex-col gap-1.5 shadow-xl">
+      <button
+        type="button"
+        onClick={() => map.zoomIn()}
+        aria-label="Zoom in"
+        className="w-9 h-9 rounded-2xl bg-slate-900/90 hover:bg-slate-800 text-white border border-slate-700 flex items-center justify-center font-black text-lg active:scale-95 transition-all shadow-md cursor-pointer backdrop-blur-md"
+        title="Zoom In"
+      >
+        +
+      </button>
+      <div className="text-[9px] font-black text-center text-slate-400 bg-slate-900/90 py-0.5 px-1 rounded-lg border border-slate-700 pointer-events-none select-none backdrop-blur-md">
+        {Math.round(currentZoom)}x
+      </div>
+      <button
+        type="button"
+        onClick={() => map.zoomOut()}
+        aria-label="Zoom out"
+        className="w-9 h-9 rounded-2xl bg-slate-900/90 hover:bg-slate-800 text-white border border-slate-700 flex items-center justify-center font-black text-lg active:scale-95 transition-all shadow-md cursor-pointer backdrop-blur-md"
+        title="Zoom Out"
+      >
+        −
+      </button>
+    </div>
+  );
+}
+
 interface MapProps {
   initialDestination?: [number, number];
   destinationName?: string;
@@ -227,7 +264,16 @@ export default function Map({
       </div>
 
       {/* Main Leaflet Map Container */}
-      <MapContainer center={defaultCenter} zoom={13} className="w-full h-full bg-[#09090b] z-0" zoomControl={false}>
+      <MapContainer
+        center={defaultCenter}
+        zoom={13}
+        scrollWheelZoom={true}
+        doubleClickZoom={true}
+        touchZoom={true}
+        className="w-full h-full bg-[#09090b] z-0"
+        zoomControl={false}
+      >
+        <MapFloatingControls />
         {/* Mapbox High-Definition Tiles */}
         {!tileError ? (
           <TileLayer

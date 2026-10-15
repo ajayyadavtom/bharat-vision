@@ -12,6 +12,11 @@ import { useEffect } from "react";
  */
 export default function MobileScrollLock() {
   useEffect(() => {
+    // Only engage mobile scroll lock on mobile screens (< 768px)
+    if (typeof window !== "undefined" && window.innerWidth >= 768) {
+      return;
+    }
+
     let twoFingerStartY: number | null = null;
     let targetScrollContainer: HTMLElement | null = null;
 

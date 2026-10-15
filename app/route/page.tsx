@@ -297,10 +297,10 @@ export default function RoutePlannerScreen() {
   };
 
   return (
-    <div className="flex flex-col h-[100dvh] bg-slate-100 dark:bg-[#09090b] relative overflow-hidden text-slate-900 dark:text-slate-100">
+    <div className="flex flex-col lg:grid lg:grid-cols-12 lg:gap-6 h-[100dvh] lg:h-full bg-slate-100 dark:bg-[#09090b] relative overflow-hidden text-slate-900 dark:text-slate-100 lg:max-w-7xl lg:mx-auto lg:p-6 lg:pt-4">
       
       {/* Top Half: Live Map with Route, Boarding, and GPS Markers */}
-      <div className={`absolute top-0 left-0 right-0 transition-all duration-500 ease-in-out ${suggestion ? 'h-[38vh]' : 'h-[52vh]'} z-0`}>
+      <div className={`absolute top-0 left-0 right-0 lg:static lg:col-start-6 lg:col-span-7 lg:h-[calc(100vh-140px)] lg:rounded-3xl lg:overflow-hidden lg:shadow-xl transition-all duration-500 ease-in-out ${suggestion ? 'h-[38vh]' : 'h-[52vh]'} z-0`}>
         <LiveMap
           busCode={suggestion?.busCode || "500D"}
           destination={suggestion?.busDestination || destination}
@@ -311,7 +311,7 @@ export default function RoutePlannerScreen() {
           initialShowStops={true}
         />
         {/* Blending Gradient */}
-        <div className="absolute bottom-0 left-0 right-0 h-14 bg-gradient-to-t from-slate-100 dark:from-[#09090b] to-transparent z-10 pointer-events-none" />
+        <div className="lg:hidden absolute bottom-0 left-0 right-0 h-14 bg-gradient-to-t from-slate-100 dark:from-[#09090b] to-transparent z-10 pointer-events-none" />
       </div>
 
       {/* Floating Active Turn-by-Turn Guidance Banner (When Live Navigation is Active) */}
@@ -366,7 +366,7 @@ export default function RoutePlannerScreen() {
       {/* Bottom Half: Interactive Sheet & Best Bus Suggestion Drawer */}
       <motion.div 
         layout
-        className={`absolute bottom-0 left-0 right-0 bg-slate-100 dark:bg-[#09090b] rounded-t-3xl shadow-[0_-15px_40px_rgba(0,0,0,0.2)] dark:shadow-[0_-15px_40px_rgba(0,0,0,0.6)] z-20 flex flex-col transition-all duration-500 ease-in-out pb-[80px] ${
+        className={`absolute bottom-0 left-0 right-0 lg:static lg:col-start-1 lg:col-span-5 lg:h-[calc(100vh-140px)] lg:rounded-3xl lg:shadow-none bg-slate-100 dark:bg-[#09090b] rounded-t-3xl shadow-[0_-15px_40px_rgba(0,0,0,0.2)] dark:shadow-[0_-15px_40px_rgba(0,0,0,0.6)] z-20 flex flex-col transition-all duration-500 ease-in-out pb-[80px] lg:pb-0 ${
           suggestion ? 'h-[75vh]' : 'h-[62vh]'
         }`}
       >

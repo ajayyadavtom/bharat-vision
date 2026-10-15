@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Popup, Polyline, CircleMarker, useMap } from "react-leaflet";
 import L from "leaflet";
 
@@ -20,19 +20,35 @@ function MapController({
   center,
   zoom,
   bounds,
+  filterKey,
+  recenterTrigger,
 }: {
   center?: [number, number];
   zoom?: number;
   bounds?: L.LatLngBoundsExpression;
+  filterKey?: string;
+  recenterTrigger?: number;
 }) {
   const map = useMap();
+  const prevFilterRef = useRef<string | undefined>(undefined);
+  const prevRecenterRef = useRef<number | undefined>(recenterTrigger);
+
   useEffect(() => {
-    if (bounds) {
-      map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15, animate: true });
-    } else if (center) {
-      map.flyTo(center, zoom || 12, { animate: true, duration: 1.2 });
+    const filterChanged = prevFilterRef.current !== filterKey;
+    const recenterClicked = prevRecenterRef.current !== recenterTrigger;
+    prevFilterRef.current = filterKey;
+    prevRecenterRef.current = recenterTrigger;
+
+    // Only auto-fit bounds on filter change, initial load, or explicit recenter click
+    if (filterChanged || recenterClicked) {
+      if (bounds) {
+        map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15, animate: true });
+      } else if (center) {
+        map.flyTo(center, zoom || 12, { animate: true, duration: 1.0 });
+      }
     }
-  }, [center, zoom, bounds, map]);
+  }, [center, zoom, bounds, filterKey, recenterTrigger, map]);
+
   return null;
 }
 
@@ -239,13 +255,20 @@ export default function MetroMap({
       </div>
 
       <MapContainer
-        key={`${centerCoordinates[0]}-${centerCoordinates[1]}-${recenterTrigger}`}
         center={centerCoordinates}
         zoom={12}
+        scrollWheelZoom={true}
+        doubleClickZoom={true}
+        touchZoom={true}
         className="w-full h-full bg-[#f8fafc] dark:bg-[#09090b] rounded-2xl z-0"
         zoomControl={false}
       >
-        <MapController center={centerCoordinates} bounds={mapBounds} />
+        <MapController
+          center={centerCoordinates}
+          bounds={mapBounds}
+          filterKey={selectedFilter}
+          recenterTrigger={recenterTrigger}
+        />
         <MetroFloatingControls onRecenter={handleRecenter} />
 
         {/* Mapbox High-Definition Retina Tile Layer */}

@@ -188,7 +188,7 @@ export default function ChatScreen() {
   };
 
   return (
-    <div className="flex flex-col h-[100dvh] bg-slate-50 dark:bg-slate-950 relative overflow-hidden">
+    <div className="flex flex-col h-[100dvh] md:h-full bg-slate-50 dark:bg-slate-950 relative overflow-hidden md:max-w-4xl md:mx-auto md:w-full">
       
       <input 
         type="file" 
@@ -360,7 +360,7 @@ export default function ChatScreen() {
       </div>
 
       {/* Bottom Area: Quick Prompts + Input (Normal Flow, No Overlap) */}
-      <div className="flex flex-col bg-slate-50 dark:bg-slate-950 pb-[72px] shadow-[0_-10px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_-10px_20px_rgba(0,0,0,0.2)] z-10">
+      <div className="flex flex-col bg-slate-50 dark:bg-slate-950 pb-[72px] md:pb-4 shadow-[0_-10px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_-10px_20px_rgba(0,0,0,0.2)] z-10">
         
         {/* Quick Prompts */}
         <div className="flex overflow-x-auto no-scrollbar gap-2 px-4 py-3">

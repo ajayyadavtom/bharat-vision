@@ -189,7 +189,7 @@ export default function ProfileScreen() {
   };
 
   return (
-    <div className="flex flex-col h-[100dvh] overflow-y-auto no-scrollbar pb-[120px] bg-slate-50 dark:bg-slate-950 px-4 pt-8 [&>*]:shrink-0 relative transition-colors duration-200">
+    <div className="flex flex-col h-[100dvh] md:h-full overflow-y-auto no-scrollbar pb-[120px] md:pb-8 bg-slate-50 dark:bg-slate-950 px-4 md:px-8 pt-8 md:pt-6 [&>*]:shrink-0 relative transition-colors duration-200 md:max-w-5xl md:mx-auto md:w-full">
       
       {/* Header with Quick Theme Toggle */}
       <div className="mb-6 flex items-center justify-between">

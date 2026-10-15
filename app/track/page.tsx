@@ -141,8 +141,8 @@ export default function TrackScreen() {
   ];
 
   return (
-    <div className="flex flex-col h-[100dvh] overflow-y-auto no-scrollbar pb-[120px] bg-slate-50 dark:bg-slate-950 relative">
-      <div className="p-4 pt-8 bg-gradient-to-b from-white dark:from-slate-900 to-transparent flex justify-between items-start">
+    <div className="flex flex-col lg:grid lg:grid-cols-12 lg:gap-x-6 lg:gap-y-3 h-[100dvh] lg:h-full overflow-y-auto no-scrollbar pb-[120px] lg:pb-8 bg-slate-50 dark:bg-slate-950 relative lg:max-w-7xl lg:mx-auto lg:p-6 lg:pt-4">
+      <div className="order-1 lg:col-span-12 p-4 pt-8 lg:p-0 bg-gradient-to-b from-white dark:from-slate-900 to-transparent lg:bg-transparent flex justify-between items-start">
         <div>
           <h2 className="text-[10px] text-emerald-600 dark:text-emerald-400 uppercase tracking-[0.2em] font-bold mb-1 flex items-center gap-1">
             <Zap size={10} fill="currentColor" /> BMTC GTFS Live Fleet & Metro
@@ -155,7 +155,7 @@ export default function TrackScreen() {
 
         <button
           onClick={() => setTriggerAnomaly(true)}
-          className="bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-700 p-2 rounded-xl flex items-center justify-center shadow-sm hover:scale-105 active:scale-95 transition-all"
+          className="bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-700 p-2 rounded-xl flex items-center justify-center shadow-sm hover:scale-105 active:scale-95 transition-all cursor-pointer"
           title="Simulate Route Deviation Anomaly"
         >
           <AlertTriangle size={18} />
@@ -163,7 +163,7 @@ export default function TrackScreen() {
       </div>
 
       {/* Route Deviation AI Anomaly Engine (10-minute cooldown, transit velocity gated) */}
-      <div className="px-4">
+      <div className="order-2 lg:order-none lg:col-span-5 lg:col-start-1 px-4 lg:px-0">
         <RouteDeviationAI
           externalTrigger={triggerAnomaly}
           resetTrigger={() => setTriggerAnomaly(false)}
@@ -172,7 +172,7 @@ export default function TrackScreen() {
       </div>
 
       {/* Proximity Deboarding Chime Engine (Active for all routes, auto-notifies on route switch) */}
-      <div className="px-4">
+      <div className="order-3 lg:order-none lg:col-span-5 lg:col-start-1 px-4 lg:px-0">
         <ProximityChime
           busCode={busCode || "500D"}
           userLocation={userLoc}
@@ -182,7 +182,7 @@ export default function TrackScreen() {
       </div>
 
       {/* Interactive BMTC 4400+ Routes Autocomplete Search */}
-      <div className="px-4 mb-2 relative" ref={searchContainerRef}>
+      <div className="order-4 lg:order-none lg:col-span-5 lg:col-start-1 px-4 lg:px-0 mb-2 relative" ref={searchContainerRef}>
         <div className="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3">
           <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
             <Bus size={16} className="text-indigo-600 dark:text-indigo-400" />
@@ -266,9 +266,37 @@ export default function TrackScreen() {
         </div>
       </div>
 
-      {/* The Live Interactive Map (Mapbox Retina + Metro + Bus Stops) */}
-      <div className="px-4 mb-4 mt-1">
-        <div className="w-full h-80 sm:h-96 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl relative overflow-hidden shadow-lg">
+      {/* Commuter Active Location Bar (Allows user to set origin location) */}
+      <div className="order-5 lg:order-none lg:col-span-5 lg:col-start-1 px-4 lg:px-0 mb-1.5 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5 text-[11px] text-slate-600 dark:text-slate-300 min-w-0">
+          <span className="text-blue-500 font-black">📍 Your Location:</span>
+          <span className="font-extrabold truncate text-slate-800 dark:text-slate-200">
+            {userLoc ? `${userLoc[0].toFixed(3)}, ${userLoc[1].toFixed(3)}` : "Central Silk Board"}
+          </span>
+        </div>
+        <div className="flex items-center gap-1 shrink-0">
+          <span className="text-[9px] text-slate-400 font-bold hidden sm:inline">Quick set:</span>
+          {[
+            { label: "Silk Board", coords: [12.9172, 77.6228] as [number, number] },
+            { label: "Majestic", coords: [12.9772, 77.5713] as [number, number] },
+            { label: "Whitefield", coords: [12.9863, 77.7335] as [number, number] },
+            { label: "Hebbal", coords: [13.0358, 77.597] as [number, number] },
+          ].map((hub) => (
+            <button
+              key={hub.label}
+              type="button"
+              onClick={() => setUserLoc(hub.coords)}
+              className="text-[9px] font-black bg-white dark:bg-slate-900 hover:bg-blue-50 dark:hover:bg-blue-950/40 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:border-blue-400 px-2 py-0.5 rounded-lg active:scale-95 transition-all cursor-pointer shadow-xs"
+            >
+              {hub.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* The Live Interactive Map (Mapbox Retina + Metro + Bus Stops + Moving Bus) */}
+      <div className="order-6 lg:order-none lg:col-start-6 lg:col-span-7 lg:row-start-2 lg:row-span-12 lg:sticky lg:top-4 lg:self-start px-4 lg:px-0 mb-4 lg:mb-0 mt-1">
+        <div className="w-full h-80 sm:h-96 lg:h-[640px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl relative overflow-hidden shadow-lg">
           <LiveMap
             busCode={busCode}
             destination={destination}
@@ -277,13 +305,14 @@ export default function TrackScreen() {
             routePath={activeRouteDetails?.coordinates}
             initialShowMetro={true}
             initialShowStops={true}
+            onUserLocationChange={(newLoc) => setUserLoc(newLoc)}
           />
         </div>
       </div>
 
       {/* Selected Route Alignment & Bus Stops Timeline Drawer */}
       {activeRouteDetails && (
-        <div className="px-4 mb-4">
+        <div className="order-7 lg:order-none lg:col-span-5 lg:col-start-1 px-4 lg:px-0 mb-4">
           <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-4 shadow-sm">
             <div className="flex items-start justify-between border-b border-slate-100 dark:border-slate-800 pb-3 mb-3">
               <div>
@@ -357,17 +386,17 @@ export default function TrackScreen() {
       )}
 
       {/* Real-time Hardware-free Crowd Detection System Prompt */}
-      <div className="px-4 mb-3">
+      <div className="order-8 lg:order-none lg:col-span-5 lg:col-start-1 px-4 lg:px-0 mb-3">
         <CrowdReportPrompt busId={busCode || "500D"} availableBuses={["500D", "335E", "250", "KIA9", "KBS3C"]} />
       </div>
 
       {/* Tokyo & Singapore Crowd Density Engine */}
-      <div className="px-4 mb-3">
+      <div className="order-9 lg:order-none lg:col-span-5 lg:col-start-1 px-4 lg:px-0 mb-3">
         <SmartBoardingCard />
       </div>
 
       {/* Real-time Smart vs Cheap Destination Planner (Automated Bus/Walk/Auto/Metro Calculation) */}
-      <div className="px-4 mb-4">
+      <div className="order-10 lg:order-none lg:col-span-5 lg:col-start-1 px-4 lg:px-0 mb-4">
         <SmartTripPlanner
           userLocation={userLoc}
           currentBusCode={busCode}
