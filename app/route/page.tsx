@@ -297,10 +297,10 @@ export default function RoutePlannerScreen() {
   };
 
   return (
-    <div className="flex flex-col lg:grid lg:grid-cols-12 lg:gap-6 h-[100dvh] lg:h-full bg-slate-100 dark:bg-[#09090b] relative overflow-hidden text-slate-900 dark:text-slate-100 lg:max-w-7xl lg:mx-auto lg:p-6 lg:pt-4">
+    <div className="flex flex-col lg:grid lg:grid-cols-12 lg:gap-8 h-[100dvh] lg:h-full bg-slate-100 dark:bg-[#09090b] relative overflow-hidden text-slate-900 dark:text-slate-100 lg:max-w-[1720px] lg:mx-auto lg:w-full lg:px-10 xl:px-14 lg:py-4">
       
       {/* Top Half: Live Map with Route, Boarding, and GPS Markers */}
-      <div className={`absolute top-0 left-0 right-0 lg:static lg:col-start-6 lg:col-span-7 lg:h-[calc(100vh-140px)] lg:rounded-3xl lg:overflow-hidden lg:shadow-xl transition-all duration-500 ease-in-out ${suggestion ? 'h-[38vh]' : 'h-[52vh]'} z-0`}>
+      <div className={`absolute top-0 left-0 right-0 lg:static lg:col-start-6 xl:col-start-5 lg:col-span-7 xl:col-span-8 lg:h-[calc(100vh-140px)] lg:min-h-[620px] lg:max-h-[860px] lg:rounded-3xl lg:overflow-hidden lg:shadow-xl transition-all duration-500 ease-in-out ${suggestion ? 'h-[38vh]' : 'h-[52vh]'} z-0`}>
         <LiveMap
           busCode={suggestion?.busCode || "500D"}
           destination={suggestion?.busDestination || destination}
@@ -366,7 +366,7 @@ export default function RoutePlannerScreen() {
       {/* Bottom Half: Interactive Sheet & Best Bus Suggestion Drawer */}
       <motion.div 
         layout
-        className={`absolute bottom-0 left-0 right-0 lg:static lg:col-start-1 lg:col-span-5 lg:h-[calc(100vh-140px)] lg:rounded-3xl lg:shadow-none bg-slate-100 dark:bg-[#09090b] rounded-t-3xl shadow-[0_-15px_40px_rgba(0,0,0,0.2)] dark:shadow-[0_-15px_40px_rgba(0,0,0,0.6)] z-20 flex flex-col transition-all duration-500 ease-in-out pb-[80px] lg:pb-0 ${
+        className={`absolute bottom-0 left-0 right-0 lg:static lg:col-start-1 lg:col-span-5 xl:col-span-4 lg:h-[calc(100vh-140px)] lg:min-h-[620px] lg:max-h-[860px] lg:rounded-3xl lg:shadow-none bg-slate-100 dark:bg-[#09090b] rounded-t-3xl shadow-[0_-15px_40px_rgba(0,0,0,0.2)] dark:shadow-[0_-15px_40px_rgba(0,0,0,0.6)] z-20 flex flex-col transition-all duration-500 ease-in-out pb-[80px] lg:pb-0 ${
           suggestion ? 'h-[75vh]' : 'h-[62vh]'
         }`}
       >

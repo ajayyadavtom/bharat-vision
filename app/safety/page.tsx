@@ -214,7 +214,7 @@ export default function SafetyScreen() {
   ];
 
   return (
-    <div className="flex flex-col h-[100dvh] md:h-full overflow-y-auto no-scrollbar pb-28 md:pb-8 bg-slate-50 dark:bg-slate-950 px-4 md:px-8 pt-8 md:pt-6 [&>*]:shrink-0 relative md:max-w-5xl md:mx-auto md:w-full">
+    <div className="flex flex-col h-[100dvh] md:h-full overflow-y-auto no-scrollbar pb-28 md:pb-8 bg-slate-50 dark:bg-slate-950 px-4 md:px-10 xl:px-14 pt-8 md:pt-6 [&>*]:shrink-0 relative md:max-w-[1500px] xl:max-w-[1640px] md:mx-auto md:w-full">
       {/* Background Pulse Effect when SOS is active */}
       {sosActive && (
         <motion.div
@@ -224,8 +224,12 @@ export default function SafetyScreen() {
         />
       )}
 
-      {/* Header: Hold to SOS */}
-      <div className="bg-gradient-to-br from-red-950/40 via-surface-dark to-white dark:to-surface-black border-2 border-red-500/50 p-6 rounded-3xl shadow-[0_0_30px_rgba(239,68,68,0.2)] mb-4 flex flex-col items-center text-center relative overflow-hidden">
+      {/* Desktop 2-Column Responsive Layout */}
+      <div className="flex flex-col md:grid md:grid-cols-12 md:gap-8 items-start w-full">
+        {/* Left Column: SOS & Direct Emergency Actions */}
+        <div className="w-full md:col-span-5 flex flex-col">
+          {/* Header: Hold to SOS */}
+          <div className="bg-gradient-to-br from-red-950/40 via-surface-dark to-white dark:to-surface-black border-2 border-red-500/50 p-6 rounded-3xl shadow-[0_0_30px_rgba(239,68,68,0.2)] mb-4 flex flex-col items-center text-center relative overflow-hidden">
         <div className="absolute inset-0 bg-red-500/5 animate-pulse pointer-events-none"></div>
 
         {/* Hold to SOS Button */}
@@ -298,8 +302,12 @@ export default function SafetyScreen() {
         )}
       </AnimatePresence>
 
-      {/* Emergency Contacts Section (Family & Important Numbers) */}
-      <div className="bg-surface-dark border border-slate-200 dark:border-brand-dark p-5 rounded-3xl shadow-lg mb-6">
+        </div>
+
+        {/* Right Column: Emergency Contacts Section */}
+        <div className="w-full md:col-span-7 flex flex-col">
+          {/* Emergency Contacts Section (Family & Important Numbers) */}
+          <div className="bg-surface-dark border border-slate-200 dark:border-brand-dark p-5 rounded-3xl shadow-lg mb-6">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <Users size={18} className="text-red-500" />
@@ -387,6 +395,8 @@ export default function SafetyScreen() {
               </div>
             </div>
           ))}
+        </div>
+      </div>
         </div>
       </div>
 

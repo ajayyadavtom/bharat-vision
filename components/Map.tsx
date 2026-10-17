@@ -6,20 +6,26 @@ import L from "leaflet";
 import { Navigation, MapPin, Compass, Locate, Route as RouteIcon, Layers } from "lucide-react";
 import { MAPBOX_PUBLIC_TOKEN, MAPBOX_STYLES, MapboxStyleOption, fetchMapboxRoute } from "@/lib/mapbox";
 
-// Fix Leaflet default marker icon paths in Next.js
-const userIcon = L.divIcon({
-  className: "custom-user-gps-marker",
-  html: `<div style="background-color: #3b82f6; width: 20px; height: 20px; border-radius: 50%; border: 3px solid #ffffff; box-shadow: 0 0 12px rgba(59,130,246,0.9); display: flex; align-items: center; justify-content: center;"><div style="width: 6px; height: 6px; background-color: #ffffff; border-radius: 50%;"></div></div>`,
-  iconSize: [20, 20],
-  iconAnchor: [10, 10],
-});
+// Fix Leaflet default marker icon paths in Next.js (SSR safe)
+const getUserIcon = () => {
+  if (typeof window === "undefined" || !L.divIcon) return undefined as any;
+  return L.divIcon({
+    className: "custom-user-gps-marker",
+    html: `<div style="background-color: #3b82f6; width: 20px; height: 20px; border-radius: 50%; border: 3px solid #ffffff; box-shadow: 0 0 12px rgba(59,130,246,0.9); display: flex; align-items: center; justify-content: center;"><div style="width: 6px; height: 6px; background-color: #ffffff; border-radius: 50%;"></div></div>`,
+    iconSize: [20, 20],
+    iconAnchor: [10, 10],
+  });
+};
 
-const destIcon = L.divIcon({
-  className: "custom-dest-marker",
-  html: `<div style="background-color: #ef4444; width: 24px; height: 24px; border-radius: 50%; border: 3px solid #ffffff; box-shadow: 0 0 12px rgba(239,68,68,0.9); display: flex; align-items: center; justify-content: center; font-size: 12px; color: white; font-weight: bold;">🏁</div>`,
-  iconSize: [24, 24],
-  iconAnchor: [12, 24],
-});
+const getDestIcon = () => {
+  if (typeof window === "undefined" || !L.divIcon) return undefined as any;
+  return L.divIcon({
+    className: "custom-dest-marker",
+    html: `<div style="background-color: #ef4444; width: 24px; height: 24px; border-radius: 50%; border: 3px solid #ffffff; box-shadow: 0 0 12px rgba(239,68,68,0.9); display: flex; align-items: center; justify-content: center; font-size: 12px; color: white; font-weight: bold;">🏁</div>`,
+    iconSize: [24, 24],
+    iconAnchor: [12, 24],
+  });
+};
 
 // Component to handle live GPS location tracking
 function LiveLocationTracker({
@@ -311,7 +317,7 @@ export default function Map({
 
         {/* Live User Position Marker */}
         {userPos && (
-          <Marker position={userPos} icon={userIcon}>
+          <Marker position={userPos} icon={getUserIcon()}>
             <Popup>
               <div className="p-1 font-sans text-xs">
                 <span className="text-[9px] uppercase font-bold text-blue-500 block">Live GPS</span>
@@ -326,7 +332,7 @@ export default function Map({
 
         {/* Destination Marker */}
         {targetDestination && (
-          <Marker position={targetDestination} icon={destIcon}>
+          <Marker position={targetDestination} icon={getDestIcon()}>
             <Popup>
               <div className="p-1 font-sans text-xs">
                 <span className="text-[9px] uppercase font-bold text-red-500 block">Target Destination</span>

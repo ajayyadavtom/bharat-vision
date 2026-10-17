@@ -154,7 +154,7 @@ export default function SettingsScreen() {
   const currentTheme = theme === "system" ? systemTheme : theme;
 
   return (
-    <div className="flex flex-col min-h-[100dvh] bg-slate-50 dark:bg-slate-950 px-4 pt-8 pb-[120px] relative">
+    <div className="flex flex-col min-h-[100dvh] md:min-h-full md:h-full overflow-y-auto no-scrollbar bg-slate-50 dark:bg-slate-950 px-4 md:px-10 xl:px-14 pt-8 md:pt-6 pb-[120px] md:pb-8 relative md:max-w-4xl lg:max-w-5xl md:mx-auto md:w-full">
       <div className="flex items-center gap-3 mb-8">
         <Link href="/profile" className="p-2 bg-white dark:bg-slate-900 rounded-full shadow-sm border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300">
           <ArrowLeft size={20} />

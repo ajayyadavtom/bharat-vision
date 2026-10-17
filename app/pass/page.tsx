@@ -320,7 +320,7 @@ export default function PassScreen() {
   if (!mounted) return null;
 
   return (
-    <div className="flex flex-col h-[100dvh] md:h-full overflow-y-auto no-scrollbar pb-[120px] md:pb-8 bg-slate-50 dark:bg-slate-950 px-4 md:px-8 pt-8 md:pt-6 select-none md:max-w-6xl md:mx-auto md:w-full [&>*]:shrink-0">
+    <div className="flex flex-col h-[100dvh] md:h-full overflow-y-auto no-scrollbar pb-[120px] md:pb-8 bg-slate-50 dark:bg-slate-950 px-4 md:px-10 xl:px-14 pt-8 md:pt-6 select-none md:max-w-[1720px] md:mx-auto md:w-full [&>*]:shrink-0">
       {/* Top Header */}
       <div className="mb-6 flex justify-between items-start">
         <div>
@@ -891,7 +891,7 @@ export default function PassScreen() {
           )}
         </div>
 
-        <div className="flex flex-col gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
           {passCatalog.map((pass: any, index: number) => {
             const isAc = pass.type === "AC" || (pass.type && pass.type.includes("AC"));
             return (

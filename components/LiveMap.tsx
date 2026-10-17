@@ -145,19 +145,22 @@ function SmoothBusMarker({
     : "Low";
   const displayOcc = crowdStatus ? crowdStatus.occupancyPercent : bus.occ;
 
-  const dynamicBusIcon = L.divIcon({
-    className: "custom-bus-marker",
-    html: `
-      <div style="position: relative; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;">
-        <div style="position: absolute; width: 100%; height: 100%; border-radius: 50%; background-color: ${crowdColor}; opacity: 0.25; transform: scale(1.4); animation: pulse 2s infinite;"></div>
-        <div style="background-color: ${crowdColor}; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2.5px solid #ffffff; box-shadow: 0 4px 14px rgba(0,0,0,0.35); color: #ffffff; font-size: 15px; z-index: 2;">🚌</div>
-        <div style="position: absolute; top: -4px; right: -6px; background-color: #0f172a; color: #ffffff; font-size: 9px; font-weight: 800; padding: 1.5px 5px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.4); z-index: 3; box-shadow: 0 2px 6px rgba(0,0,0,0.4);">${bus.spd}kph</div>
-        <div style="position: absolute; bottom: -5px; background-color: ${crowdColor}; color: #ffffff; font-size: 8px; font-weight: 900; padding: 1px 4px; border-radius: 9999px; border: 1px solid #ffffff; z-index: 4; white-space: nowrap;">${crowdLabel}</div>
-      </div>
-    `,
-    iconSize: [44, 44],
-    iconAnchor: [22, 22],
-  });
+  const dynamicBusIcon = useMemo(() => {
+    if (typeof window === "undefined" || !L.divIcon) return undefined as any;
+    return L.divIcon({
+      className: "custom-bus-marker",
+      html: `
+        <div style="position: relative; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;">
+          <div style="position: absolute; width: 100%; height: 100%; border-radius: 50%; background-color: ${crowdColor}; opacity: 0.25; transform: scale(1.4); animation: pulse 2s infinite;"></div>
+          <div style="background-color: ${crowdColor}; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2.5px solid #ffffff; box-shadow: 0 4px 14px rgba(0,0,0,0.35); color: #ffffff; font-size: 15px; z-index: 2;">🚌</div>
+          <div style="position: absolute; top: -4px; right: -6px; background-color: #0f172a; color: #ffffff; font-size: 9px; font-weight: 800; padding: 1.5px 5px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.4); z-index: 3; box-shadow: 0 2px 6px rgba(0,0,0,0.4);">${bus.spd}kph</div>
+          <div style="position: absolute; bottom: -5px; background-color: ${crowdColor}; color: #ffffff; font-size: 8px; font-weight: 900; padding: 1px 4px; border-radius: 9999px; border: 1px solid #ffffff; z-index: 4; white-space: nowrap;">${crowdLabel}</div>
+        </div>
+      `,
+      iconSize: [44, 44],
+      iconAnchor: [22, 22],
+    });
+  }, [crowdColor, bus.spd, crowdLabel]);
 
   return (
     <Marker position={pos} icon={dynamicBusIcon}>
@@ -703,29 +706,50 @@ export default function LiveMap({
       ? effectiveRoutePath[effectiveRoutePath.length - 1]
       : null;
 
-  const startIcon = L.divIcon({
-    className: "custom-route-start-marker",
-    html: `
-      <div style="display: flex; flex-direction: column; align-items: center; pointer-events: auto;">
-        <div style="background-color: #10b981; color: #ffffff; font-size: 9px; font-weight: 900; letter-spacing: 0.5px; padding: 2px 7px; border-radius: 9999px; box-shadow: 0 4px 10px rgba(16,185,129,0.5); border: 1.5px solid #ffffff; white-space: nowrap;">ORIGIN</div>
-        <div style="width: 14px; height: 14px; border-radius: 50%; background-color: #10b981; border: 3px solid #ffffff; box-shadow: 0 2px 8px rgba(0,0,0,0.3); margin-top: 1px;"></div>
-      </div>
-    `,
-    iconSize: [60, 36],
-    iconAnchor: [30, 34],
-  });
+  const startIcon = useMemo(() => {
+    if (typeof window === "undefined" || !L.divIcon) return undefined as any;
+    return L.divIcon({
+      className: "custom-route-start-marker",
+      html: `
+        <div style="display: flex; flex-direction: column; align-items: center; pointer-events: auto;">
+          <div style="background-color: #10b981; color: #ffffff; font-size: 9px; font-weight: 900; letter-spacing: 0.5px; padding: 2px 7px; border-radius: 9999px; box-shadow: 0 4px 10px rgba(16,185,129,0.5); border: 1.5px solid #ffffff; white-space: nowrap;">ORIGIN</div>
+          <div style="width: 14px; height: 14px; border-radius: 50%; background-color: #10b981; border: 3px solid #ffffff; box-shadow: 0 2px 8px rgba(0,0,0,0.3); margin-top: 1px;"></div>
+        </div>
+      `,
+      iconSize: [60, 36],
+      iconAnchor: [30, 34],
+    });
+  }, []);
 
-  const destIcon = L.divIcon({
-    className: "custom-route-dest-marker",
-    html: `
-      <div style="display: flex; flex-direction: column; align-items: center; pointer-events: auto;">
-        <div style="background-color: #ef4444; color: #ffffff; font-size: 9px; font-weight: 900; letter-spacing: 0.5px; padding: 2px 7px; border-radius: 9999px; box-shadow: 0 4px 10px rgba(239,68,68,0.5); border: 1.5px solid #ffffff; white-space: nowrap;">DESTINATION</div>
-        <div style="width: 14px; height: 14px; border-radius: 50%; background-color: #ef4444; border: 3px solid #ffffff; box-shadow: 0 2px 8px rgba(0,0,0,0.3); margin-top: 1px;"></div>
-      </div>
-    `,
-    iconSize: [80, 36],
-    iconAnchor: [40, 34],
-  });
+  const destIcon = useMemo(() => {
+    if (typeof window === "undefined" || !L.divIcon) return undefined as any;
+    return L.divIcon({
+      className: "custom-route-dest-marker",
+      html: `
+        <div style="display: flex; flex-direction: column; align-items: center; pointer-events: auto;">
+          <div style="background-color: #ef4444; color: #ffffff; font-size: 9px; font-weight: 900; letter-spacing: 0.5px; padding: 2px 7px; border-radius: 9999px; box-shadow: 0 4px 10px rgba(239,68,68,0.5); border: 1.5px solid #ffffff; white-space: nowrap;">DESTINATION</div>
+          <div style="width: 14px; height: 14px; border-radius: 50%; background-color: #ef4444; border: 3px solid #ffffff; box-shadow: 0 2px 8px rgba(0,0,0,0.3); margin-top: 1px;"></div>
+        </div>
+      `,
+      iconSize: [80, 36],
+      iconAnchor: [40, 34],
+    });
+  }, []);
+
+  const userLocationMarkerIcon = useMemo(() => {
+    if (typeof window === "undefined" || !L.divIcon) return undefined as any;
+    return L.divIcon({
+      className: "custom-user-marker",
+      html: `
+        <div style="position: relative; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: grab;">
+          <div style="position: absolute; width: 36px; height: 36px; border-radius: 50%; background-color: #2563eb; opacity: 0.35; animation: ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
+          <div style="background-color: #2563eb; width: 18px; height: 18px; border-radius: 50%; border: 3px solid #ffffff; box-shadow: 0 0 14px rgba(37,99,235,0.9); z-index: 2; display: flex; align-items: center; justify-content: center; color: white; font-size: 10px;">📍</div>
+        </div>
+      `,
+      iconSize: [36, 36],
+      iconAnchor: [18, 18],
+    });
+  }, []);
 
   return (
     <div className="w-full h-full relative z-0 bg-slate-100 dark:bg-[#09090b] overflow-hidden">
@@ -1051,17 +1075,7 @@ export default function LiveMap({
                 handleSetLocation([pos.lat, pos.lng], "Custom Dragged Pin");
               },
             }}
-            icon={L.divIcon({
-              className: "custom-user-marker",
-              html: `
-                <div style="position: relative; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: grab;">
-                  <div style="position: absolute; width: 36px; height: 36px; border-radius: 50%; background-color: #2563eb; opacity: 0.35; animation: ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
-                  <div style="background-color: #2563eb; width: 18px; height: 18px; border-radius: 50%; border: 3px solid #ffffff; box-shadow: 0 0 14px rgba(37,99,235,0.9); z-index: 2; display: flex; align-items: center; justify-content: center; color: white; font-size: 10px;">📍</div>
-                </div>
-              `,
-              iconSize: [36, 36],
-              iconAnchor: [18, 18],
-            })}
+            icon={userLocationMarkerIcon}
           >
             <Popup>
               <div className="font-bold text-xs p-1 text-slate-900">

@@ -30,9 +30,9 @@ export default function LiveTrackingPage() {
   const [selectedRoute, setSelectedRoute] = useState("500D");
 
   return (
-    <div className="flex flex-col h-[100dvh] bg-slate-50 dark:bg-slate-950 pb-18 overflow-hidden select-none">
+    <div className="flex flex-col h-[100dvh] md:h-full bg-slate-50 dark:bg-slate-950 pb-18 md:pb-6 overflow-hidden select-none md:max-w-[1720px] md:mx-auto md:w-full md:px-10 xl:px-14 md:py-4">
       {/* Top Header */}
-      <div className="p-4 pt-6 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 flex flex-col gap-3 z-20 shadow-sm shrink-0">
+      <div className="p-4 pt-6 md:pt-4 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200 dark:border-slate-800 md:rounded-2xl flex flex-col gap-3 z-20 shadow-xs shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link

@@ -109,7 +109,7 @@ export default function DemandForecastingDashboard() {
   const availableYears = ["2019-20", "2018-19", "2017-18", "2016-17"];
 
   return (
-    <div className="flex flex-col min-h-[100dvh] h-full overflow-y-auto no-scrollbar pb-[120px] bg-surface-black px-4 pt-8 [&>*]:shrink-0">
+    <div className="flex flex-col min-h-[100dvh] md:h-full overflow-y-auto no-scrollbar pb-[120px] md:pb-8 bg-surface-black px-4 pt-8 md:max-w-[1500px] xl:max-w-[1640px] md:mx-auto md:w-full md:px-10 xl:px-14 [&>*]:shrink-0">
       
       {/* Header */}
       <div className="mb-6 flex justify-between items-start">
@@ -169,7 +169,8 @@ export default function DemandForecastingDashboard() {
             Aggregates live commuter app search intent across the Bharat Vision network to predict crowd surges and deficit before stops overflow.
           </p>
 
-          <AnimatePresence>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <AnimatePresence>
             {nodes.map((node) => (
               <motion.div
                 key={node.id}
@@ -262,6 +263,7 @@ export default function DemandForecastingDashboard() {
               </motion.div>
             ))}
           </AnimatePresence>
+          </div>
         </div>
       )}
 
@@ -326,11 +328,12 @@ export default function DemandForecastingDashboard() {
           )}
 
           {/* 6 BMTC Divisions Cards */}
-          <div className="space-y-3">
-            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider px-1">
+          <div>
+            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider px-1 mb-3">
               Divisional Breakdown ({selectedYear})
             </h4>
 
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {divisionRecords.map((div) => {
               const utilNum = Number(div.fleetUtilisation) || 0;
               return (
@@ -389,6 +392,7 @@ export default function DemandForecastingDashboard() {
                 </div>
               );
             })}
+            </div>
           </div>
 
         </div>
@@ -420,7 +424,7 @@ export default function DemandForecastingDashboard() {
           </div>
 
           {/* Stops List */}
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {filteredStops.map((stop) => {
               const isExpanded = expandedStop === stop.name;
               const allRouteEntries = stop.routesMap ? Object.entries(stop.routesMap).sort((a, b) => b[1] - a[1]) : [];

@@ -196,7 +196,7 @@ export default function VisionHome() {
         variants={dashboardVariants}
         initial="hidden"
         animate="show"
-        className="flex flex-col md:grid md:grid-cols-12 h-[100dvh] md:h-full overflow-y-auto no-scrollbar gap-6 p-4 pt-8 md:p-8 md:pt-6 pb-[120px] md:pb-8 relative z-10 [&>*]:shrink-0 md:max-w-7xl md:mx-auto md:w-full"
+        className="flex flex-col md:grid md:grid-cols-12 h-[100dvh] md:h-full overflow-y-auto no-scrollbar gap-6 p-4 pt-8 md:p-8 md:pt-6 pb-[120px] md:pb-8 relative z-10 [&>*]:shrink-0 md:max-w-[1720px] md:mx-auto md:w-full md:px-10 xl:px-14"
       >
         {/* User Greeting & Live Location Badge */}
         <motion.div variants={itemVariants} className="order-1 md:col-span-12 flex justify-between items-start md:pb-2 border-b border-transparent md:border-slate-200 md:dark:border-slate-800/80">
@@ -280,7 +280,7 @@ export default function VisionHome() {
         <motion.div 
           variants={itemVariants} 
           onClick={() => setShowClimateModal(!showClimateModal)}
-          className="order-2 md:order-3 md:col-span-5 flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3.5 shadow-sm cursor-pointer transition-all hover:border-slate-300 dark:hover:border-slate-700"
+          className="order-2 md:order-3 md:col-span-5 xl:col-span-4 flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3.5 shadow-sm cursor-pointer transition-all hover:border-slate-300 dark:hover:border-slate-700"
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -368,7 +368,7 @@ export default function VisionHome() {
         </motion.div>
 
         {/* Where to? Navigation Search Bar */}
-        <motion.div variants={itemVariants} className="order-3 md:order-2 md:col-span-7 relative group">
+        <motion.div variants={itemVariants} className="order-3 md:order-2 md:col-span-7 xl:col-span-8 relative group">
           <Link href="/route" className="block">
             <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
               <Search size={20} className="text-slate-400 group-hover:text-emerald-500 transition-colors" />
@@ -377,10 +377,28 @@ export default function VisionHome() {
               Where to? (e.g., Silk Board to Majestic)
             </div>
           </Link>
+          {/* Desktop Quick Corridor Hubs */}
+          <div className="hidden md:flex items-center gap-1.5 mt-2.5 overflow-x-auto no-scrollbar">
+            <span className="text-[10px] uppercase font-bold text-slate-400 shrink-0">Popular:</span>
+            {[
+              { label: "Silk Board ⇄ Hebbal (500D)", href: "/track" },
+              { label: "Majestic ⇄ Whitefield (Purple)", href: "/metro" },
+              { label: "Airport Vayu Vajra (KIA-9)", href: "/track" },
+              { label: "Indiranagar ⇄ MG Road", href: "/route" },
+            ].map((hub) => (
+              <Link
+                key={hub.label}
+                href={hub.href}
+                className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 bg-white/80 dark:bg-slate-900/80 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-600 dark:hover:text-emerald-400 border border-slate-200 dark:border-slate-800 px-2.5 py-1 rounded-lg transition-colors whitespace-nowrap shadow-xs"
+              >
+                {hub.label}
+              </Link>
+            ))}
+          </div>
         </motion.div>
 
         {/* Bharat Wallet Balance Card */}
-        <motion.div variants={itemVariants} className="order-4 md:order-5 md:col-span-5 bg-emerald-500 dark:bg-emerald-600 rounded-2xl p-5 shadow-lg border border-emerald-400 dark:border-emerald-500 relative overflow-hidden">
+        <motion.div variants={itemVariants} className="order-4 md:order-5 md:col-span-5 xl:col-span-4 bg-emerald-500 dark:bg-emerald-600 rounded-2xl p-5 shadow-lg border border-emerald-400 dark:border-emerald-500 relative overflow-hidden">
           <motion.div animate={{ scale: [1, 1.1, 1], opacity: [0.2, 0.3, 0.2] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }} className="absolute -right-6 -top-6 w-32 h-32 bg-white/20 rounded-full blur-2xl" />
           <div className="flex justify-between items-end relative z-10">
             <div>
@@ -394,7 +412,7 @@ export default function VisionHome() {
         </motion.div>
 
         {/* Rapid Transit Service Links */}
-        <motion.div variants={itemVariants} className="order-5 md:order-4 md:col-span-7">
+        <motion.div variants={itemVariants} className="order-5 md:order-4 md:col-span-7 xl:col-span-8">
           <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-3">Rapid Transit</h3>
           <div className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-3">
             <Link href="/pass" className="group flex flex-col items-center justify-center bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-emerald-500 transition-all shadow-sm">

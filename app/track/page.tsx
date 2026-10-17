@@ -141,7 +141,7 @@ export default function TrackScreen() {
   ];
 
   return (
-    <div className="flex flex-col lg:grid lg:grid-cols-12 lg:gap-x-6 lg:gap-y-3 h-[100dvh] lg:h-full overflow-y-auto no-scrollbar pb-[120px] lg:pb-8 bg-slate-50 dark:bg-slate-950 relative lg:max-w-7xl lg:mx-auto lg:p-6 lg:pt-4">
+    <div className="flex flex-col lg:grid lg:grid-cols-12 lg:gap-x-8 lg:gap-y-4 h-[100dvh] lg:h-full overflow-y-auto no-scrollbar pb-[120px] lg:pb-8 bg-slate-50 dark:bg-slate-950 relative lg:max-w-[1720px] lg:mx-auto lg:w-full lg:px-10 xl:px-14 lg:pt-4">
       <div className="order-1 lg:col-span-12 p-4 pt-8 lg:p-0 bg-gradient-to-b from-white dark:from-slate-900 to-transparent lg:bg-transparent flex justify-between items-start">
         <div>
           <h2 className="text-[10px] text-emerald-600 dark:text-emerald-400 uppercase tracking-[0.2em] font-bold mb-1 flex items-center gap-1">
@@ -163,7 +163,7 @@ export default function TrackScreen() {
       </div>
 
       {/* Route Deviation AI Anomaly Engine (10-minute cooldown, transit velocity gated) */}
-      <div className="order-2 lg:order-none lg:col-span-5 lg:col-start-1 px-4 lg:px-0">
+      <div className="order-2 lg:order-none lg:col-span-5 xl:col-span-4 lg:col-start-1 px-4 lg:px-0">
         <RouteDeviationAI
           externalTrigger={triggerAnomaly}
           resetTrigger={() => setTriggerAnomaly(false)}
@@ -172,7 +172,7 @@ export default function TrackScreen() {
       </div>
 
       {/* Proximity Deboarding Chime Engine (Active for all routes, auto-notifies on route switch) */}
-      <div className="order-3 lg:order-none lg:col-span-5 lg:col-start-1 px-4 lg:px-0">
+      <div className="order-3 lg:order-none lg:col-span-5 xl:col-span-4 lg:col-start-1 px-4 lg:px-0">
         <ProximityChime
           busCode={busCode || "500D"}
           userLocation={userLoc}
@@ -182,7 +182,7 @@ export default function TrackScreen() {
       </div>
 
       {/* Interactive BMTC 4400+ Routes Autocomplete Search */}
-      <div className="order-4 lg:order-none lg:col-span-5 lg:col-start-1 px-4 lg:px-0 mb-2 relative" ref={searchContainerRef}>
+      <div className="order-4 lg:order-none lg:col-span-5 xl:col-span-4 lg:col-start-1 px-4 lg:px-0 mb-2 relative" ref={searchContainerRef}>
         <div className="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3">
           <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
             <Bus size={16} className="text-indigo-600 dark:text-indigo-400" />
@@ -267,7 +267,7 @@ export default function TrackScreen() {
       </div>
 
       {/* Commuter Active Location Bar (Allows user to set origin location) */}
-      <div className="order-5 lg:order-none lg:col-span-5 lg:col-start-1 px-4 lg:px-0 mb-1.5 flex items-center justify-between gap-2">
+      <div className="order-5 lg:order-none lg:col-span-5 xl:col-span-4 lg:col-start-1 px-4 lg:px-0 mb-1.5 flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5 text-[11px] text-slate-600 dark:text-slate-300 min-w-0">
           <span className="text-blue-500 font-black">📍 Your Location:</span>
           <span className="font-extrabold truncate text-slate-800 dark:text-slate-200">
@@ -295,8 +295,8 @@ export default function TrackScreen() {
       </div>
 
       {/* The Live Interactive Map (Mapbox Retina + Metro + Bus Stops + Moving Bus) */}
-      <div className="order-6 lg:order-none lg:col-start-6 lg:col-span-7 lg:row-start-2 lg:row-span-12 lg:sticky lg:top-4 lg:self-start px-4 lg:px-0 mb-4 lg:mb-0 mt-1">
-        <div className="w-full h-80 sm:h-96 lg:h-[640px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl relative overflow-hidden shadow-lg">
+      <div className="order-6 lg:order-none lg:col-start-6 xl:col-start-5 lg:col-span-7 xl:col-span-8 lg:row-start-2 lg:row-span-12 lg:sticky lg:top-4 lg:self-start px-4 lg:px-0 mb-4 lg:mb-0 mt-1">
+        <div className="w-full h-80 sm:h-96 lg:h-[calc(100vh-140px)] lg:min-h-[620px] lg:max-h-[860px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl relative overflow-hidden shadow-lg">
           <LiveMap
             busCode={busCode}
             destination={destination}
@@ -312,7 +312,7 @@ export default function TrackScreen() {
 
       {/* Selected Route Alignment & Bus Stops Timeline Drawer */}
       {activeRouteDetails && (
-        <div className="order-7 lg:order-none lg:col-span-5 lg:col-start-1 px-4 lg:px-0 mb-4">
+        <div className="order-7 lg:order-none lg:col-span-5 xl:col-span-4 lg:col-start-1 px-4 lg:px-0 mb-4">
           <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-4 shadow-sm">
             <div className="flex items-start justify-between border-b border-slate-100 dark:border-slate-800 pb-3 mb-3">
               <div>

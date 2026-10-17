@@ -378,7 +378,7 @@ export default function MetroScreen() {
   ];
 
   return (
-    <div className="flex flex-col lg:grid lg:grid-cols-12 lg:gap-x-6 lg:gap-y-3 h-[100dvh] lg:h-full overflow-y-auto no-scrollbar pb-[120px] lg:pb-8 bg-slate-50 dark:bg-surface-black px-4 lg:px-6 pt-6 lg:pt-4 text-slate-900 dark:text-slate-100 lg:max-w-7xl lg:mx-auto lg:w-full [&>*]:shrink-0">
+    <div className="flex flex-col lg:grid lg:grid-cols-12 lg:gap-x-8 lg:gap-y-4 h-[100dvh] lg:h-full overflow-y-auto no-scrollbar pb-[120px] lg:pb-8 bg-slate-50 dark:bg-surface-black px-4 lg:px-10 xl:px-14 pt-6 lg:pt-4 text-slate-900 dark:text-slate-100 lg:max-w-[1720px] lg:mx-auto lg:w-full [&>*]:shrink-0">
       
       {/* Header & Live Wallet Display */}
       <div className="order-1 lg:col-span-12 mb-4 flex justify-between items-start gap-2 shrink-0">
@@ -410,7 +410,7 @@ export default function MetroScreen() {
       </div>
 
       {/* Official Line Toggle Tabs */}
-      <div className="order-2 lg:order-none lg:col-span-5 lg:col-start-1 flex items-center gap-1.5 bg-white dark:bg-slate-900/90 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 mb-3.5 overflow-x-auto no-scrollbar shrink-0 min-h-[46px] shadow-xs">
+      <div className="order-2 lg:order-none lg:col-span-5 xl:col-span-4 lg:col-start-1 flex items-center gap-1.5 bg-white dark:bg-slate-900/90 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 mb-3.5 overflow-x-auto no-scrollbar shrink-0 min-h-[46px] shadow-xs">
         {lineFilters.map((filter) => {
           const isSelected = activeLineFilter === filter.key;
           return (
@@ -432,7 +432,7 @@ export default function MetroScreen() {
       </div>
 
       {/* Interactive Namma Metro Network Map */}
-      <div className="order-3 lg:order-none lg:col-start-6 lg:col-span-7 lg:row-start-2 lg:row-span-12 lg:sticky lg:top-4 lg:self-start mb-4 shrink-0 w-full">
+      <div className="order-3 lg:order-none lg:col-start-6 xl:col-start-5 lg:col-span-7 xl:col-span-8 lg:row-start-2 lg:row-span-12 lg:sticky lg:top-4 lg:self-start mb-4 shrink-0 w-full">
         <div className="flex items-center justify-between mb-1.5 px-1">
           <span className="text-[11px] font-black uppercase text-purple-700 dark:text-purple-300 tracking-wider flex items-center gap-1.5">
             <MapPin size={13} className="text-purple-600 dark:text-purple-400" /> Interactive Metro Map
@@ -441,7 +441,7 @@ export default function MetroScreen() {
             Tap stations to set From/To
           </span>
         </div>
-        <div className="w-full h-64 lg:h-[640px] bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-md relative">
+        <div className="w-full h-64 lg:h-[calc(100vh-140px)] lg:min-h-[620px] lg:max-h-[860px] bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-md relative">
           <MetroMap
             originStationId={origin}
             destStationId={destination}
@@ -453,7 +453,7 @@ export default function MetroScreen() {
       </div>
 
       {/* Station Selector Card */}
-      <div className="order-4 lg:order-none lg:col-span-5 lg:col-start-1 bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-200 dark:border-slate-800 mb-4 shadow-sm shrink-0">
+      <div className="order-4 lg:order-none lg:col-span-5 xl:col-span-4 lg:col-start-1 bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-200 dark:border-slate-800 mb-4 shadow-sm shrink-0">
         <div className="flex justify-between items-center mb-3">
           <h3 className="text-xs uppercase tracking-wider font-black text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
             <Compass size={14} className="text-purple-500" /> Plan Journey
@@ -563,7 +563,7 @@ export default function MetroScreen() {
         <motion.div 
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="order-5 lg:order-none lg:col-span-5 lg:col-start-1 bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 mb-4 shadow-sm shrink-0"
+          className="order-5 lg:order-none lg:col-span-5 xl:col-span-4 lg:col-start-1 bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 mb-4 shadow-sm shrink-0"
         >
           {/* Fare & Metrics Grid */}
           <div className="grid grid-cols-3 gap-2 text-center border-b border-slate-100 dark:border-slate-800 pb-4 mb-4">

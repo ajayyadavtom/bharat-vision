@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { 
@@ -85,7 +85,7 @@ export default function DesktopNav() {
   return (
     <>
       <header className="hidden md:flex sticky top-0 z-[110] w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-xs select-none">
-        <div className="max-w-7xl mx-auto w-full px-6 h-16 flex items-center justify-between gap-4">
+        <div className="max-w-[1720px] mx-auto w-full px-6 lg:px-10 xl:px-14 h-16 flex items-center justify-between gap-4">
           
           {/* Brand Identity & City Selection */}
           <div className="flex items-center gap-4 shrink-0">

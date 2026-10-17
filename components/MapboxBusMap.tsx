@@ -2,7 +2,6 @@
 
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import mapboxgl from "mapbox-gl";
-import "mapbox-gl/dist/mapbox-gl.css";
 import { MAPBOX_PUBLIC_TOKEN } from "@/lib/mapbox";
 import { Loader2, Navigation, Radio, Compass, ShieldCheck } from "lucide-react";
 
@@ -75,8 +74,17 @@ export default function MapboxBusMap({
   const [activeRoutePath, setActiveRoutePath] = useState<[number, number][]>(routeCoordinates || []);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // 1. Inject ripple animation keyframes
+  // 1. Inject Mapbox GL CSS & ripple animation keyframes
   useEffect(() => {
+    const linkId = "mapbox-gl-css";
+    if (typeof document !== "undefined" && !document.getElementById(linkId)) {
+      const link = document.createElement("link");
+      link.id = linkId;
+      link.rel = "stylesheet";
+      link.href = "https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.css";
+      document.head.appendChild(link);
+    }
+
     const styleId = "bmtc-mapbox-ripple-styles";
     if (!document.getElementById(styleId)) {
       const styleTag = document.createElement("style");

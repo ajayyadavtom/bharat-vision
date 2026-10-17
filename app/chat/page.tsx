@@ -188,7 +188,7 @@ export default function ChatScreen() {
   };
 
   return (
-    <div className="flex flex-col h-[100dvh] md:h-full bg-slate-50 dark:bg-slate-950 relative overflow-hidden md:max-w-4xl md:mx-auto md:w-full">
+    <div className="flex h-[100dvh] md:h-full bg-slate-50 dark:bg-slate-950 relative overflow-hidden md:max-w-[1720px] md:mx-auto md:w-full md:px-10 xl:px-14 md:py-4 md:gap-6">
       
       <input 
         type="file" 
@@ -199,101 +199,157 @@ export default function ChatScreen() {
         className="hidden" 
       />
 
-      {/* Sidebar Overlay */}
-      <AnimatePresence>
-        {isSidebarOpen && (
-          <>
-            <motion.div 
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onClick={() => setIsSidebarOpen(false)}
-              className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm z-40"
-            />
-            <motion.div 
-              initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }} transition={{ type: "spring", bounce: 0, duration: 0.3 }}
-              className="absolute top-0 bottom-0 left-0 w-3/4 max-w-sm bg-white dark:bg-slate-900 shadow-2xl z-50 flex flex-col border-r border-slate-200 dark:border-slate-800"
-            >
-              <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-1.5 flex items-center justify-center shadow-xs">
-                    <img src="/vanara-logo.png" alt="Vanara AI" className="w-full h-full object-contain dark:invert" />
-                  </div>
-                  <div>
-                    <h2 className="text-base font-black text-slate-900 dark:text-white leading-tight">Vanara AI</h2>
-                    <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider">Conversations</p>
-                  </div>
-                </div>
-                <button onClick={() => setIsSidebarOpen(false)} className="text-slate-500 hover:text-slate-900 dark:hover:text-white p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                  <X size={20} />
-                </button>
-              </div>
-              <div className="p-4 border-b border-slate-200 dark:border-slate-800">
-                <button 
-                  onClick={() => { startNewChat(); setIsSidebarOpen(false); }}
-                  className="w-full flex items-center justify-center gap-2 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 rounded-xl py-3 font-bold text-sm active:scale-95 transition-all"
-                >
-                  <PlusCircle size={18} /> New Conversation
-                </button>
-              </div>
-              <div className="flex-1 overflow-y-auto no-scrollbar p-4 flex flex-col gap-2">
-                {chatSessions.length === 0 ? (
-                  <p className="text-xs text-slate-400 text-center mt-4">No previous conversations.</p>
-                ) : (
-                  chatSessions.map(session => (
-                    <div key={session.id} className="flex items-center gap-1 group">
-                      <button
-                        onClick={() => { loadChatSession(session.id); setIsSidebarOpen(false); }}
-                        className="flex-1 flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 text-left transition-colors border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
-                      >
-                        <MessageSquare size={16} className="text-slate-400 shrink-0" />
-                        <div className="flex-1 overflow-hidden">
-                          <p className="text-sm font-bold text-slate-700 dark:text-slate-300 truncate">{session.title}</p>
-                          <p className="text-[10px] text-slate-400">{new Date(session.updatedAt).toLocaleDateString()}</p>
-                        </div>
-                      </button>
-                      <button 
-                        onClick={() => deleteChatSession(session.id)}
-                        className="p-3 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors shrink-0"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  ))
-                )}
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* Header */}
-      <div className="p-4 pt-8 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center z-10 shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-500/10 via-teal-500/10 to-slate-100 dark:from-emerald-950/40 dark:via-slate-800 dark:to-slate-900 border border-emerald-500/30 flex items-center justify-center p-2 shadow-sm">
+      {/* Desktop Persistent Sidebar */}
+      <aside className="hidden md:flex md:w-72 lg:w-80 flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-sm h-full shrink-0 overflow-hidden">
+        <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-1.5 flex items-center justify-center shadow-xs">
               <img src="/vanara-logo.png" alt="Vanara AI" className="w-full h-full object-contain dark:invert" />
             </div>
-            <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 ${isOnline ? "bg-emerald-500 animate-pulse" : "bg-amber-500"} border-2 border-white dark:border-slate-900 rounded-full`} />
-          </div>
-          <div className="flex flex-col">
-            <div className="flex items-center gap-1.5">
-              <h1 className="text-base font-black tracking-tight text-slate-900 dark:text-white">Vanara AI</h1>
-              <span className={`px-1.5 py-0.5 text-[9px] font-bold ${isOnline ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"} rounded-full border uppercase tracking-wider`}>
-                {isOnline ? "Assistant" : "Offline DB"}
-              </span>
+            <div>
+              <h2 className="text-base font-black text-slate-900 dark:text-white leading-tight">Vanara AI</h2>
+              <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider">Conversations</p>
             </div>
-            <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1">
-              <Sparkles size={10} className={isOnline ? "text-emerald-500" : "text-amber-500"} /> 
-              {isOnline ? "Transit Intelligence • Online" : "On-Device Transit Engine • Offline"}
-            </p>
           </div>
+          <span className={`w-2.5 h-2.5 rounded-full ${isOnline ? "bg-emerald-500 animate-pulse" : "bg-amber-500"}`} title={isOnline ? "Online" : "Offline DB"} />
         </div>
-        <button onClick={() => setIsSidebarOpen(true)} className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors shadow-inner">
-          <Menu size={20} />
-        </button>
-      </div>
+
+        <div className="p-3 border-b border-slate-200 dark:border-slate-800">
+          <button 
+            onClick={() => startNewChat()}
+            className="w-full flex items-center justify-center gap-2 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:hover:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 rounded-xl py-2.5 font-bold text-xs active:scale-95 transition-all cursor-pointer shadow-xs"
+          >
+            <PlusCircle size={16} /> New Conversation
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto no-scrollbar p-3 flex flex-col gap-1.5">
+          {chatSessions.length === 0 ? (
+            <p className="text-xs text-slate-400 text-center mt-6">No previous conversations.</p>
+          ) : (
+            chatSessions.map(session => (
+              <div key={session.id} className="flex items-center gap-1 group">
+                <button
+                  onClick={() => loadChatSession(session.id)}
+                  className="flex-1 flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100 dark:hover:bg-slate-800 text-left transition-colors border border-transparent hover:border-slate-200 dark:hover:border-slate-700 cursor-pointer"
+                >
+                  <MessageSquare size={14} className="text-slate-400 shrink-0" />
+                  <div className="flex-1 overflow-hidden">
+                    <p className="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">{session.title}</p>
+                    <p className="text-[9px] text-slate-400">{new Date(session.updatedAt).toLocaleDateString()}</p>
+                  </div>
+                </button>
+                <button 
+                  onClick={() => deleteChatSession(session.id)}
+                  className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors shrink-0 opacity-0 group-hover:opacity-100 cursor-pointer"
+                  title="Delete Conversation"
+                >
+                  <Trash2 size={13} />
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+      </aside>
+
+      {/* Main Chat Panel */}
+      <div className="flex-1 flex flex-col bg-white dark:bg-slate-900 md:border md:border-slate-200 md:dark:border-slate-800 md:rounded-3xl md:shadow-sm overflow-hidden h-full relative">
+
+        {/* Mobile Drawer Overlay */}
+        <AnimatePresence>
+          {isSidebarOpen && (
+            <>
+              <motion.div 
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                onClick={() => setIsSidebarOpen(false)}
+                className="md:hidden absolute inset-0 bg-slate-900/40 backdrop-blur-sm z-40"
+              />
+              <motion.div 
+                initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }} transition={{ type: "spring", bounce: 0, duration: 0.3 }}
+                className="md:hidden absolute top-0 bottom-0 left-0 w-3/4 max-w-sm bg-white dark:bg-slate-900 shadow-2xl z-50 flex flex-col border-r border-slate-200 dark:border-slate-800"
+              >
+                <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-1.5 flex items-center justify-center shadow-xs">
+                      <img src="/vanara-logo.png" alt="Vanara AI" className="w-full h-full object-contain dark:invert" />
+                    </div>
+                    <div>
+                      <h2 className="text-base font-black text-slate-900 dark:text-white leading-tight">Vanara AI</h2>
+                      <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider">Conversations</p>
+                    </div>
+                  </div>
+                  <button onClick={() => setIsSidebarOpen(false)} className="text-slate-500 hover:text-slate-900 dark:hover:text-white p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                    <X size={20} />
+                  </button>
+                </div>
+                <div className="p-4 border-b border-slate-200 dark:border-slate-800">
+                  <button 
+                    onClick={() => { startNewChat(); setIsSidebarOpen(false); }}
+                    className="w-full flex items-center justify-center gap-2 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 rounded-xl py-3 font-bold text-sm active:scale-95 transition-all"
+                  >
+                    <PlusCircle size={18} /> New Conversation
+                  </button>
+                </div>
+                <div className="flex-1 overflow-y-auto no-scrollbar p-4 flex flex-col gap-2">
+                  {chatSessions.length === 0 ? (
+                    <p className="text-xs text-slate-400 text-center mt-4">No previous conversations.</p>
+                  ) : (
+                    chatSessions.map(session => (
+                      <div key={session.id} className="flex items-center gap-1 group">
+                        <button
+                          onClick={() => { loadChatSession(session.id); setIsSidebarOpen(false); }}
+                          className="flex-1 flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 text-left transition-colors border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
+                        >
+                          <MessageSquare size={16} className="text-slate-400 shrink-0" />
+                          <div className="flex-1 overflow-hidden">
+                            <p className="text-sm font-bold text-slate-700 dark:text-slate-300 truncate">{session.title}</p>
+                            <p className="text-[10px] text-slate-400">{new Date(session.updatedAt).toLocaleDateString()}</p>
+                          </div>
+                        </button>
+                        <button 
+                          onClick={() => deleteChatSession(session.id)}
+                          className="p-3 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors shrink-0"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+
+        {/* Header */}
+        <div className="p-4 pt-6 md:pt-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center z-10 shadow-xs">
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500/10 via-teal-500/10 to-slate-100 dark:from-emerald-950/40 dark:via-slate-800 dark:to-slate-900 border border-emerald-500/30 flex items-center justify-center p-2 shadow-xs">
+                <img src="/vanara-logo.png" alt="Vanara AI" className="w-full h-full object-contain dark:invert" />
+              </div>
+              <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 ${isOnline ? "bg-emerald-500 animate-pulse" : "bg-amber-500"} border-2 border-white dark:border-slate-900 rounded-full`} />
+            </div>
+            <div className="flex flex-col">
+              <div className="flex items-center gap-1.5">
+                <h1 className="text-base font-black tracking-tight text-slate-900 dark:text-white">Vanara AI</h1>
+                <span className={`px-1.5 py-0.5 text-[9px] font-bold ${isOnline ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"} rounded-full border uppercase tracking-wider`}>
+                  {isOnline ? "Assistant" : "Offline DB"}
+                </span>
+              </div>
+              <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                <Sparkles size={10} className={isOnline ? "text-emerald-500" : "text-amber-500"} /> 
+                {isOnline ? "Transit Intelligence • Online" : "On-Device Transit Engine • Offline"}
+              </p>
+            </div>
+          </div>
+          <button onClick={() => setIsSidebarOpen(true)} className="md:hidden w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors shadow-inner">
+            <Menu size={20} />
+          </button>
+        </div>
 
       {/* Chat Area */}
-      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto no-scrollbar p-4 flex flex-col gap-4 scroll-smooth">
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto no-scrollbar p-4 md:p-6 flex flex-col gap-4 scroll-smooth">
         {chatMessages.map((msg) => (
           <div
             key={msg.id}
@@ -307,7 +363,7 @@ export default function ChatScreen() {
             <motion.div
               initial={{ opacity: 0, y: 10, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              className={`max-w-[82%] rounded-2xl p-4 shadow-sm border ${
+              className={`max-w-[85%] md:max-w-[75%] rounded-2xl p-4 shadow-sm border ${
                 msg.sender === "user" 
                   ? "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-br-sm" 
                   : "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-800/30 text-emerald-900 dark:text-emerald-100 rounded-bl-sm"
@@ -425,7 +481,7 @@ export default function ChatScreen() {
           </div>
         </div>
       </div>
-
     </div>
+  </div>
   );
 }
