@@ -336,10 +336,60 @@ export default function LoginScreen() {
   };
 
   return (
-    <div className="flex flex-col min-h-[100dvh] bg-surface-black px-6 py-10 justify-center relative">
-      <div className="absolute top-10 left-1/2 -translate-x-1/2 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+    <div className="flex flex-col min-h-[100dvh] bg-surface-black px-6 py-8 lg:py-12 justify-center relative overflow-hidden">
+      <div className="absolute top-10 left-1/4 -translate-x-1/2 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-10 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
 
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-sm mx-auto relative z-10">
+      <div className="w-full max-w-5xl mx-auto lg:grid lg:grid-cols-12 lg:gap-12 lg:items-center relative z-10">
+        {/* Left Desktop Brand Showcase (Visible only on lg+) */}
+        <div className="hidden lg:flex lg:flex-col lg:col-span-6 pr-4">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-14 h-14 bg-gradient-to-tr from-emerald-600 to-teal-500 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-emerald-500/30">
+              <Zap size={28} fill="currentColor" />
+            </div>
+            <div>
+              <span className="text-[10px] font-black uppercase tracking-[0.25em] text-emerald-400 block">
+                Namma Bengaluru
+              </span>
+              <h2 className="text-2xl font-black text-white tracking-tight">
+                BHARAT <span className="text-emerald-400">VISION</span>
+              </h2>
+            </div>
+          </div>
+
+          <h1 className="text-3xl xl:text-4xl font-extrabold text-white leading-tight mb-4">
+            Next-Gen Intelligent Civic Transit for Bengaluru
+          </h1>
+          <p className="text-slate-400 text-sm mb-8 leading-relaxed">
+            Real-time fleet tracking across 4,400+ BMTC bus routes, 121 Namma Metro stations, multimodal ONDC mobility, and instant commuter safety.
+          </p>
+
+          <div className="grid grid-cols-2 gap-3 mb-8">
+            <div className="bg-slate-900/80 border border-slate-800 p-3.5 rounded-2xl backdrop-blur-md">
+              <span className="text-emerald-400 font-black text-lg block">4,400+</span>
+              <span className="text-xs text-slate-300 font-bold block">BMTC Bus Routes</span>
+              <span className="text-[10px] text-slate-500 mt-0.5 block">GTFS live telemetry stream</span>
+            </div>
+            <div className="bg-slate-900/80 border border-slate-800 p-3.5 rounded-2xl backdrop-blur-md">
+              <span className="text-purple-400 font-black text-lg block">121</span>
+              <span className="text-xs text-slate-300 font-bold block">Metro Stations</span>
+              <span className="text-[10px] text-slate-500 mt-0.5 block">5 BMRCL lines + QR tickets</span>
+            </div>
+            <div className="bg-slate-900/80 border border-slate-800 p-3.5 rounded-2xl backdrop-blur-md">
+              <span className="text-amber-400 font-black text-lg block">ONDC Auto</span>
+              <span className="text-xs text-slate-300 font-bold block">Open Multimodal</span>
+              <span className="text-[10px] text-slate-500 mt-0.5 block">Zero surge first-mile ride hail</span>
+            </div>
+            <div className="bg-slate-900/80 border border-slate-800 p-3.5 rounded-2xl backdrop-blur-md">
+              <span className="text-teal-400 font-black text-lg block">SafeKeep</span>
+              <span className="text-xs text-slate-300 font-bold block">Proximity Alarm</span>
+              <span className="text-[10px] text-slate-500 mt-0.5 block">300m vibrating deboard chime</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Form Container (Centered on Mobile, Col-span-6 on Desktop) */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-sm mx-auto lg:col-span-6 lg:max-w-md lg:bg-slate-900/60 lg:border lg:border-slate-800/80 lg:p-8 lg:rounded-3xl lg:backdrop-blur-xl lg:shadow-2xl relative z-10">
         
         {/* Brand Header */}
         <div className="flex flex-col items-center mb-6 text-center">
@@ -624,6 +674,7 @@ export default function LoginScreen() {
           </button>
         </div>
       </motion.div>
+      </div>
 
       {/* --- GOOGLE ACCOUNT PICKER MODAL --- */}
       <AnimatePresence>
