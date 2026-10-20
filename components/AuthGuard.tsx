@@ -182,17 +182,17 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
           initial={{ opacity: 1 }}
           exit={{ opacity: 0, scale: 1.05, filter: "blur(10px)" }}
           transition={{ duration: 0.5, ease: "easeInOut" }}
-          className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950"
+          className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 px-4"
         >
-          <motion.div className="flex flex-col items-center">
-            <motion.div className="w-24 h-24 bg-emerald-500 rounded-3xl shadow-[0_0_50px_rgba(16,185,129,0.3)] flex items-center justify-center mb-6 relative overflow-hidden">
-              <Zap size={44} className="text-slate-900 dark:text-white relative z-10" fill="currentColor" />
+          <motion.div className="flex flex-col items-center text-center max-w-md">
+            <motion.div className="w-20 h-20 md:w-24 md:h-24 bg-gradient-to-tr from-emerald-600 to-teal-500 rounded-3xl shadow-[0_0_50px_rgba(16,185,129,0.3)] flex items-center justify-center mb-5 relative overflow-hidden">
+              <Zap size={44} className="text-white relative z-10" fill="currentColor" />
             </motion.div>
-            <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight mb-2">
-              Bharat <span className="text-emerald-500">Vision</span>
+            <h1 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight mb-2">
+              BHARAT <span className="text-emerald-500">VISION</span>
             </h1>
-            <p className="text-slate-500 dark:text-slate-400 text-xs font-bold tracking-[0.3em] uppercase">
-              Smart Transit
+            <p className="text-slate-500 dark:text-slate-400 text-xs md:text-sm font-bold tracking-[0.3em] uppercase">
+              Bengaluru Intelligent Transit Engine
             </p>
           </motion.div>
         </motion.div>
