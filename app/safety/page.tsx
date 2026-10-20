@@ -229,7 +229,7 @@ export default function SafetyScreen() {
         {/* Left Column: SOS & Direct Emergency Actions */}
         <div className="w-full md:col-span-5 flex flex-col">
           {/* Header: Hold to SOS */}
-          <div className="bg-gradient-to-br from-red-950/40 via-surface-dark to-white dark:to-surface-black border-2 border-red-500/50 p-6 rounded-3xl shadow-[0_0_30px_rgba(239,68,68,0.2)] mb-4 flex flex-col items-center text-center relative overflow-hidden">
+          <div className="bg-gradient-to-br from-red-50 dark:from-red-950/40 via-white dark:via-surface-dark to-red-50/30 dark:to-surface-black border-2 border-red-300 dark:border-red-500/50 p-6 rounded-3xl shadow-[0_0_30px_rgba(239,68,68,0.2)] mb-4 flex flex-col items-center text-center relative overflow-hidden">
         <div className="absolute inset-0 bg-red-500/5 animate-pulse pointer-events-none"></div>
 
         {/* Hold to SOS Button */}
@@ -524,14 +524,14 @@ export default function SafetyScreen() {
               onChange={(e) => setHazardDescription(e.target.value)}
               required
               rows={3}
-              className="w-full bg-surface-black text-slate-900 dark:text-white rounded-xl py-3 px-4 outline-none border border-slate-200 dark:border-surface-dark focus:border-brand-base text-xs font-semibold resize-none placeholder-gray-600"
+              className="w-full bg-surface-black text-slate-900 dark:text-white rounded-xl py-3 px-4 outline-none border border-slate-200 dark:border-surface-dark focus:border-brand-base text-xs font-semibold resize-none placeholder-slate-400 dark:placeholder-gray-500"
               placeholder="Describe the hazard (e.g., Yelahanka Metro platform overcrowded)..."
             />
           </div>
 
           <button
             type="submit"
-            className="w-full bg-brand-accent text-brand-dark font-black py-3.5 rounded-xl text-xs shadow-lg active:scale-95 transition-transform mt-1"
+            className="w-full bg-teal-600 hover:bg-teal-500 text-white font-black py-3.5 rounded-xl text-xs shadow-lg active:scale-95 transition-transform mt-1 cursor-pointer"
           >
             Submit Report (+15 Karma Points)
           </button>
@@ -540,7 +540,7 @@ export default function SafetyScreen() {
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="mt-2 bg-emerald-500/20 border border-emerald-500 text-emerald-300 text-xs py-2 px-4 rounded-xl flex items-center gap-2 justify-center"
+              className="mt-2 bg-emerald-50 dark:bg-emerald-500/20 border border-emerald-300 dark:border-emerald-500 text-emerald-800 dark:text-emerald-300 text-xs py-2 px-4 rounded-xl flex items-center gap-2 justify-center font-bold"
             >
               <CheckCircle2 size={16} />
               <span>Hazard successfully logged & Karma credited!</span>

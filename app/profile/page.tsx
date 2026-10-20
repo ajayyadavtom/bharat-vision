@@ -369,7 +369,7 @@ export default function ProfileScreen() {
             <Leaf size={16} className="text-emerald-500 dark:text-emerald-400" />
           </div>
           <p className="text-3xl font-black text-slate-900 dark:text-white mt-1">
-            {(carbonSavedGrams / 1000).toFixed(1)} <span className="text-sm text-slate-400 font-bold">kg</span>
+            {(carbonSavedGrams / 1000).toFixed(1)} <span className="text-sm text-slate-500 dark:text-slate-400 font-bold">kg</span>
           </p>
           <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mt-1">Carbon Offset</p>
         </div>
@@ -379,9 +379,9 @@ export default function ProfileScreen() {
             <Medal size={16} className="text-amber-500 dark:text-amber-400" />
           </div>
           <p className="text-3xl font-black text-slate-900 dark:text-white mt-1">
-            {karmaPoints} <span className="text-sm text-slate-400 font-bold">pts</span>
+            {karmaPoints} <span className="text-sm text-slate-500 dark:text-slate-400 font-bold">pts</span>
           </p>
-          <p className="text-[10px] text-amber-500 font-bold uppercase tracking-wider mt-1">Rank: Bronze</p>
+          <p className="text-[10px] text-amber-600 dark:text-amber-400 font-bold uppercase tracking-wider mt-1">Rank: Bronze</p>
         </div>
       </div>
 
@@ -492,7 +492,7 @@ export default function ProfileScreen() {
                           <p className="font-bold text-sm text-slate-700 dark:text-slate-300">
                             No {historyFilter === "all" ? "" : historyFilter} records found
                           </p>
-                          <p className="text-xs text-slate-400 mt-0.5">
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                             Purchased tickets and booked rides will be automatically tracked here.
                           </p>
                         </div>
@@ -584,7 +584,7 @@ export default function ProfileScreen() {
                                 <span className="font-black text-base text-emerald-600 dark:text-emerald-400 block">
                                   ₹{ride.fare}
                                 </span>
-                                <span className="text-[10px] font-semibold text-slate-400 block">Paid</span>
+                                <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 block">Paid</span>
                               </div>
                             </div>
                           );

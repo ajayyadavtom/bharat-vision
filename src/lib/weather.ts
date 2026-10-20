@@ -37,11 +37,11 @@ export function getWeatherCondition(code: number): { en: string; kn: string; hi:
 }
 
 export function getAqiDetails(usAqi: number): { category: "Good" | "Moderate" | "Poor" | "Unhealthy" | "Hazardous"; color: string } {
-  if (usAqi <= 50) return { category: "Good", color: "text-emerald-400" };
-  if (usAqi <= 100) return { category: "Moderate", color: "text-yellow-400" };
-  if (usAqi <= 150) return { category: "Poor", color: "text-orange-400" };
-  if (usAqi <= 200) return { category: "Unhealthy", color: "text-red-400" };
-  return { category: "Hazardous", color: "text-purple-400" };
+  if (usAqi <= 50) return { category: "Good", color: "text-emerald-700 dark:text-emerald-400" };
+  if (usAqi <= 100) return { category: "Moderate", color: "text-amber-700 dark:text-yellow-400" };
+  if (usAqi <= 150) return { category: "Poor", color: "text-orange-700 dark:text-orange-400" };
+  if (usAqi <= 200) return { category: "Unhealthy", color: "text-red-700 dark:text-red-400" };
+  return { category: "Hazardous", color: "text-purple-700 dark:text-purple-400" };
 }
 
 export async function fetchLiveWeatherAndAqi(latitude: number, longitude: number): Promise<RealtimeWeatherData> {

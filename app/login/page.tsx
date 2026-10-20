@@ -462,14 +462,14 @@ export default function LoginScreen() {
           <button
             type="button"
             onClick={() => { setLoginMode("email"); setError(null); setSuccessMsg(null); }}
-            className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 ${loginMode === "email" ? "bg-emerald-500 text-slate-900 shadow-md font-black" : "text-slate-500 dark:text-gray-400 hover:text-white"}`}
+            className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 ${loginMode === "email" ? "bg-emerald-500 text-slate-900 shadow-md font-black" : "text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white"}`}
           >
             <Mail size={14} /> Email Account
           </button>
           <button
             type="button"
             onClick={() => { setLoginMode("phone"); setError(null); setSuccessMsg(null); }}
-            className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 ${loginMode === "phone" ? "bg-emerald-500 text-slate-900 shadow-md font-black" : "text-slate-500 dark:text-gray-400 hover:text-white"}`}
+            className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 ${loginMode === "phone" ? "bg-emerald-500 text-slate-900 shadow-md font-black" : "text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white"}`}
           >
             <Phone size={14} /> Mobile OTP
           </button>
@@ -577,7 +577,7 @@ export default function LoginScreen() {
                   onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, ""))}
                   required
                   maxLength={6}
-                  className="w-full bg-surface-dark/80 backdrop-blur-md text-emerald-400 rounded-2xl py-3.5 pl-12 pr-4 outline-none border border-slate-200 dark:border-surface-dark focus:border-emerald-500 transition-all shadow-md text-base text-center tracking-[0.5em] font-black font-mono placeholder-gray-600"
+                  className="w-full bg-surface-dark/80 backdrop-blur-md text-emerald-600 dark:text-emerald-400 rounded-2xl py-3.5 pl-12 pr-4 outline-none border border-slate-200 dark:border-surface-dark focus:border-emerald-500 transition-all shadow-md text-base text-center tracking-[0.5em] font-black font-mono placeholder-gray-400 dark:placeholder-gray-600"
                   placeholder="• • • • • •"
                 />
               </div>
@@ -607,7 +607,7 @@ export default function LoginScreen() {
                   <button
                     type="button"
                     onClick={() => { setOtpSent(false); setOtp(""); setError(null); }}
-                    className="text-gray-400 hover:text-white"
+                    className="text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white"
                   >
                     Change Number
                   </button>
@@ -616,7 +616,7 @@ export default function LoginScreen() {
                     type="button"
                     disabled={otpCountdown > 0}
                     onClick={handleSendOtp}
-                    className="text-emerald-400 hover:underline disabled:text-gray-600 disabled:no-underline font-semibold"
+                    className="text-emerald-600 dark:text-emerald-400 hover:underline disabled:text-gray-400 dark:disabled:text-gray-600 disabled:no-underline font-semibold"
                   >
                     {otpCountdown > 0 ? `Resend in ${otpCountdown}s` : "Resend OTP"}
                   </button>
@@ -628,9 +628,9 @@ export default function LoginScreen() {
 
         {/* Divider */}
         <div className="flex items-center gap-4 my-5">
-          <div className="h-px bg-slate-800 flex-1"></div>
-          <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Or</span>
-          <div className="h-px bg-slate-800 flex-1"></div>
+          <div className="h-px bg-slate-200 dark:bg-slate-800 flex-1"></div>
+          <span className="text-[10px] text-slate-500 dark:text-gray-500 font-bold uppercase tracking-widest">Or</span>
+          <div className="h-px bg-slate-200 dark:bg-slate-800 flex-1"></div>
         </div>
 
         {/* Google Login Button */}

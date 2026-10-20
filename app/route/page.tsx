@@ -406,7 +406,7 @@ export default function RoutePlannerScreen() {
                 </div>
                 <div className="flex-1 min-w-0 relative">
                   <div className="flex items-center justify-between mb-0.5">
-                    <label className="text-[9px] uppercase font-black text-slate-400">From (Your Location)</label>
+                    <label className="text-[9px] uppercase font-black text-slate-500 dark:text-slate-400">From (Your Location)</label>
                     {useLiveLocation && (
                       <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                         <Radio size={10} className="animate-spin" /> GPS Active
@@ -466,7 +466,7 @@ export default function RoutePlannerScreen() {
                   <MapPin size={16} className="text-purple-600 dark:text-purple-400" />
                 </div>
                 <div className="flex-1 min-w-0 relative">
-                  <label className="text-[9px] uppercase font-black text-slate-400 block mb-0.5">To (Destination)</label>
+                  <label className="text-[9px] uppercase font-black text-slate-500 dark:text-slate-400 block mb-0.5">To (Destination)</label>
                   <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-1.5 focus-within:border-purple-500 transition-colors">
                     <input
                       type="text"
@@ -524,7 +524,7 @@ export default function RoutePlannerScreen() {
 
             {/* Quick Destination Chips */}
             <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-2.5 mt-2 border-t border-slate-100 dark:border-slate-800">
-              <span className="text-[9px] uppercase font-black text-slate-400 shrink-0 mr-1">Quick:</span>
+              <span className="text-[9px] uppercase font-black text-slate-500 dark:text-slate-400 shrink-0 mr-1">Quick:</span>
               {popularDestinations.map((pop) => (
                 <button
                   key={pop.label}
@@ -593,25 +593,25 @@ export default function RoutePlannerScreen() {
               {/* Metrics Grid */}
               <div className="grid grid-cols-4 gap-2 text-center bg-slate-50 dark:bg-slate-950 p-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 mb-3.5">
                 <div>
-                  <span className="text-[9px] uppercase font-black text-slate-400 block">Total Time</span>
+                  <span className="text-[9px] uppercase font-black text-slate-500 dark:text-slate-400 block">Total Time</span>
                   <span className="text-sm font-black text-slate-900 dark:text-white flex items-center justify-center gap-0.5">
                     {suggestion.totalDurationMinutes}m
                   </span>
                 </div>
                 <div>
-                  <span className="text-[9px] uppercase font-black text-slate-400 block">Bus Stops</span>
+                  <span className="text-[9px] uppercase font-black text-slate-500 dark:text-slate-400 block">Bus Stops</span>
                   <span className="text-sm font-black text-indigo-600 dark:text-indigo-400">
                     {suggestion.stopsCount}
                   </span>
                 </div>
                 <div>
-                  <span className="text-[9px] uppercase font-black text-slate-400 block">First Walk</span>
+                  <span className="text-[9px] uppercase font-black text-slate-500 dark:text-slate-400 block">First Walk</span>
                   <span className="text-sm font-black text-slate-700 dark:text-slate-300">
                     {suggestion.walkToBoardingMinutes}m
                   </span>
                 </div>
                 <div>
-                  <span className="text-[9px] uppercase font-black text-slate-400 block">CO₂ Saved</span>
+                  <span className="text-[9px] uppercase font-black text-slate-500 dark:text-slate-400 block">CO₂ Saved</span>
                   <span className="text-sm font-black text-emerald-600 dark:text-emerald-400 flex items-center justify-center gap-0.5">
                     <Leaf size={11} /> {suggestion.carbonSavedGrams}g
                   </span>
@@ -623,18 +623,18 @@ export default function RoutePlannerScreen() {
                 <div className="flex items-start gap-2">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 mt-1 shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <span className="text-[10px] text-slate-400 uppercase font-black block">Boarding Bus Stop</span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-black block">Boarding Bus Stop</span>
                     <strong className="text-slate-900 dark:text-white truncate block">{suggestion.boardingStop.name}</strong>
-                    <span className="text-[10px] text-slate-500">Walk {suggestion.walkToBoardingMeters}m ({suggestion.walkToBoardingMinutes} min) from your location</span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400">Walk {suggestion.walkToBoardingMeters}m ({suggestion.walkToBoardingMinutes} min) from your location</span>
                   </div>
                 </div>
 
                 <div className="border-t border-slate-200 dark:border-slate-800 pt-2 flex items-start gap-2">
                   <span className="w-2 h-2 rounded-full bg-rose-500 mt-1 shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <span className="text-[10px] text-slate-400 uppercase font-black block">Alighting Bus Stop</span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-black block">Alighting Bus Stop</span>
                     <strong className="text-slate-900 dark:text-white truncate block">{suggestion.alightingStop.name}</strong>
-                    <span className="text-[10px] text-slate-500">Walk {suggestion.walkFromAlightMeters}m ({suggestion.walkFromAlightMinutes} min) to {suggestion.destinationName}</span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400">Walk {suggestion.walkFromAlightMeters}m ({suggestion.walkFromAlightMinutes} min) to {suggestion.destinationName}</span>
                   </div>
                 </div>
               </div>
@@ -715,7 +715,7 @@ export default function RoutePlannerScreen() {
           {/* Section 3: Alternative Transit Modes (Metro, AC Volvo, Feeder) */}
           {suggestion && suggestion.alternatives.length > 0 && (
             <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-4 shadow-sm mb-3">
-              <h4 className="text-[11px] font-black uppercase tracking-wider text-slate-400 mb-2.5">
+              <h4 className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2.5">
                 Alternative Travel Options
               </h4>
               <div className="flex flex-col gap-2">
@@ -740,12 +740,12 @@ export default function RoutePlannerScreen() {
                             {alt.tag}
                           </span>
                         </div>
-                        <p className="text-[10px] text-slate-500">{alt.description}</p>
+                        <p className="text-[10px] text-slate-600 dark:text-slate-400">{alt.description}</p>
                       </div>
                     </div>
                     <div className="text-right shrink-0 ml-2">
                       <span className="text-xs font-black text-slate-900 dark:text-white block">{alt.durationMinutes}m</span>
-                      <span className="text-[10px] text-slate-400 font-bold">₹{alt.fareRupees}</span>
+                      <span className="text-[10px] text-slate-600 dark:text-slate-400 font-bold">₹{alt.fareRupees}</span>
                     </div>
                   </div>
                 ))}

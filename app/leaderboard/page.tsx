@@ -48,10 +48,10 @@ export default function LeaderboardScreen() {
   };
 
   const calculateLevel = (points: number) => {
-    if (points >= 2000) return { tier: "Platinum", color: "text-indigo-400", border: "border-indigo-500/50", bg: "bg-indigo-900/20" };
-    if (points >= 1000) return { tier: "Gold", color: "text-amber-400", border: "border-amber-500/50", bg: "bg-amber-900/20" };
-    if (points >= 500) return { tier: "Silver", color: "text-slate-600 dark:text-gray-300", border: "border-gray-400/50", bg: "bg-gray-800/40" };
-    return { tier: "Bronze", color: "text-amber-700", border: "border-amber-900/50", bg: "bg-amber-950/30" };
+    if (points >= 2000) return { tier: "Platinum", color: "text-indigo-700 dark:text-indigo-400", border: "border-indigo-300 dark:border-indigo-500/50", bg: "bg-indigo-50 dark:bg-indigo-900/20" };
+    if (points >= 1000) return { tier: "Gold", color: "text-amber-700 dark:text-amber-400", border: "border-amber-300 dark:border-amber-500/50", bg: "bg-amber-50 dark:bg-amber-900/20" };
+    if (points >= 500) return { tier: "Silver", color: "text-slate-700 dark:text-gray-300", border: "border-slate-300 dark:border-gray-400/50", bg: "bg-slate-100 dark:bg-gray-800/40" };
+    return { tier: "Bronze", color: "text-amber-800 dark:text-amber-600", border: "border-amber-300 dark:border-amber-900/50", bg: "bg-amber-50 dark:bg-amber-950/30" };
   };
 
   const userLevel = calculateLevel(karmaPoints);
@@ -89,7 +89,7 @@ export default function LeaderboardScreen() {
             </span>
           </div>
           
-          <div className="w-16 h-16 bg-surface-black rounded-2xl border border-white/10 flex items-center justify-center shadow-inner">
+          <div className="w-16 h-16 bg-surface-black rounded-2xl border border-slate-200 dark:border-white/10 flex items-center justify-center shadow-inner">
             <Trophy size={32} className={userLevel.color} />
           </div>
         </div>
@@ -105,7 +105,7 @@ export default function LeaderboardScreen() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: idx * 0.1 }}
             className={`flex items-center justify-between p-3 rounded-2xl transition-all ${
-              user.isCurrentUser ? "bg-brand-base/20 border border-brand-base shadow-md" : "bg-transparent border border-transparent"
+              user.isCurrentUser ? "bg-teal-500/15 border border-teal-500 shadow-md" : "bg-transparent border border-transparent"
             }`}
           >
             <div className="flex items-center gap-4">
@@ -113,13 +113,13 @@ export default function LeaderboardScreen() {
                 {getRankIcon(user.rank)}
               </div>
               <div>
-                <p className={`text-sm font-bold ${user.isCurrentUser ? "text-brand-accent" : "text-slate-900 dark:text-white"}`}>
+                <p className={`text-sm font-bold ${user.isCurrentUser ? "text-teal-700 dark:text-brand-accent font-black" : "text-slate-900 dark:text-white"}`}>
                   {user.name} {user.isCurrentUser && "(You)"}
                 </p>
               </div>
             </div>
             <div className="text-right">
-              <p className="text-xs font-black text-gray-200">{user.points} pts</p>
+              <p className="text-xs font-black text-slate-900 dark:text-gray-200">{user.points} pts</p>
             </div>
           </motion.div>
         ))}
@@ -129,25 +129,25 @@ export default function LeaderboardScreen() {
       <h3 className="text-sm font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-3">Earn & Redeem</h3>
       <div className="grid grid-cols-2 gap-3">
         
-        <div className="bg-surface-dark border border-slate-200 dark:border-brand-dark p-4 rounded-2xl flex flex-col gap-2">
-          <div className="bg-emerald-900/30 w-8 h-8 rounded-lg flex items-center justify-center mb-1">
-            <Leaf size={16} className="text-emerald-400" />
+        <div className="bg-surface-dark border border-slate-200 dark:border-brand-dark p-4 rounded-2xl flex flex-col gap-2 shadow-xs">
+          <div className="bg-emerald-100 dark:bg-emerald-900/30 w-8 h-8 rounded-lg flex items-center justify-center mb-1">
+            <Leaf size={16} className="text-emerald-700 dark:text-emerald-400" />
           </div>
           <h4 className="text-xs font-bold text-slate-900 dark:text-white">Green Transit</h4>
-          <p className="text-[10px] text-slate-500 dark:text-gray-400 leading-tight">Earn +5 pts for choosing multi-modal routes over private cabs.</p>
+          <p className="text-[10px] text-slate-600 dark:text-gray-400 leading-tight">Earn +5 pts for choosing multi-modal routes over private cabs.</p>
         </div>
 
-        <div className="bg-surface-dark border border-slate-200 dark:border-brand-dark p-4 rounded-2xl flex flex-col gap-2">
-          <div className="bg-red-900/30 w-8 h-8 rounded-lg flex items-center justify-center mb-1">
-            <ShieldAlert size={16} className="text-red-400" />
+        <div className="bg-surface-dark border border-slate-200 dark:border-brand-dark p-4 rounded-2xl flex flex-col gap-2 shadow-xs">
+          <div className="bg-red-100 dark:bg-red-900/30 w-8 h-8 rounded-lg flex items-center justify-center mb-1">
+            <ShieldAlert size={16} className="text-red-700 dark:text-red-400" />
           </div>
           <h4 className="text-xs font-bold text-slate-900 dark:text-white">SafeKeep Intel</h4>
-          <p className="text-[10px] text-slate-500 dark:text-gray-400 leading-tight">Earn +15 pts for reporting accurate hazards and crowd surges.</p>
+          <p className="text-[10px] text-slate-600 dark:text-gray-400 leading-tight">Earn +15 pts for reporting accurate hazards and crowd surges.</p>
         </div>
 
       </div>
 
-      <button className="w-full mt-4 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-slate-900 dark:text-white font-extrabold py-4 rounded-2xl text-xs shadow-lg active:scale-95 transition-transform flex items-center justify-center gap-2">
+      <button className="w-full mt-4 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white font-black py-4 rounded-2xl text-xs shadow-lg active:scale-95 transition-transform flex items-center justify-center gap-2 cursor-pointer">
         <Gift size={18} />
         <span>Redeem 500 Pts for 1-Day Pass</span>
       </button>

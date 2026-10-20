@@ -288,13 +288,13 @@ export default function VisionHome() {
               <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
                 <Search size={20} className="text-slate-400 group-hover:text-emerald-500 transition-colors" />
               </div>
-              <div className="w-full bg-white dark:bg-slate-900 text-slate-500 rounded-2xl py-4 pl-12 pr-4 border border-slate-200 dark:border-slate-800 group-hover:border-emerald-500 transition-all shadow-sm text-sm text-left font-bold">
+              <div className="w-full bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 rounded-2xl py-4 pl-12 pr-4 border border-slate-200 dark:border-slate-800 group-hover:border-emerald-500 transition-all shadow-sm text-sm text-left font-bold">
                 Where to? (e.g., Silk Board to Majestic)
               </div>
             </Link>
             {/* Quick Corridor Hubs */}
             <div className="flex items-center gap-1.5 mt-2.5 overflow-x-auto no-scrollbar">
-              <span className="text-[10px] uppercase font-bold text-slate-400 shrink-0">Popular:</span>
+              <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 shrink-0">Popular:</span>
               {[
                 { label: "Silk Board ⇄ Hebbal (500D)", href: "/track" },
                 { label: "Majestic ⇄ Whitefield (Purple)", href: "/metro" },
@@ -304,7 +304,7 @@ export default function VisionHome() {
                 <Link
                   key={hub.label}
                   href={hub.href}
-                  className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 bg-white/80 dark:bg-slate-900/80 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-600 dark:hover:text-emerald-400 border border-slate-200 dark:border-slate-800 px-2.5 py-1 rounded-lg transition-colors whitespace-nowrap shadow-xs"
+                  className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 bg-white/80 dark:bg-slate-900/80 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-600 dark:hover:text-emerald-400 border border-slate-200 dark:border-slate-800 px-2.5 py-1 rounded-lg transition-colors whitespace-nowrap shadow-xs"
                 >
                   {hub.label}
                 </Link>
@@ -318,7 +318,7 @@ export default function VisionHome() {
             <div className="flex justify-between items-end relative z-10">
               <div>
                 <p className="text-emerald-50 text-xs font-semibold mb-1 flex items-center gap-1"><CreditCard size={12} /> BHARAT WALLET</p>
-                <h3 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">₹{(walletBalance || 0).toFixed(2)}</h3>
+                <h3 className="text-4xl font-black text-white tracking-tight">₹{(walletBalance || 0).toFixed(2)}</h3>
               </div>
               <button onClick={() => setIsPaymentOpen(true)} className="bg-white text-emerald-600 text-xs font-bold px-4 py-2 rounded-xl shadow-sm active:scale-95 transition-transform hover:bg-slate-50 cursor-pointer">
                 Add Money
@@ -448,23 +448,23 @@ export default function VisionHome() {
                   className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 grid grid-cols-4 gap-2 text-center text-slate-700 dark:text-slate-200"
                 >
                   <div className="bg-slate-50 dark:bg-slate-800/60 p-2 rounded-xl">
-                    <span className="text-[9px] text-slate-400 font-bold block uppercase flex items-center justify-center gap-0.5">
-                      <Droplets size={10} className="text-blue-400" /> Humidity
+                    <span className="text-[9px] text-slate-600 dark:text-slate-400 font-bold block uppercase flex items-center justify-center gap-0.5">
+                      <Droplets size={10} className="text-blue-500" /> Humidity
                     </span>
                     <span className="text-xs font-black">{liveWeather.humidity}%</span>
                   </div>
                   <div className="bg-slate-50 dark:bg-slate-800/60 p-2 rounded-xl">
-                    <span className="text-[9px] text-slate-400 font-bold block uppercase flex items-center justify-center gap-0.5">
-                      <Wind size={10} className="text-teal-400" /> Wind
+                    <span className="text-[9px] text-slate-600 dark:text-slate-400 font-bold block uppercase flex items-center justify-center gap-0.5">
+                      <Wind size={10} className="text-teal-600 dark:text-teal-400" /> Wind
                     </span>
                     <span className="text-xs font-black">{liveWeather.windSpeed} km/h</span>
                   </div>
                   <div className="bg-slate-50 dark:bg-slate-800/60 p-2 rounded-xl">
-                    <span className="text-[9px] text-slate-400 font-bold block uppercase">PM2.5</span>
+                    <span className="text-[9px] text-slate-600 dark:text-slate-400 font-bold block uppercase">PM2.5</span>
                     <span className="text-xs font-black">{liveWeather.pm25} µg</span>
                   </div>
                   <div className="bg-slate-50 dark:bg-slate-800/60 p-2 rounded-xl">
-                    <span className="text-[9px] text-slate-400 font-bold block uppercase">PM10</span>
+                    <span className="text-[9px] text-slate-600 dark:text-slate-400 font-bold block uppercase">PM10</span>
                     <span className="text-xs font-black">{liveWeather.pm10} µg</span>
                   </div>
                 </motion.div>

@@ -42,13 +42,13 @@ export default function DepotDashboard() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping"></span>
-            <h1 className="text-[10px] uppercase tracking-widest text-red-400 font-bold">Depot Command Center</h1>
+            <h1 className="text-[10px] uppercase tracking-widest text-red-600 dark:text-red-400 font-bold">Depot Command Center</h1>
           </div>
           <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white">Surge Telemetry</h2>
         </div>
         <div className="bg-surface-dark border border-slate-200 dark:border-brand-dark px-3 py-1.5 rounded-xl shadow-md text-right">
           <span className="text-[10px] text-slate-500 dark:text-gray-400 font-bold uppercase block">System Status</span>
-          <span className="text-emerald-400 font-black text-xs flex items-center gap-1">
+          <span className="text-emerald-600 dark:text-emerald-400 font-black text-xs flex items-center gap-1">
             <Radio size={12} className="animate-pulse" /> Live Feed Active
           </span>
         </div>
@@ -59,23 +59,23 @@ export default function DepotDashboard() {
         <div className="bg-surface-dark p-4 rounded-2xl border border-slate-200 dark:border-surface-dark flex flex-col justify-between">
           <p className="text-[10px] text-slate-500 dark:text-gray-400 font-bold uppercase">Active Fleet</p>
           <p className="text-2xl font-black text-slate-900 dark:text-white mt-2">40 Buses</p>
-          <span className="text-[10px] text-emerald-400 font-semibold mt-1">100% Operational</span>
+          <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold mt-1">100% Operational</span>
         </div>
         <div className="bg-surface-dark p-4 rounded-2xl border border-slate-200 dark:border-surface-dark flex flex-col justify-between">
           <p className="text-[10px] text-slate-500 dark:text-gray-400 font-bold uppercase">Total Pax</p>
-          <p className="text-2xl font-black text-brand-accent mt-2">2,540</p>
-          <span className="text-[10px] text-amber-400 font-semibold mt-1">Peak Hour Load</span>
+          <p className="text-2xl font-black text-teal-700 dark:text-brand-accent mt-2">2,540</p>
+          <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold mt-1">Peak Hour Load</span>
         </div>
         <div className="bg-surface-dark p-4 rounded-2xl border border-slate-200 dark:border-surface-dark flex flex-col justify-between">
           <p className="text-[10px] text-slate-500 dark:text-gray-400 font-bold uppercase">Surge Zones</p>
-          <p className="text-2xl font-black text-red-400 mt-2">2 Routes</p>
-          <span className="text-[10px] text-red-400 font-semibold mt-1">Action Required</span>
+          <p className="text-2xl font-black text-red-600 dark:text-red-400 mt-2">2 Routes</p>
+          <span className="text-[10px] text-red-600 dark:text-red-400 font-bold mt-1">Action Required</span>
         </div>
       </div>
 
       {/* Corridor Surge Monitoring List */}
       <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
-        <TrendingUp size={18} className="text-brand-accent" /> Corridor Density & Relief Dispatch
+        <TrendingUp size={18} className="text-teal-600 dark:text-brand-accent" /> Corridor Density & Relief Dispatch
       </h3>
 
       <div className="flex flex-col gap-4 mb-6">
@@ -86,38 +86,38 @@ export default function DepotDashboard() {
             animate={{ opacity: 1, y: 0 }}
             className={`p-4 rounded-2xl border backdrop-blur-md transition-all ${
               corridor.surgeStatus === "Critical Overflow" 
-                ? "bg-red-950/20 border-red-500/50 shadow-[0_0_20px_rgba(239,68,68,0.15)]" 
+                ? "bg-red-50/70 dark:bg-red-950/20 border-red-300 dark:border-red-500/50 shadow-[0_0_20px_rgba(239,68,68,0.15)]" 
                 : corridor.surgeStatus === "Elevated Surge"
-                ? "bg-amber-950/20 border-amber-500/40"
+                ? "bg-amber-50/70 dark:bg-amber-950/20 border-amber-300 dark:border-amber-500/40"
                 : "bg-surface-dark border-slate-200 dark:border-surface-dark"
             }`}
           >
             <div className="flex justify-between items-start mb-3">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="bg-brand-dark text-brand-accent font-black text-xs px-2 py-0.5 rounded border border-brand-base">
+                  <span className="bg-teal-100 text-teal-800 dark:bg-brand-dark dark:text-brand-accent font-black text-xs px-2 py-0.5 rounded border border-teal-300 dark:border-brand-base">
                     Route {corridor.route}
                   </span>
-                  <span className="text-xs text-slate-600 dark:text-gray-300 font-semibold">{corridor.corridor}</span>
+                  <span className="text-xs text-slate-700 dark:text-gray-300 font-semibold">{corridor.corridor}</span>
                 </div>
               </div>
               <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded-full border ${
                 corridor.surgeStatus === "Critical Overflow" 
-                  ? "bg-red-500/20 text-red-400 border-red-500" 
+                  ? "bg-red-100 text-red-700 border-red-300 dark:bg-red-500/20 dark:text-red-400 dark:border-red-500" 
                   : corridor.surgeStatus === "Elevated Surge"
-                  ? "bg-amber-500/20 text-amber-400 border-amber-500"
-                  : "bg-emerald-500/20 text-emerald-400 border-emerald-500"
+                  ? "bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-500/20 dark:text-amber-400 dark:border-amber-500"
+                  : "bg-emerald-100 text-emerald-700 border-emerald-300 dark:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500"
               }`}>
                 {corridor.surgeStatus}
               </span>
             </div>
 
             <div className="flex justify-between items-center bg-surface-black p-3 rounded-xl border border-slate-200 dark:border-surface-dark mb-3">
-              <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-gray-300">
-                <Users size={14} className="text-brand-accent" />
+              <div className="flex items-center gap-2 text-xs text-slate-700 dark:text-gray-300">
+                <Users size={14} className="text-teal-600 dark:text-brand-accent" />
                 <span>Passenger Load: <strong className="text-slate-900 dark:text-white">{corridor.passengerCount} pax</strong></span>
               </div>
-              <div className="text-xs text-slate-500 dark:text-gray-400">
+              <div className="text-xs text-slate-600 dark:text-gray-400">
                 Active Fleet: <strong className="text-slate-900 dark:text-white">{corridor.activeBuses} units</strong>
               </div>
             </div>
@@ -151,7 +151,7 @@ export default function DepotDashboard() {
           <h3 className="text-sm font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-2">Command Audit Logs</h3>
           <div className="bg-surface-dark p-4 rounded-2xl border border-slate-200 dark:border-surface-dark flex flex-col gap-2 font-mono text-[11px]">
             {dispatchedLogs.map((log, index) => (
-              <div key={index} className="text-emerald-400 flex items-center gap-2">
+              <div key={index} className="text-emerald-700 dark:text-emerald-400 flex items-center gap-2">
                 <CheckCircle2 size={12} />
                 <span>{log}</span>
               </div>

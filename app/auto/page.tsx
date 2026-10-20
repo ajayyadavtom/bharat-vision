@@ -77,13 +77,13 @@ export default function AutoCabBooking() {
       <div className="bg-surface-dark p-5 rounded-3xl border border-slate-200 dark:border-surface-dark mb-6 shadow-lg">
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-3 bg-surface-black p-3 rounded-2xl border border-slate-200 dark:border-surface-dark focus-within:border-amber-500 transition-colors">
-            <MapPin size={18} className="text-brand-light" />
+            <MapPin size={18} className="text-teal-600 dark:text-brand-light" />
             <input 
               type="text" 
               value={pickup}
               onChange={(e) => setPickup(e.target.value)}
               placeholder="Pickup Location"
-              className="bg-transparent text-slate-900 dark:text-white text-sm outline-none w-full font-semibold placeholder-gray-500"
+              className="bg-transparent text-slate-900 dark:text-white text-sm outline-none w-full font-semibold placeholder-slate-400"
             />
           </div>
           <div className="flex items-center gap-3 bg-surface-black p-3 rounded-2xl border border-slate-200 dark:border-surface-dark focus-within:border-amber-500 transition-colors">
@@ -93,14 +93,14 @@ export default function AutoCabBooking() {
               value={dropoff}
               onChange={(e) => setDropoff(e.target.value)}
               placeholder="Where to?"
-              className="bg-transparent text-slate-900 dark:text-white text-sm outline-none w-full font-semibold placeholder-gray-500"
+              className="bg-transparent text-slate-900 dark:text-white text-sm outline-none w-full font-semibold placeholder-slate-400"
             />
           </div>
           
           <button 
             onClick={handleSearch}
             disabled={!dropoff || isSearching}
-            className="w-full bg-amber-500 text-surface-black font-extrabold py-3.5 rounded-2xl shadow-lg active:scale-95 transition-transform flex items-center justify-center gap-2 text-sm disabled:opacity-50"
+            className="w-full bg-amber-500 text-slate-950 font-black py-3.5 rounded-2xl shadow-lg active:scale-95 transition-transform flex items-center justify-center gap-2 text-sm disabled:opacity-50 cursor-pointer"
           >
             {isSearching ? "Searching Open Network..." : "Find Rides"}
           </button>
@@ -116,11 +116,11 @@ export default function AutoCabBooking() {
               key={ride.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-surface-dark p-4 rounded-2xl border border-amber-900/30 flex items-center justify-between"
+              className="bg-surface-dark p-4 rounded-2xl border border-amber-200 dark:border-amber-900/30 flex items-center justify-between shadow-xs"
             >
               <div className="flex items-center gap-3">
-                <div className="bg-amber-900/30 p-2 rounded-xl">
-                  <Car size={24} className="text-amber-400" />
+                <div className="bg-amber-100 dark:bg-amber-900/30 p-2 rounded-xl">
+                  <Car size={24} className="text-amber-600 dark:text-amber-400" />
                 </div>
                 <div>
                   <h4 className="text-sm font-bold text-slate-900 dark:text-white">{ride.type}</h4>
@@ -128,10 +128,10 @@ export default function AutoCabBooking() {
                 </div>
               </div>
               <div className="flex flex-col items-end gap-2">
-                <span className="text-lg font-black text-amber-400">₹{ride.fare}</span>
+                <span className="text-lg font-black text-amber-600 dark:text-amber-400">₹{ride.fare}</span>
                 <button 
                   onClick={() => handleBook(ride)}
-                  className="bg-amber-500 text-surface-black text-xs font-bold px-4 py-1.5 rounded-lg active:scale-95 transition-transform"
+                  className="bg-amber-500 text-slate-950 text-xs font-black px-4 py-1.5 rounded-lg active:scale-95 transition-transform cursor-pointer"
                 >
                   Book
                 </button>
@@ -146,10 +146,10 @@ export default function AutoCabBooking() {
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-emerald-900/20 border border-emerald-500/30 p-5 rounded-3xl flex flex-col items-center text-center gap-3"
+          className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-300 dark:border-emerald-500/30 p-5 rounded-3xl flex flex-col items-center text-center gap-3 shadow-md"
         >
-          <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mb-2">
-            <Car size={32} className="text-emerald-400" />
+          <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-500/20 rounded-full flex items-center justify-center mb-2">
+            <Car size={32} className="text-emerald-600 dark:text-emerald-400" />
           </div>
           <div>
             <h3 className="text-xl font-black text-slate-900 dark:text-white mb-1">Driver Assigned!</h3>
@@ -163,7 +163,7 @@ export default function AutoCabBooking() {
             </div>
             <div className="text-right">
               <p className="text-[10px] text-slate-500 dark:text-gray-400 font-bold uppercase">PIN</p>
-              <p className="text-xl font-black text-emerald-400 tracking-widest">{bookedRide.pin}</p>
+              <p className="text-xl font-black text-emerald-600 dark:text-emerald-400 tracking-widest">{bookedRide.pin}</p>
             </div>
           </div>
           

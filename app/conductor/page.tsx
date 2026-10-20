@@ -65,8 +65,8 @@ export default function ConductorETMV2() {
       <div className="mb-6 flex justify-between items-start">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="w-2.5 h-2.5 rounded-full bg-brand-accent animate-pulse"></span>
-            <h1 className="text-[10px] uppercase tracking-widest text-brand-light font-bold">Conductor ETM Terminal</h1>
+            <span className="w-2.5 h-2.5 rounded-full bg-teal-500 animate-pulse"></span>
+            <h1 className="text-[10px] uppercase tracking-widest text-teal-700 dark:text-brand-light font-bold">Conductor ETM Terminal</h1>
           </div>
           <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white">Route 500D</h2>
         </div>
@@ -81,12 +81,12 @@ export default function ConductorETMV2() {
         <div className="bg-surface-dark p-4 rounded-2xl border border-slate-200 dark:border-surface-dark flex flex-col justify-between">
           <p className="text-[10px] text-slate-500 dark:text-gray-400 font-bold uppercase">Shift Revenue</p>
           <p className="text-3xl font-black text-slate-900 dark:text-white mt-2">₹{totalRevenue}</p>
-          <span className="text-[10px] text-emerald-400 font-semibold mt-1">Live Synced</span>
+          <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold mt-1">Live Synced</span>
         </div>
         <div className="bg-surface-dark p-4 rounded-2xl border border-slate-200 dark:border-surface-dark flex flex-col justify-between">
           <p className="text-[10px] text-slate-500 dark:text-gray-400 font-bold uppercase">Change Dispensed</p>
-          <p className="text-3xl font-black text-brand-accent mt-2">₹{digitalChangeIssued}</p>
-          <span className="text-[10px] text-brand-light font-semibold mt-1">Via App Wallet</span>
+          <p className="text-3xl font-black text-teal-700 dark:text-brand-accent mt-2">₹{digitalChangeIssued}</p>
+          <span className="text-[10px] text-teal-600 dark:text-brand-light font-bold mt-1">Via App Wallet</span>
         </div>
       </div>
 
@@ -94,13 +94,13 @@ export default function ConductorETMV2() {
       <div className="flex bg-surface-dark p-1 rounded-xl mb-6 border border-slate-200 dark:border-brand-dark">
         <button 
           onClick={() => setActiveTab("validate")}
-          className={`flex-1 py-3 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${activeTab === "validate" ? "bg-brand-dark text-slate-900 dark:text-white shadow-md" : "text-slate-500 dark:text-gray-400"}`}
+          className={`flex-1 py-3 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${activeTab === "validate" ? "bg-teal-700 text-white shadow-md font-black" : "text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white"}`}
         >
           <Scan size={16} /> Validate Passes
         </button>
         <button 
           onClick={() => setActiveTab("cash-sync")}
-          className={`flex-1 py-3 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${activeTab === "cash-sync" ? "bg-indigo-900/50 text-indigo-300 shadow-md" : "text-slate-500 dark:text-gray-400"}`}
+          className={`flex-1 py-3 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${activeTab === "cash-sync" ? "bg-indigo-600 text-white shadow-md font-black" : "text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white"}`}
         >
           <IndianRupee size={16} /> Cash-to-Digital
         </button>
@@ -115,19 +115,19 @@ export default function ConductorETMV2() {
             exit={{ opacity: 0, x: 20 }}
           >
             {/* Standard QR/NFC Validator */}
-            <div className="bg-surface-dark border border-brand-base p-6 rounded-3xl shadow-lg mb-6 relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-brand-base/10 to-white dark:to-surface-black opacity-40"></div>
+            <div className="bg-surface-dark border border-teal-300 dark:border-brand-base p-6 rounded-3xl shadow-lg mb-6 relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-teal-500/10 to-white dark:to-surface-black opacity-40"></div>
               <div className="relative z-10 flex flex-col items-center text-center">
-                <div className="w-16 h-16 bg-brand-dark rounded-2xl border border-brand-base flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(20,184,166,0.3)]">
-                  <Scan size={32} className="text-brand-accent animate-pulse" />
+                <div className="w-16 h-16 bg-teal-700 dark:bg-brand-dark rounded-2xl border border-teal-500 dark:border-brand-base flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(20,184,166,0.3)]">
+                  <Scan size={32} className="text-white dark:text-brand-accent animate-pulse" />
                 </div>
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">Optical & NFC Pass Validator</h3>
-                <p className="text-xs text-slate-500 dark:text-gray-400 mb-6">Point ETM scanner at commuter's dynamic TOTP QR code.</p>
+                <p className="text-xs text-slate-600 dark:text-gray-400 mb-6">Point ETM scanner at commuter's dynamic TOTP QR code.</p>
                 <div className="grid grid-cols-2 gap-3 w-full">
-                  <button onClick={() => handleSimulateScan("valid")} disabled={isScanning} className="bg-emerald-500/20 border border-emerald-500 text-emerald-300 font-bold py-3 rounded-xl text-xs active:scale-95 transition-transform">
+                  <button onClick={() => handleSimulateScan("valid")} disabled={isScanning} className="bg-emerald-50 dark:bg-emerald-500/20 border border-emerald-300 dark:border-emerald-500 text-emerald-800 dark:text-emerald-300 font-bold py-3 rounded-xl text-xs active:scale-95 transition-transform">
                     Simulate Valid Scan
                   </button>
-                  <button onClick={() => handleSimulateScan("invalid")} disabled={isScanning} className="bg-red-500/20 border border-red-500 text-red-300 font-bold py-3 rounded-xl text-xs active:scale-95 transition-transform">
+                  <button onClick={() => handleSimulateScan("invalid")} disabled={isScanning} className="bg-red-50 dark:bg-red-500/20 border border-red-300 dark:border-red-500 text-red-800 dark:text-red-300 font-bold py-3 rounded-xl text-xs active:scale-95 transition-transform">
                     Simulate Invalid
                   </button>
                 </div>
@@ -135,14 +135,14 @@ export default function ConductorETMV2() {
             </div>
 
             {verificationResult.status && !isScanning && (
-              <div className={`p-5 rounded-2xl border shadow-xl ${verificationResult.status === "valid" ? "bg-emerald-950/30 border-emerald-500" : "bg-red-950/30 border-red-500"}`}>
+              <div className={`p-5 rounded-2xl border shadow-xl ${verificationResult.status === "valid" ? "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-500" : "bg-red-50 dark:bg-red-950/30 border-red-300 dark:border-red-500"}`}>
                 <div className="flex items-center gap-3">
-                  {verificationResult.status === "valid" ? <CheckCircle2 size={24} className="text-emerald-400" /> : <XCircle size={24} className="text-red-400" />}
+                  {verificationResult.status === "valid" ? <CheckCircle2 size={24} className="text-emerald-600 dark:text-emerald-400" /> : <XCircle size={24} className="text-red-600 dark:text-red-400" />}
                   <div>
-                    <h4 className={`text-base font-black uppercase ${verificationResult.status === "valid" ? "text-emerald-300" : "text-red-300"}`}>
+                    <h4 className={`text-base font-black uppercase ${verificationResult.status === "valid" ? "text-emerald-800 dark:text-emerald-300" : "text-red-800 dark:text-red-300"}`}>
                       {verificationResult.status === "valid" ? "Access Granted" : "Access Denied"}
                     </h4>
-                    <p className="text-xs text-slate-500 dark:text-gray-400 mt-1">{verificationResult.commuterName} • {verificationResult.route}</p>
+                    <p className="text-xs text-slate-600 dark:text-gray-400 mt-1">{verificationResult.commuterName} • {verificationResult.route}</p>
                   </div>
                 </div>
               </div>
@@ -158,9 +158,9 @@ export default function ConductorETMV2() {
             exit={{ opacity: 0, x: -20 }}
           >
             {/* Cash-to-Digital Sync Engine */}
-            <div className="bg-gradient-to-br from-indigo-950/40 via-surface-dark to-white dark:to-surface-black border border-indigo-500/50 p-6 rounded-3xl shadow-lg mb-6">
+            <div className="bg-gradient-to-br from-indigo-50 dark:from-indigo-950/40 via-white dark:via-surface-dark to-slate-50 dark:to-surface-black border border-indigo-200 dark:border-indigo-500/50 p-6 rounded-3xl shadow-lg mb-6">
               <div className="flex items-center gap-3 mb-6">
-                <div className="bg-indigo-900/50 p-2 rounded-xl text-indigo-400 border border-indigo-500/30">
+                <div className="bg-indigo-100 dark:bg-indigo-900/50 p-2 rounded-xl text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/30">
                   <SmartphoneNfc size={24} />
                 </div>
                 <div>
@@ -190,7 +190,7 @@ export default function ConductorETMV2() {
                       <button 
                         key={amt}
                         onClick={() => setCashReceived(amt)}
-                        className={`py-2 rounded-lg text-xs font-bold border transition-colors ${cashReceived === amt ? "bg-indigo-600 border-indigo-500 text-slate-900 dark:text-white" : "bg-surface-black border-slate-200 dark:border-surface-dark text-slate-500 dark:text-gray-400"}`}
+                        className={`py-2 rounded-lg text-xs font-bold border transition-colors ${cashReceived === amt ? "bg-indigo-600 border-indigo-500 text-white font-black" : "bg-surface-black border-slate-200 dark:border-surface-dark text-slate-600 dark:text-gray-400"}`}
                       >
                         ₹{amt}
                       </button>
@@ -199,12 +199,12 @@ export default function ConductorETMV2() {
                 </div>
               </div>
 
-              <div className="bg-black/50 p-4 rounded-2xl border border-indigo-900/50 flex justify-between items-center mb-6">
+              <div className="bg-slate-100 dark:bg-black/50 p-4 rounded-2xl border border-slate-200 dark:border-indigo-900/50 flex justify-between items-center mb-6">
                 <div>
-                  <p className="text-[10px] text-indigo-300 font-bold uppercase tracking-wider">Change to Digitize</p>
-                  <p className="text-3xl font-black text-indigo-400 mt-1">₹{calculateChange()}</p>
+                  <p className="text-[10px] text-indigo-700 dark:text-indigo-300 font-bold uppercase tracking-wider">Change to Digitize</p>
+                  <p className="text-3xl font-black text-indigo-600 dark:text-indigo-400 mt-1">₹{calculateChange()}</p>
                 </div>
-                <ArrowRight size={24} className="text-gray-600" />
+                <ArrowRight size={24} className="text-slate-400 dark:text-gray-600" />
                 <div className="text-right">
                   <p className="text-[10px] text-slate-500 dark:text-gray-400 font-bold uppercase tracking-wider">Destination</p>
                   <p className="text-sm font-bold text-slate-900 dark:text-white mt-1">User Wallet</p>
@@ -231,7 +231,7 @@ export default function ConductorETMV2() {
                 <motion.div 
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="w-full bg-emerald-950/40 border border-emerald-900 text-emerald-400 font-bold py-4 rounded-xl text-sm flex flex-col items-center justify-center gap-2"
+                  className="w-full bg-emerald-100 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-900 text-emerald-800 dark:text-emerald-400 font-bold py-4 rounded-xl text-sm flex flex-col items-center justify-center gap-2"
                 >
                   <CheckCircle2 size={24} />
                   <span>₹{calculateChange()} synced to commuter wallet!</span>

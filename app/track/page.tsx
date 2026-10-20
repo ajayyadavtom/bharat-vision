@@ -214,7 +214,7 @@ export default function TrackScreen() {
         {/* Live Autocomplete Dropdown */}
         {showDropdown && searchResults.length > 0 && (
           <div className="absolute top-14 left-4 right-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden z-[500] max-h-72 overflow-y-auto no-scrollbar animate-in fade-in zoom-in-95 duration-150">
-            <div className="p-2 bg-slate-50 dark:bg-slate-800/60 border-b border-slate-100 dark:border-slate-800 text-[10px] font-black uppercase text-slate-400 tracking-wider flex justify-between">
+            <div className="p-2 bg-slate-50 dark:bg-slate-800/60 border-b border-slate-100 dark:border-slate-800 text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider flex justify-between">
               <span>Matching BMTC Routes ({searchResults.length})</span>
               <span>Tap to Navigate</span>
             </div>
@@ -332,7 +332,7 @@ export default function TrackScreen() {
                 <span className="text-xs font-black text-emerald-600 dark:text-emerald-400 block">
                   {activeRouteDetails.stopsCount} Stops
                 </span>
-                <span className="text-[10px] text-slate-400 font-bold block">
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold block">
                   {activeRouteDetails.tripCount} Trips/day
                 </span>
               </div>
@@ -340,7 +340,7 @@ export default function TrackScreen() {
 
             {/* Stops Timeline Accordion */}
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">
+              <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 Route Stops Navigation
               </span>
               <button

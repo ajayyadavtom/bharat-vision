@@ -403,7 +403,7 @@ export default function MetroScreen() {
             <Wallet size={15} className="text-emerald-600 dark:text-emerald-400" />
           </div>
           <div>
-            <span className="text-[9px] text-slate-400 dark:text-slate-500 uppercase font-bold block leading-none">Wallet</span>
+            <span className="text-[9px] text-slate-500 dark:text-slate-400 uppercase font-bold block leading-none">Wallet</span>
             <span className="text-slate-900 dark:text-white font-black text-xs leading-none">₹{walletBalance.toFixed(2)}</span>
           </div>
         </div>
@@ -421,7 +421,7 @@ export default function MetroScreen() {
               className={`py-2 px-3.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer ${
                 isSelected
                   ? filter.activeClass
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:white hover:bg-slate-100 dark:hover:bg-slate-800"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
               }`}
             >
               {filter.dotColor && <span className={`w-2 h-2 rounded-full ${filter.dotColor}`} />}
@@ -517,7 +517,7 @@ export default function MetroScreen() {
               <MapPin size={16} className="text-emerald-600 dark:text-emerald-400" />
             </div>
             <div className="flex-1 min-w-0">
-              <label className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-black block leading-tight">
+              <label className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-black block leading-tight">
                 From Station (Boarding)
               </label>
               <select 
@@ -540,7 +540,7 @@ export default function MetroScreen() {
               <TrainFront size={16} className="text-purple-600 dark:text-purple-400" />
             </div>
             <div className="flex-1 min-w-0">
-              <label className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-black block leading-tight">
+              <label className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-black block leading-tight">
                 To Station (Destination)
               </label>
               <select 
