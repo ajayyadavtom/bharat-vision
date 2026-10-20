@@ -13,6 +13,7 @@ interface MetroMapProps {
   onSelectOrigin?: (stationId: string) => void;
   onSelectDestination?: (stationId: string) => void;
   activeLineFilter?: string;
+  onSelectLineFilter?: (line: string) => void;
   className?: string;
 }
 
@@ -41,6 +42,21 @@ function MapController({
 
     // Only auto-fit bounds on filter change, initial load, or explicit recenter click
     if (filterChanged || recenterClicked) {
+      // If a specific line is filtered (e.g. Purple, Green, Yellow, Blue, Pink), fit to that line's stations
+      if (filterKey && filterKey !== "All") {
+        const lower = filterKey.toLowerCase();
+        const lineStations = metroData.stations.filter((s) =>
+          s.lines.some((l) => l.toLowerCase() === lower)
+        );
+        if (lineStations.length > 0) {
+          const lineBounds = L.latLngBounds(
+            lineStations.map((s) => [s.lat, s.lon] as [number, number])
+          );
+          map.fitBounds(lineBounds, { padding: [40, 40], maxZoom: 14, animate: true });
+          return;
+        }
+      }
+
       if (bounds) {
         map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15, animate: true });
       } else if (center) {
@@ -91,6 +107,7 @@ export default function MetroMap({
   onSelectOrigin,
   onSelectDestination,
   activeLineFilter = "All",
+  onSelectLineFilter,
   className = "w-full h-full",
 }: MetroMapProps) {
   const [selectedFilter, setSelectedFilter] = useState<string>(activeLineFilter);
@@ -193,12 +210,20 @@ export default function MetroMap({
 
         {/* Expanded Line Filter Pills */}
         {isExpanded && (
-          <div className="flex items-center gap-1 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-1 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-x-auto no-scrollbar">
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+            className="flex items-center gap-1 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-1 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-x-auto no-scrollbar"
+          >
             {["All", "Purple", "Green", "Yellow", "Blue", "Pink"].map((line) => (
               <button
                 key={line}
                 type="button"
-                onClick={() => setSelectedFilter(line)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedFilter(line);
+                  onSelectLineFilter?.(line);
+                }}
                 className={`text-[10px] font-black px-2.5 py-1 rounded-xl transition-all whitespace-nowrap cursor-pointer ${
                   selectedFilter === line
                     ? line === "Purple"
@@ -350,6 +375,8 @@ export default function MetroMap({
             ? "#10b981"
             : station.lines.includes("Yellow")
             ? "#eab308"
+            : station.lines.includes("Pink")
+            ? "#ec4899"
             : "#3b82f6";
 
           const radius = isOrigin || isDest ? 9 : isInterchange ? 7 : 5;
@@ -388,6 +415,8 @@ export default function MetroMap({
                             ? "bg-emerald-600"
                             : l === "Yellow"
                             ? "bg-amber-500 text-slate-900"
+                            : l === "Pink"
+                            ? "bg-pink-600"
                             : "bg-blue-600"
                         }`}
                       >

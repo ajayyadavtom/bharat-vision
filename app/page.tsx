@@ -25,6 +25,9 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import dynamic from "next/dynamic";
+
+const LiveMap = dynamic(() => import("../components/LiveMap"), { ssr: false });
 
 import { useAppStore } from "@/lib/store";
 import { getCityData, CITIES } from "@/lib/cityData";
@@ -35,6 +38,7 @@ import BehavioralHabitAI from "../components/BehavioralHabitAI";
 
 export default function VisionHome() {
   const router = useRouter();
+  const [desktopCorridor, setDesktopCorridor] = useState("500D");
   const { 
     appLang, 
     userName, 
@@ -276,192 +280,263 @@ export default function VisionHome() {
           </div>
         </motion.div>
 
-        {/* Live Location Weather & US AQI Dashboard Card */}
-        <motion.div 
-          variants={itemVariants} 
-          onClick={() => setShowClimateModal(!showClimateModal)}
-          className="order-2 md:order-3 md:col-span-5 xl:col-span-4 flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3.5 shadow-sm cursor-pointer transition-all hover:border-slate-300 dark:hover:border-slate-700"
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="bg-slate-100 dark:bg-slate-800 p-2.5 rounded-full border border-slate-200 dark:border-slate-700">
-                {renderWeatherIcon()}
+        {/* LEFT COLUMN: Transit Search, Wallet, Rapid Transit & Environmental Telemetry */}
+        <div className="order-2 lg:col-span-5 xl:col-span-5 flex flex-col gap-5">
+          {/* Where to? Navigation Search Bar */}
+          <motion.div variants={itemVariants} className="relative group">
+            <Link href="/route" className="block">
+              <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                <Search size={20} className="text-slate-400 group-hover:text-emerald-500 transition-colors" />
               </div>
+              <div className="w-full bg-white dark:bg-slate-900 text-slate-500 rounded-2xl py-4 pl-12 pr-4 border border-slate-200 dark:border-slate-800 group-hover:border-emerald-500 transition-all shadow-sm text-sm text-left font-bold">
+                Where to? (e.g., Silk Board to Majestic)
+              </div>
+            </Link>
+            {/* Quick Corridor Hubs */}
+            <div className="flex items-center gap-1.5 mt-2.5 overflow-x-auto no-scrollbar">
+              <span className="text-[10px] uppercase font-bold text-slate-400 shrink-0">Popular:</span>
+              {[
+                { label: "Silk Board ⇄ Hebbal (500D)", href: "/track" },
+                { label: "Majestic ⇄ Whitefield (Purple)", href: "/metro" },
+                { label: "Airport Vayu Vajra (KIA-9)", href: "/track" },
+                { label: "Indiranagar ⇄ MG Road", href: "/route" },
+              ].map((hub) => (
+                <Link
+                  key={hub.label}
+                  href={hub.href}
+                  className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 bg-white/80 dark:bg-slate-900/80 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-600 dark:hover:text-emerald-400 border border-slate-200 dark:border-slate-800 px-2.5 py-1 rounded-lg transition-colors whitespace-nowrap shadow-xs"
+                >
+                  {hub.label}
+                </Link>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Bharat Wallet Balance Card */}
+          <motion.div variants={itemVariants} className="bg-emerald-500 dark:bg-emerald-600 rounded-2xl p-5 shadow-lg border border-emerald-400 dark:border-emerald-500 relative overflow-hidden">
+            <motion.div animate={{ scale: [1, 1.1, 1], opacity: [0.2, 0.3, 0.2] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }} className="absolute -right-6 -top-6 w-32 h-32 bg-white/20 rounded-full blur-2xl pointer-events-none" />
+            <div className="flex justify-between items-end relative z-10">
               <div>
-                <p className="text-slate-900 dark:text-white text-sm font-bold flex items-center gap-1.5">
-                  {liveWeather ? `${liveWeather.temperature}°C` : "--°C"} · {
-                    liveWeather ? (
-                      appLang === 'kn' ? liveWeather.conditionTextKn :
-                      appLang === 'hi' ? liveWeather.conditionTextHi :
-                      liveWeather.conditionText
-                    ) : "Loading weather..."
-                  }
-                </p>
-                <p className="text-[10px] text-slate-500 font-medium flex items-center gap-1">
-                  <MapPin size={10} className={userLocation?.isRealGps ? "text-emerald-500" : ""} /> 
-                  {userLocation?.isRealGps ? `${userLocation.name}, ${userLocation.city}` : cityData.name} 
-                  · Feels {liveWeather?.apparentTemperature ?? "--"}°C
-                </p>
+                <p className="text-emerald-50 text-xs font-semibold mb-1 flex items-center gap-1"><CreditCard size={12} /> BHARAT WALLET</p>
+                <h3 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">₹{(walletBalance || 0).toFixed(2)}</h3>
+              </div>
+              <button onClick={() => setIsPaymentOpen(true)} className="bg-white text-emerald-600 text-xs font-bold px-4 py-2 rounded-xl shadow-sm active:scale-95 transition-transform hover:bg-slate-50 cursor-pointer">
+                Add Money
+              </button>
+            </div>
+          </motion.div>
+
+          {/* Rapid Transit Service Links */}
+          <motion.div variants={itemVariants}>
+            <h3 className="text-sm font-extrabold text-slate-900 dark:text-white mb-2.5 flex items-center justify-between">
+              <span>Rapid Transit Hub</span>
+              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">Bengaluru Unified</span>
+            </h3>
+            <div className="grid grid-cols-3 gap-2.5">
+              <Link href="/pass" className="group flex flex-col items-center justify-center bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-emerald-500 transition-all shadow-sm">
+                <div className="bg-emerald-50 dark:bg-emerald-900/30 p-2.5 rounded-xl mb-1.5 group-hover:scale-110 transition-transform">
+                  <Ticket size={20} className="text-emerald-500 dark:text-emerald-400" />
+                </div>
+                <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">Smart Pass</span>
+              </Link>
+
+              <Link href="/ncmc" className="group flex flex-col items-center justify-center bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-indigo-500 transition-all shadow-sm">
+                <div className="bg-indigo-50 dark:bg-indigo-900/30 p-2.5 rounded-xl mb-1.5 group-hover:scale-110 transition-transform">
+                  <CreditCard size={20} className="text-indigo-500 dark:text-indigo-400" />
+                </div>
+                <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">NCMC Card</span>
+              </Link>
+
+              <Link href="/metro" className="group flex flex-col items-center justify-center bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-purple-500 transition-all shadow-sm">
+                <div className="bg-purple-50 dark:bg-purple-900/30 p-2.5 rounded-xl mb-1.5 group-hover:scale-110 transition-transform">
+                  <TrainFront size={20} className="text-purple-500 dark:text-purple-400" />
+                </div>
+                <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">Namma Metro</span>
+              </Link>
+
+              <Link href="/auto" className="group flex flex-col items-center justify-center bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-amber-500 transition-all shadow-sm">
+                <div className="bg-amber-50 dark:bg-amber-900/30 p-2.5 rounded-xl mb-1.5 group-hover:scale-110 transition-transform">
+                  <Search size={20} className="text-amber-500 dark:text-amber-400" />
+                </div>
+                <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">Auto/Cab</span>
+              </Link>
+
+              <Link href="/safety" className="group flex flex-col items-center justify-center bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-red-500 transition-all shadow-sm">
+                <div className="bg-red-50 dark:bg-red-900/30 p-2.5 rounded-xl mb-1.5 group-hover:scale-110 transition-transform">
+                  <ShieldAlert size={20} className="text-red-500 dark:text-red-400" />
+                </div>
+                <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">SafeKeep</span>
+              </Link>
+
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new CustomEvent("bv-trigger-habit-ai"))}
+                className="group flex flex-col items-center justify-center bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-teal-500 transition-all shadow-sm cursor-pointer"
+              >
+                <div className="bg-teal-50 dark:bg-teal-900/30 p-2.5 rounded-xl mb-1.5 group-hover:scale-110 transition-transform">
+                  <Sparkles size={20} className="text-teal-600 dark:text-teal-400" />
+                </div>
+                <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">Habit AI</span>
+              </button>
+            </div>
+          </motion.div>
+
+          {/* Live Location Weather & US AQI Dashboard Card */}
+          <motion.div 
+            variants={itemVariants} 
+            onClick={() => setShowClimateModal(!showClimateModal)}
+            className="flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3.5 shadow-sm cursor-pointer transition-all hover:border-slate-300 dark:hover:border-slate-700"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="bg-slate-100 dark:bg-slate-800 p-2.5 rounded-full border border-slate-200 dark:border-slate-700">
+                  {renderWeatherIcon()}
+                </div>
+                <div>
+                  <p className="text-slate-900 dark:text-white text-sm font-bold flex items-center gap-1.5">
+                    {liveWeather ? `${liveWeather.temperature}°C` : "--°C"} · {
+                      liveWeather ? (
+                        appLang === 'kn' ? liveWeather.conditionTextKn :
+                        appLang === 'hi' ? liveWeather.conditionTextHi :
+                        liveWeather.conditionText
+                      ) : "Loading weather..."
+                    }
+                  </p>
+                  <p className="text-[10px] text-slate-500 font-medium flex items-center gap-1">
+                    <MapPin size={10} className={userLocation?.isRealGps ? "text-emerald-500" : ""} /> 
+                    {userLocation?.isRealGps ? `${userLocation.name}, ${userLocation.city}` : cityData.name} 
+                    · Feels {liveWeather?.apparentTemperature ?? "--"}°C
+                  </p>
+                </div>
+              </div>
+
+              {/* Real-Time US AQI Badge */}
+              <div className="flex items-center gap-2">
+                <div className="text-right">
+                  <span className="text-[9px] uppercase font-bold text-slate-400 block">US AQI</span>
+                  <span className={`text-xs font-black ${liveWeather?.aqiColor || "text-emerald-400"}`}>
+                    {liveWeather?.aqi ?? "--"} ({liveWeather?.aqiCategory ?? "..."})
+                  </span>
+                </div>
               </div>
             </div>
 
-            {/* Real-Time US AQI Badge */}
-            <div className="flex items-center gap-2">
-              <div className="text-right">
-                <span className="text-[9px] uppercase font-bold text-slate-400 block">US AQI</span>
-                <span className={`text-xs font-black ${liveWeather?.aqiColor || "text-emerald-400"}`}>
-                  {liveWeather?.aqi ?? "--"} ({liveWeather?.aqiCategory ?? "..."})
+            {/* Commuter Climate Advisory Banner */}
+            {liveWeather && (
+              <div className="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-600 dark:text-slate-300">
+                <span className="truncate pr-2 font-medium">
+                  💡 {
+                    appLang === 'kn' ? liveWeather.commuterAlertKn :
+                    appLang === 'hi' ? liveWeather.commuterAlertHi :
+                    liveWeather.commuterAlert
+                  }
+                </span>
+                <span className="text-[9px] text-emerald-500 font-bold uppercase tracking-wider shrink-0 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                  Live
                 </span>
               </div>
-            </div>
-          </div>
-
-          {/* Commuter Climate Advisory Banner */}
-          {liveWeather && (
-            <div className="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-600 dark:text-slate-300">
-              <span className="truncate pr-2 font-medium">
-                💡 {
-                  appLang === 'kn' ? liveWeather.commuterAlertKn :
-                  appLang === 'hi' ? liveWeather.commuterAlertHi :
-                  liveWeather.commuterAlert
-                }
-              </span>
-              <span className="text-[9px] text-emerald-500 font-bold uppercase tracking-wider shrink-0 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
-                Live
-              </span>
-            </div>
-          )}
-
-          {/* Detailed Real-Time Telemetry Drawer: Humidity, Wind, PM2.5, PM10 */}
-          <AnimatePresence>
-            {showClimateModal && liveWeather && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 grid grid-cols-4 gap-2 text-center text-slate-700 dark:text-slate-200"
-              >
-                <div className="bg-slate-50 dark:bg-slate-800/60 p-2 rounded-xl">
-                  <span className="text-[9px] text-slate-400 font-bold block uppercase flex items-center justify-center gap-0.5">
-                    <Droplets size={10} className="text-blue-400" /> Humidity
-                  </span>
-                  <span className="text-xs font-black">{liveWeather.humidity}%</span>
-                </div>
-                <div className="bg-slate-50 dark:bg-slate-800/60 p-2 rounded-xl">
-                  <span className="text-[9px] text-slate-400 font-bold block uppercase flex items-center justify-center gap-0.5">
-                    <Wind size={10} className="text-teal-400" /> Wind
-                  </span>
-                  <span className="text-xs font-black">{liveWeather.windSpeed} km/h</span>
-                </div>
-                <div className="bg-slate-50 dark:bg-slate-800/60 p-2 rounded-xl">
-                  <span className="text-[9px] text-slate-400 font-bold block uppercase">PM2.5</span>
-                  <span className="text-xs font-black">{liveWeather.pm25} µg</span>
-                </div>
-                <div className="bg-slate-50 dark:bg-slate-800/60 p-2 rounded-xl">
-                  <span className="text-[9px] text-slate-400 font-bold block uppercase">PM10</span>
-                  <span className="text-xs font-black">{liveWeather.pm10} µg</span>
-                </div>
-              </motion.div>
             )}
-          </AnimatePresence>
-        </motion.div>
 
-        {/* Where to? Navigation Search Bar */}
-        <motion.div variants={itemVariants} className="order-3 md:order-2 md:col-span-7 xl:col-span-8 relative group">
-          <Link href="/route" className="block">
-            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-              <Search size={20} className="text-slate-400 group-hover:text-emerald-500 transition-colors" />
-            </div>
-            <div className="w-full bg-white dark:bg-slate-900 text-slate-500 rounded-2xl py-4 pl-12 pr-4 border border-slate-200 dark:border-slate-800 group-hover:border-emerald-500 transition-all shadow-sm text-sm text-left">
-              Where to? (e.g., Silk Board to Majestic)
-            </div>
-          </Link>
-          {/* Desktop Quick Corridor Hubs */}
-          <div className="hidden md:flex items-center gap-1.5 mt-2.5 overflow-x-auto no-scrollbar">
-            <span className="text-[10px] uppercase font-bold text-slate-400 shrink-0">Popular:</span>
-            {[
-              { label: "Silk Board ⇄ Hebbal (500D)", href: "/track" },
-              { label: "Majestic ⇄ Whitefield (Purple)", href: "/metro" },
-              { label: "Airport Vayu Vajra (KIA-9)", href: "/track" },
-              { label: "Indiranagar ⇄ MG Road", href: "/route" },
-            ].map((hub) => (
+            {/* Detailed Real-Time Telemetry Drawer: Humidity, Wind, PM2.5, PM10 */}
+            <AnimatePresence>
+              {showClimateModal && liveWeather && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 grid grid-cols-4 gap-2 text-center text-slate-700 dark:text-slate-200"
+                >
+                  <div className="bg-slate-50 dark:bg-slate-800/60 p-2 rounded-xl">
+                    <span className="text-[9px] text-slate-400 font-bold block uppercase flex items-center justify-center gap-0.5">
+                      <Droplets size={10} className="text-blue-400" /> Humidity
+                    </span>
+                    <span className="text-xs font-black">{liveWeather.humidity}%</span>
+                  </div>
+                  <div className="bg-slate-50 dark:bg-slate-800/60 p-2 rounded-xl">
+                    <span className="text-[9px] text-slate-400 font-bold block uppercase flex items-center justify-center gap-0.5">
+                      <Wind size={10} className="text-teal-400" /> Wind
+                    </span>
+                    <span className="text-xs font-black">{liveWeather.windSpeed} km/h</span>
+                  </div>
+                  <div className="bg-slate-50 dark:bg-slate-800/60 p-2 rounded-xl">
+                    <span className="text-[9px] text-slate-400 font-bold block uppercase">PM2.5</span>
+                    <span className="text-xs font-black">{liveWeather.pm25} µg</span>
+                  </div>
+                  <div className="bg-slate-50 dark:bg-slate-800/60 p-2 rounded-xl">
+                    <span className="text-[9px] text-slate-400 font-bold block uppercase">PM10</span>
+                    <span className="text-xs font-black">{liveWeather.pm10} µg</span>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        </div>
+
+        {/* RIGHT COLUMN: Live Bengaluru Transit Radar & Interactive Fleet (Desktop Widescreen Viewport) */}
+        <div className="hidden lg:flex lg:flex-col lg:col-span-7 xl:col-span-7 lg:sticky lg:top-4 lg:self-start gap-3">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 shadow-sm flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-2 mb-0.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+                    Live Transit Radar
+                  </span>
+                </div>
+                <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                  <Zap size={16} className="text-emerald-500" />
+                  Bengaluru Live Fleet & Metro Network
+                </h3>
+              </div>
               <Link
-                key={hub.label}
-                href={hub.href}
-                className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 bg-white/80 dark:bg-slate-900/80 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-600 dark:hover:text-emerald-400 border border-slate-200 dark:border-slate-800 px-2.5 py-1 rounded-lg transition-colors whitespace-nowrap shadow-xs"
+                href="/track"
+                className="text-xs font-bold bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900 text-emerald-700 dark:text-emerald-300 px-3 py-1.5 rounded-xl border border-emerald-200 dark:border-emerald-800 transition-colors flex items-center gap-1 shadow-xs"
               >
-                {hub.label}
+                <span>Full Screen</span>
+                <Compass size={13} />
               </Link>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Bharat Wallet Balance Card */}
-        <motion.div variants={itemVariants} className="order-4 md:order-5 md:col-span-5 xl:col-span-4 bg-emerald-500 dark:bg-emerald-600 rounded-2xl p-5 shadow-lg border border-emerald-400 dark:border-emerald-500 relative overflow-hidden">
-          <motion.div animate={{ scale: [1, 1.1, 1], opacity: [0.2, 0.3, 0.2] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }} className="absolute -right-6 -top-6 w-32 h-32 bg-white/20 rounded-full blur-2xl" />
-          <div className="flex justify-between items-end relative z-10">
-            <div>
-              <p className="text-emerald-50 text-xs font-semibold mb-1 flex items-center gap-1"><CreditCard size={12} /> BHARAT WALLET</p>
-              <h3 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">₹{(walletBalance || 0).toFixed(2)}</h3>
             </div>
-            <button onClick={() => setIsPaymentOpen(true)} className="bg-white text-emerald-600 text-xs font-bold px-4 py-2 rounded-xl shadow-sm active:scale-95 transition-transform hover:bg-slate-50 cursor-pointer">
-              Add Money
-            </button>
+
+            {/* Quick Corridor Filter Pills */}
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+              {[
+                { code: "500D", label: "500D ORR (Silk Board ⇄ Hebbal)" },
+                { code: "335E", label: "335E (Majestic ⇄ Whitefield)" },
+                { code: "250", label: "250 (Majestic ⇄ Yelahanka)" },
+                { code: "KIA9", label: "KIA-9 (Airport Express)" },
+              ].map((c) => (
+                <button
+                  key={c.code}
+                  type="button"
+                  onClick={() => setDesktopCorridor(c.code)}
+                  className={`text-[10px] font-extrabold px-3 py-1 rounded-xl whitespace-nowrap transition-all cursor-pointer border ${
+                    desktopCorridor === c.code
+                      ? "bg-emerald-600 text-white border-emerald-500 shadow-sm"
+                      : "bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-emerald-400"
+                  }`}
+                >
+                  {c.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Live Interactive Mapbox Retina Container */}
+            <div className="w-full h-[520px] xl:h-[580px] rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 relative shadow-inner">
+              <LiveMap
+                busCode={desktopCorridor}
+                initialShowMetro={true}
+                initialShowStops={true}
+              />
+            </div>
+
+            {/* Footer Metrics */}
+            <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 px-1 pt-1 border-t border-slate-100 dark:border-slate-800">
+              <span className="font-bold">5,192 Bus Stops · 121 Metro Stations · 4,400+ BMTC Routes</span>
+              <span className="text-emerald-600 dark:text-emerald-400 font-black">60 FPS Real-time GPS</span>
+            </div>
           </div>
-        </motion.div>
-
-        {/* Rapid Transit Service Links */}
-        <motion.div variants={itemVariants} className="order-5 md:order-4 md:col-span-7 xl:col-span-8">
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-3">Rapid Transit</h3>
-          <div className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-3">
-            <Link href="/pass" className="group flex flex-col items-center justify-center bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-emerald-500 transition-all shadow-sm">
-              <div className="bg-emerald-50 dark:bg-emerald-900/30 p-3 rounded-full mb-2 group-hover:scale-110 transition-transform">
-                <Ticket size={24} className="text-emerald-500 dark:text-emerald-400" />
-              </div>
-              <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Smart Pass</span>
-            </Link>
-
-            <Link href="/ncmc" className="group flex flex-col items-center justify-center bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-indigo-500 transition-all shadow-sm">
-              <div className="bg-indigo-50 dark:bg-indigo-900/30 p-3 rounded-full mb-2 group-hover:scale-110 transition-transform">
-                <CreditCard size={24} className="text-indigo-500 dark:text-indigo-400" />
-              </div>
-              <span className="text-xs font-bold text-slate-700 dark:text-slate-300">NCMC Card</span>
-            </Link>
-
-            <Link href="/metro" className="group flex flex-col items-center justify-center bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-purple-500 transition-all shadow-sm">
-              <div className="bg-purple-50 dark:bg-purple-900/30 p-3 rounded-full mb-2 group-hover:scale-110 transition-transform">
-                <TrainFront size={24} className="text-purple-500 dark:text-purple-400" />
-              </div>
-              <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Namma Metro</span>
-            </Link>
-
-            <Link href="/auto" className="group flex flex-col items-center justify-center bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-amber-500 transition-all shadow-sm">
-              <div className="bg-amber-50 dark:bg-amber-900/30 p-3 rounded-full mb-2 group-hover:scale-110 transition-transform">
-                <Search size={24} className="text-amber-500 dark:text-amber-400" />
-              </div>
-              <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Auto/Cab</span>
-            </Link>
-
-            <Link href="/safety" className="group flex flex-col items-center justify-center bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-red-500 transition-all shadow-sm">
-              <div className="bg-red-50 dark:bg-red-900/30 p-3 rounded-full mb-2 group-hover:scale-110 transition-transform">
-                <ShieldAlert size={24} className="text-red-500 dark:text-red-400" />
-              </div>
-              <span className="text-xs font-bold text-slate-700 dark:text-slate-300">SafeKeep</span>
-            </Link>
-
-            <button
-              type="button"
-              onClick={() => window.dispatchEvent(new CustomEvent("bv-trigger-habit-ai"))}
-              className="group flex flex-col items-center justify-center bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-teal-500 transition-all shadow-sm cursor-pointer"
-            >
-              <div className="bg-teal-50 dark:bg-teal-900/30 p-3 rounded-full mb-2 group-hover:scale-110 transition-transform">
-                <Sparkles size={24} className="text-teal-600 dark:text-teal-400" />
-              </div>
-              <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Habit AI</span>
-            </button>
-          </div>
-        </motion.div>
+        </div>
       </motion.div>
 
       <AnimatePresence>

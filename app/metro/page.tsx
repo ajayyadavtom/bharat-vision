@@ -441,13 +441,14 @@ export default function MetroScreen() {
             Tap stations to set From/To
           </span>
         </div>
-        <div className="w-full h-64 lg:h-[calc(100vh-140px)] lg:min-h-[620px] lg:max-h-[860px] bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-md relative">
+        <div id="interactive-metro-map" className="w-full h-64 lg:h-[calc(100vh-140px)] lg:min-h-[620px] lg:max-h-[860px] bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-md relative">
           <MetroMap
             originStationId={origin}
             destStationId={destination}
             onSelectOrigin={(id) => setOrigin(id)}
             onSelectDestination={(id) => setDestination(id)}
             activeLineFilter={activeLineFilter}
+            onSelectLineFilter={(line) => setActiveLineFilter(line as LineFilterKey)}
           />
         </div>
       </div>
@@ -871,73 +872,159 @@ export default function MetroScreen() {
       )}
 
       {/* Official 5-Line Network Summary Cards */}
-      <div className="mb-6 shrink-0">
-        <h3 className="text-xs uppercase tracking-wider font-black text-slate-700 dark:text-slate-300 mb-2 px-1">
-          Namma Metro Lines Overview
-        </h3>
+      <div className="order-6 lg:order-none lg:col-span-5 xl:col-span-4 lg:col-start-1 mb-6 shrink-0">
+        <div className="flex items-center justify-between mb-2 px-1">
+          <h3 className="text-xs uppercase tracking-wider font-black text-slate-700 dark:text-slate-300">
+            Namma Metro Lines Overview
+          </h3>
+          {activeLineFilter !== "All" && (
+            <button
+              type="button"
+              onClick={() => setActiveLineFilter("All")}
+              className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer"
+            >
+              Reset to All Lines
+            </button>
+          )}
+        </div>
         <div className="grid grid-cols-2 gap-2.5">
           {/* Purple Line */}
           <div 
-            onClick={() => setActiveLineFilter("Purple")}
-            className="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-purple-200 dark:border-purple-500/30 shadow-xs cursor-pointer hover:border-purple-500 transition-colors"
+            onClick={() => {
+              setActiveLineFilter("Purple");
+              const el = document.getElementById("interactive-metro-map");
+              if (el && typeof window !== "undefined" && window.innerWidth < 1024) {
+                el.scrollIntoView({ behavior: "smooth" });
+              }
+            }}
+            className={`p-3 rounded-2xl border transition-all cursor-pointer ${
+              activeLineFilter === "Purple"
+                ? "bg-purple-50 dark:bg-purple-950/40 border-purple-500 ring-2 ring-purple-500/30 shadow-md"
+                : "bg-white dark:bg-slate-900 border-purple-200 dark:border-purple-500/30 shadow-xs hover:border-purple-500"
+            }`}
           >
-            <div className="flex items-center gap-1.5 mb-1 text-purple-700 dark:text-purple-400 font-black text-xs">
-              <span className="w-2 h-2 rounded-full bg-purple-500" />
-              <span>Purple Line</span>
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-1.5 text-purple-700 dark:text-purple-400 font-black text-xs">
+                <span className="w-2 h-2 rounded-full bg-purple-500" />
+                <span>Purple Line</span>
+              </div>
+              {activeLineFilter === "Purple" && (
+                <span className="text-[9px] font-bold bg-purple-600 text-white px-1.5 py-0.2 rounded-full">Active</span>
+              )}
             </div>
-            <p className="text-[10px] text-slate-700 dark:text-slate-300 font-semibold">Whitefield ⇄ Challaghatta</p>
+            <p className="text-[10px] text-slate-700 dark:text-slate-300 font-semibold truncate" title="Whitefield ⇄ Challaghatta">Whitefield ⇄ Challaghatta</p>
             <span className="text-[9px] text-slate-500 dark:text-slate-400 block mt-1">{purpleStations.length} Stations · 43.5 km</span>
           </div>
 
           {/* Green Line */}
           <div 
-            onClick={() => setActiveLineFilter("Green")}
-            className="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-emerald-200 dark:border-emerald-500/30 shadow-xs cursor-pointer hover:border-emerald-500 transition-colors"
+            onClick={() => {
+              setActiveLineFilter("Green");
+              const el = document.getElementById("interactive-metro-map");
+              if (el && typeof window !== "undefined" && window.innerWidth < 1024) {
+                el.scrollIntoView({ behavior: "smooth" });
+              }
+            }}
+            className={`p-3 rounded-2xl border transition-all cursor-pointer ${
+              activeLineFilter === "Green"
+                ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 ring-2 ring-emerald-500/30 shadow-md"
+                : "bg-white dark:bg-slate-900 border-emerald-200 dark:border-emerald-500/30 shadow-xs hover:border-emerald-500"
+            }`}
           >
-            <div className="flex items-center gap-1.5 mb-1 text-emerald-700 dark:text-emerald-400 font-black text-xs">
-              <span className="w-2 h-2 rounded-full bg-emerald-500" />
-              <span>Green Line</span>
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 font-black text-xs">
+                <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                <span>Green Line</span>
+              </div>
+              {activeLineFilter === "Green" && (
+                <span className="text-[9px] font-bold bg-emerald-600 text-white px-1.5 py-0.2 rounded-full">Active</span>
+              )}
             </div>
-            <p className="text-[10px] text-slate-700 dark:text-slate-300 font-semibold">Madavara (BIEC) ⇄ Silk Institute</p>
+            <p className="text-[10px] text-slate-700 dark:text-slate-300 font-semibold truncate" title="Madavara (BIEC) ⇄ Silk Institute">Madavara (BIEC) ⇄ Silk Institute</p>
             <span className="text-[9px] text-slate-500 dark:text-slate-400 block mt-1">{greenStations.length} Stations · 33.5 km</span>
           </div>
 
           {/* Yellow Line */}
           <div 
-            onClick={() => setActiveLineFilter("Yellow")}
-            className="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-amber-200 dark:border-amber-500/30 shadow-xs cursor-pointer hover:border-amber-500 transition-colors"
+            onClick={() => {
+              setActiveLineFilter("Yellow");
+              const el = document.getElementById("interactive-metro-map");
+              if (el && typeof window !== "undefined" && window.innerWidth < 1024) {
+                el.scrollIntoView({ behavior: "smooth" });
+              }
+            }}
+            className={`p-3 rounded-2xl border transition-all cursor-pointer ${
+              activeLineFilter === "Yellow"
+                ? "bg-amber-50 dark:bg-amber-950/40 border-amber-500 ring-2 ring-amber-500/30 shadow-md"
+                : "bg-white dark:bg-slate-900 border-amber-200 dark:border-amber-500/30 shadow-xs hover:border-amber-500"
+            }`}
           >
-            <div className="flex items-center gap-1.5 mb-1 text-amber-700 dark:text-amber-400 font-black text-xs">
-              <span className="w-2 h-2 rounded-full bg-amber-400" />
-              <span>Yellow Line</span>
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-1.5 text-amber-700 dark:text-amber-400 font-black text-xs">
+                <span className="w-2 h-2 rounded-full bg-amber-400" />
+                <span>Yellow Line</span>
+              </div>
+              {activeLineFilter === "Yellow" && (
+                <span className="text-[9px] font-bold bg-amber-500 text-slate-950 px-1.5 py-0.2 rounded-full">Active</span>
+              )}
             </div>
-            <p className="text-[10px] text-slate-700 dark:text-slate-300 font-semibold">RV Road ⇄ Bommasandra</p>
+            <p className="text-[10px] text-slate-700 dark:text-slate-300 font-semibold truncate" title="RV Road ⇄ Bommasandra">RV Road ⇄ Bommasandra</p>
             <span className="text-[9px] text-slate-500 dark:text-slate-400 block mt-1">{yellowStations.length} Stations · 19.1 km</span>
           </div>
 
           {/* Blue Line */}
           <div 
-            onClick={() => setActiveLineFilter("Blue")}
-            className="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-blue-200 dark:border-blue-500/30 shadow-xs cursor-pointer hover:border-blue-500 transition-colors"
+            onClick={() => {
+              setActiveLineFilter("Blue");
+              const el = document.getElementById("interactive-metro-map");
+              if (el && typeof window !== "undefined" && window.innerWidth < 1024) {
+                el.scrollIntoView({ behavior: "smooth" });
+              }
+            }}
+            className={`p-3 rounded-2xl border transition-all cursor-pointer ${
+              activeLineFilter === "Blue"
+                ? "bg-blue-50 dark:bg-blue-950/40 border-blue-500 ring-2 ring-blue-500/30 shadow-md"
+                : "bg-white dark:bg-slate-900 border-blue-200 dark:border-blue-500/30 shadow-xs hover:border-blue-500"
+            }`}
           >
-            <div className="flex items-center gap-1.5 mb-1 text-blue-700 dark:text-blue-400 font-black text-xs">
-              <span className="w-2 h-2 rounded-full bg-blue-500" />
-              <span>Blue Line (ORR)</span>
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-1.5 text-blue-700 dark:text-blue-400 font-black text-xs">
+                <span className="w-2 h-2 rounded-full bg-blue-500" />
+                <span>Blue Line (ORR)</span>
+              </div>
+              {activeLineFilter === "Blue" && (
+                <span className="text-[9px] font-bold bg-blue-600 text-white px-1.5 py-0.2 rounded-full">Active</span>
+              )}
             </div>
-            <p className="text-[10px] text-slate-700 dark:text-slate-300 font-semibold">Silk Board ⇄ KR Puram / Airport</p>
+            <p className="text-[10px] text-slate-700 dark:text-slate-300 font-semibold truncate" title="Silk Board ⇄ KR Puram / Airport">Silk Board ⇄ KR Puram / Airport</p>
             <span className="text-[9px] text-slate-500 dark:text-slate-400 block mt-1">{blueStations.length} Stations · 56.8 km</span>
           </div>
 
           {/* Pink Line */}
           <div 
-            onClick={() => setActiveLineFilter("Pink")}
-            className="col-span-2 bg-white dark:bg-slate-900 p-3 rounded-2xl border border-pink-200 dark:border-pink-500/30 shadow-xs cursor-pointer hover:border-pink-500 transition-colors"
+            onClick={() => {
+              setActiveLineFilter("Pink");
+              const el = document.getElementById("interactive-metro-map");
+              if (el && typeof window !== "undefined" && window.innerWidth < 1024) {
+                el.scrollIntoView({ behavior: "smooth" });
+              }
+            }}
+            className={`col-span-2 p-3 rounded-2xl border transition-all cursor-pointer ${
+              activeLineFilter === "Pink"
+                ? "bg-pink-50 dark:bg-pink-950/40 border-pink-500 ring-2 ring-pink-500/30 shadow-md"
+                : "bg-white dark:bg-slate-900 border-pink-200 dark:border-pink-500/30 shadow-xs hover:border-pink-500"
+            }`}
           >
-            <div className="flex items-center gap-1.5 mb-1 text-pink-700 dark:text-pink-400 font-black text-xs">
-              <span className="w-2 h-2 rounded-full bg-pink-500" />
-              <span>Pink Line</span>
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-1.5 text-pink-700 dark:text-pink-400 font-black text-xs">
+                <span className="w-2 h-2 rounded-full bg-pink-500" />
+                <span>Pink Line</span>
+              </div>
+              {activeLineFilter === "Pink" && (
+                <span className="text-[9px] font-bold bg-pink-600 text-white px-1.5 py-0.2 rounded-full">Active</span>
+              )}
             </div>
-            <p className="text-[10px] text-slate-700 dark:text-slate-300 font-semibold">Kalena Agrahara ⇄ Nagawara</p>
+            <p className="text-[10px] text-slate-700 dark:text-slate-300 font-semibold truncate" title="Kalena Agrahara ⇄ Nagawara">Kalena Agrahara ⇄ Nagawara</p>
             <span className="text-[9px] text-slate-500 dark:text-slate-400 block mt-1">{pinkStations.length} Stations · 21.4 km</span>
           </div>
         </div>

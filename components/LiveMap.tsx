@@ -245,6 +245,30 @@ function MapController({
   return null;
 }
 
+// Auto-fly to selected metro line bounds when filtered
+function MetroLineFlyer({ lineFilter }: { lineFilter: string }) {
+  const map = useMap();
+  const prevFilterRef = useRef<string>("All");
+
+  useEffect(() => {
+    if (prevFilterRef.current === lineFilter) return;
+    prevFilterRef.current = lineFilter;
+
+    if (lineFilter === "All") return;
+
+    const lower = lineFilter.toLowerCase();
+    const stns = metroData.stations.filter((s) =>
+      s.lines.some((l) => l.toLowerCase() === lower)
+    );
+    if (stns.length > 0) {
+      const bounds = L.latLngBounds(stns.map((s) => [s.lat, s.lon] as [number, number]));
+      map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14, animate: true });
+    }
+  }, [lineFilter, map]);
+
+  return null;
+}
+
 // Tap map listener when in "Set Location" mode
 function MapClickHandler({
   isSettingLocation,
@@ -404,7 +428,24 @@ export default function LiveMap({
 
   // Toggleable Layers on Map
   const [showMetro, setShowMetro] = useState<boolean>(initialShowMetro);
+  const [activeMetroLineFilter, setActiveMetroLineFilter] = useState<string>("All");
   const [showStops, setShowStops] = useState<boolean>(initialShowStops);
+
+  // Filtered Metro Lines
+  const visibleMetroLines = useMemo(() => {
+    if (activeMetroLineFilter === "All") return metroData.lines;
+    const lower = activeMetroLineFilter.toLowerCase();
+    return metroData.lines.filter((l) => l.lineKey === lower);
+  }, [activeMetroLineFilter]);
+
+  // Filtered Metro Stations
+  const visibleMetroStations = useMemo(() => {
+    if (activeMetroLineFilter === "All") return metroData.stations;
+    const lower = activeMetroLineFilter.toLowerCase();
+    return metroData.stations.filter((s) =>
+      s.lines.some((l) => l.toLowerCase() === lower)
+    );
+  }, [activeMetroLineFilter]);
 
   // Mapbox style configuration
   const [styleKey, setStyleKey] = useState<string>("navigation");
@@ -801,7 +842,10 @@ export default function LiveMap({
         {/* Toggle Namma Metro Layer */}
         <button
           type="button"
-          onClick={() => setShowMetro((prev) => !prev)}
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowMetro((prev) => !prev);
+          }}
           className={`px-3 py-1.5 rounded-full border shadow-xl flex items-center gap-1.5 text-[11px] font-bold transition-all cursor-pointer backdrop-blur-md ${
             showMetro
               ? "bg-purple-600 text-white border-purple-500 shadow-purple-600/20"
@@ -813,10 +857,50 @@ export default function LiveMap({
           <span>Metro {showMetro ? "ON" : "OFF"}</span>
         </button>
 
+        {/* Metro Line Filter Pills */}
+        {showMetro && (
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+            className="flex items-center gap-1 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-1 rounded-full border border-slate-200 dark:border-slate-800 shadow-xl overflow-x-auto no-scrollbar max-w-[280px] sm:max-w-none"
+          >
+            {["All", "Purple", "Green", "Yellow", "Blue", "Pink"].map((line) => (
+              <button
+                key={line}
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveMetroLineFilter(line);
+                }}
+                className={`text-[10px] font-black px-2 py-0.5 rounded-full transition-all whitespace-nowrap cursor-pointer ${
+                  activeMetroLineFilter === line
+                    ? line === "Purple"
+                      ? "bg-purple-600 text-white shadow-sm"
+                      : line === "Green"
+                      ? "bg-emerald-600 text-white shadow-sm"
+                      : line === "Yellow"
+                      ? "bg-amber-500 text-slate-950 shadow-sm"
+                      : line === "Blue"
+                      ? "bg-blue-600 text-white shadow-sm"
+                      : line === "Pink"
+                      ? "bg-pink-600 text-white shadow-sm"
+                      : "bg-slate-800 text-white shadow-sm"
+                    : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+                }`}
+              >
+                {line === "Purple" ? "🟣" : line === "Green" ? "🟢" : line === "Yellow" ? "🟡" : line === "Blue" ? "🔵" : line === "Pink" ? "🌸" : "🌐"} {line}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* Toggle BMTC Bus Stops Layer */}
         <button
           type="button"
-          onClick={() => setShowStops((prev) => !prev)}
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowStops((prev) => !prev);
+          }}
           className={`px-3 py-1.5 rounded-full border shadow-xl flex items-center gap-1.5 text-[11px] font-bold transition-all cursor-pointer backdrop-blur-md ${
             showStops
               ? "bg-emerald-600 text-white border-emerald-500 shadow-emerald-600/20"
@@ -966,9 +1050,12 @@ export default function LiveMap({
           />
         )}
 
-        {/* NAMMA METRO NETWORK: All 10 Metro Lines */}
+        {/* Auto-flyer when metro line filter changes */}
+        {showMetro && <MetroLineFlyer lineFilter={activeMetroLineFilter} />}
+
+        {/* NAMMA METRO NETWORK: All or Filtered Metro Lines */}
         {showMetro &&
-          metroData.lines.map((line) => (
+          visibleMetroLines.map((line) => (
             <Polyline
               key={`livemap-metro-line-${line.id}`}
               positions={line.coordinates as [number, number][]}
@@ -978,9 +1065,9 @@ export default function LiveMap({
             />
           ))}
 
-        {/* NAMMA METRO STATIONS: All 121 Metro Stations */}
+        {/* NAMMA METRO STATIONS: All or Filtered Metro Stations */}
         {showMetro &&
-          metroData.stations.map((station) => (
+          visibleMetroStations.map((station) => (
             <CircleMarker
               key={`livemap-metro-stn-${station.id}`}
               center={[station.lat, station.lon]}
@@ -994,6 +1081,8 @@ export default function LiveMap({
                   ? "#10b981"
                   : station.lines.includes("Yellow")
                   ? "#eab308"
+                  : station.lines.includes("Pink")
+                  ? "#ec4899"
                   : "#3b82f6",
                 fillOpacity: 1,
               }}
@@ -1012,7 +1101,17 @@ export default function LiveMap({
                     {station.lines.map((l) => (
                       <span
                         key={l}
-                        className="text-[8px] font-bold px-1.5 py-0.5 rounded bg-slate-800 text-white"
+                        className={`text-[8px] font-bold px-1.5 py-0.5 rounded text-white ${
+                          l === "Purple"
+                            ? "bg-purple-600"
+                            : l === "Green"
+                            ? "bg-emerald-600"
+                            : l === "Yellow"
+                            ? "bg-amber-500 text-slate-950 font-bold"
+                            : l === "Pink"
+                            ? "bg-pink-600"
+                            : "bg-blue-600"
+                        }`}
                       >
                         {l} Line
                       </span>
