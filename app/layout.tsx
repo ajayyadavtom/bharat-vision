@@ -58,7 +58,7 @@ export default function RootLayout({
             <MobileScrollLock />
             <main className="w-full max-w-md md:max-w-none mx-auto h-[100dvh] md:h-screen relative shadow-2xl md:shadow-none bg-white dark:bg-slate-900 md:bg-slate-50 md:dark:bg-slate-950 overflow-hidden md:flex md:flex-col">
               <DesktopNav />
-              <div className="flex-1 w-full h-full overflow-hidden relative">
+              <div className="flex-1 w-full min-h-0 overflow-hidden relative">
                 {children}
               </div>
               <BottomNav />

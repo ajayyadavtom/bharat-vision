@@ -207,7 +207,7 @@ function SmoothBusMarker({
 }
 
 // Controller that ONLY fits bounds on explicit route change or recenter trigger
-// PREVENTS MAP ZOOM SNAP-BACK / FIGHT BUG
+// PREVENTS MAP ZOOM SNAP-BACK / FIGHT BUG & AUTO-FITS WHEN ROUTE BOUNDS ARRIVE
 function MapController({
   center,
   zoom,
@@ -224,23 +224,72 @@ function MapController({
   const map = useMap();
   const prevRouteKeyRef = useRef<string | undefined>(undefined);
   const prevRecenterRef = useRef<number>(recenterTrigger);
+  const lastFittedBoundsKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
     const routeChanged = prevRouteKeyRef.current !== routeKey;
     const recenterClicked = prevRecenterRef.current !== recenterTrigger;
+    const boundsKey = routeKey ? `${routeKey}-${bounds ? "has-bounds" : "no-bounds"}` : null;
+    const needsInitialBoundsFit = Boolean(bounds && boundsKey && lastFittedBoundsKeyRef.current !== boundsKey);
+
     prevRouteKeyRef.current = routeKey;
     prevRecenterRef.current = recenterTrigger;
 
-    // Only auto-fit bounds on route change, initial load, or explicit recenter click!
+    // Auto-fit bounds on route change, when route bounds load from API, or explicit recenter click!
     // NEVER on re-render, vehicle telemetry tick, or user manual zoom!
-    if (routeChanged || recenterClicked) {
+    if (routeChanged || recenterClicked || needsInitialBoundsFit) {
       if (bounds) {
         map.fitBounds(bounds, { padding: [50, 50], maxZoom: 16, animate: true });
+        if (boundsKey) {
+          lastFittedBoundsKeyRef.current = boundsKey;
+        }
       } else if (center) {
         map.flyTo(center, zoom || 13, { animate: true, duration: 1.0 });
       }
     }
   }, [bounds, center, zoom, routeKey, recenterTrigger, map]);
+
+  return null;
+}
+
+// Invalidate size on mount and container resize so Leaflet never renders grey tiles or distorted dimensions
+function MapResizer() {
+  const map = useMap();
+
+  useEffect(() => {
+    // Initial size invalidations to ensure proper tile rendering in responsive layouts
+    map.invalidateSize();
+    const t1 = setTimeout(() => map.invalidateSize(), 150);
+    const t2 = setTimeout(() => map.invalidateSize(), 600);
+
+    const container = map.getContainer();
+    if (!container) {
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+      };
+    }
+
+    let ro: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== "undefined") {
+      ro = new ResizeObserver(() => {
+        map.invalidateSize();
+      });
+      ro.observe(container);
+    }
+
+    const handleWindowResize = () => {
+      map.invalidateSize();
+    };
+    window.addEventListener("resize", handleWindowResize);
+
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      ro?.disconnect();
+      window.removeEventListener("resize", handleWindowResize);
+    };
+  }, [map]);
 
   return null;
 }
@@ -1006,6 +1055,9 @@ export default function LiveMap({
         className="w-full h-full bg-[#f8fafc] dark:bg-[#09090b] z-0"
         zoomControl={false}
       >
+        {/* MapResizer ensures Leaflet recalculates pixel boundaries on mount, resize, and breakpoint changes */}
+        <MapResizer />
+
         {/* MapController fits bounds ONCE per route change or recenter, NEVER on render/telemetry */}
         <MapController
           center={cityData.coordinates}

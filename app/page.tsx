@@ -281,7 +281,7 @@ export default function VisionHome() {
         </motion.div>
 
         {/* LEFT COLUMN: Transit Search, Wallet, Rapid Transit & Environmental Telemetry */}
-        <div className="order-2 lg:col-span-5 xl:col-span-5 flex flex-col gap-5">
+        <div className="order-2 md:col-span-12 lg:col-span-5 xl:col-span-5 flex flex-col gap-5">
           {/* Where to? Navigation Search Bar */}
           <motion.div variants={itemVariants} className="relative group">
             <Link href="/route" className="block">
@@ -522,7 +522,7 @@ export default function VisionHome() {
             </div>
 
             {/* Live Interactive Mapbox Retina Container */}
-            <div className="w-full h-[520px] xl:h-[580px] rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 relative shadow-inner">
+            <div className="w-full h-[400px] lg:h-[calc(100vh-270px)] lg:min-h-[420px] lg:max-h-[600px] rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 relative shadow-inner">
               <LiveMap
                 busCode={desktopCorridor}
                 initialShowMetro={true}
