@@ -200,88 +200,97 @@ export default function VisionHome() {
         variants={dashboardVariants}
         initial="hidden"
         animate="show"
-        className="flex flex-col md:grid md:grid-cols-12 h-[100dvh] md:h-full overflow-y-auto no-scrollbar gap-6 p-4 pt-8 md:p-8 md:pt-6 pb-[120px] md:pb-8 relative z-10 [&>*]:shrink-0 md:max-w-[1720px] md:mx-auto md:w-full md:px-10 xl:px-14"
+        className="flex flex-col lg:grid lg:grid-cols-12 h-[100dvh] lg:h-full overflow-y-auto lg:overflow-hidden no-scrollbar pb-[120px] lg:pb-0 bg-slate-50 dark:bg-slate-950 relative max-w-[1720px] mx-auto w-full lg:px-8 xl:px-12 lg:py-4 lg:gap-6"
       >
-        {/* User Greeting & Live Location Badge */}
-        <motion.div variants={itemVariants} className="order-1 md:col-span-12 flex justify-between items-start md:pb-2 border-b border-transparent md:border-slate-200 md:dark:border-slate-800/80">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <select 
-                value={userLocation?.isRealGps ? "gps" : currentCity}
-                onChange={(e) => {
-                  if (e.target.value === "gps") {
-                    acquireLocation(true);
-                  } else {
-                    setCurrentCity(e.target.value);
-                    setUserLocation(null);
-                  }
-                }}
-                className="text-[10px] uppercase tracking-widest text-slate-500 font-bold bg-transparent outline-none cursor-pointer"
-              >
-                {userLocation?.isRealGps && (
-                  <option value="gps" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-bold">
-                    📍 {userLocation.name} (Live GPS)
-                  </option>
-                )}
-                {Object.values(CITIES).map(city => (
-                  <option key={city.id} value={city.id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
-                    {city.name} {city.state}
-                  </option>
-                ))}
-              </select>
-
-              {/* One-Click GPS Location Refresher */}
-              <button
-                type="button"
-                onClick={() => acquireLocation(true)}
-                disabled={isLocating}
-                className={`flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-bold tracking-tight transition-all active:scale-95 border cursor-pointer ${
-                  userLocation?.isRealGps
-                    ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-600 dark:text-emerald-400"
-                    : "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 hover:text-emerald-500"
-                }`}
-                title="Detect Exact Mobile Location"
-              >
-                <Crosshair size={10} className={isLocating ? "animate-spin text-emerald-500" : (userLocation?.isRealGps ? "text-emerald-500" : "")} />
-                <span>{isLocating ? "Locating..." : (userLocation?.isRealGps ? "GPS Active" : "Detect Location")}</span>
-              </button>
-            </div>
-
-            <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white">
-              {tHome[appLang as keyof typeof tHome]?.greeting || tHome.en.greeting}, {userName ? (userName.toLowerCase() === "guest" ? "Jenny" : userName.split(" ")[0]) : "Jenny"}
-            </h2>
-          </div>
-
-          <div className="flex flex-col items-end gap-2">
-            <Link href="/profile" className="w-10 h-10 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full flex items-center justify-center shadow-sm active:scale-95 transition-transform hover:bg-slate-50 dark:hover:bg-slate-800 overflow-hidden">
-              {profilePictureUrl ? (
-                <img 
-                  src={profilePictureUrl} 
-                  alt="Profile" 
-                  className="w-full h-full object-cover" 
-                  onError={(e) => {
-                    (e.target as HTMLElement).style.display = "none";
+        {/* LEFT COLUMN: Controls, Search, Transit Hub, Wallet & Climate Telemetry */}
+        <div className="order-1 lg:col-span-5 xl:col-span-5 flex flex-col lg:h-full lg:overflow-y-auto no-scrollbar gap-4 p-4 pt-8 lg:p-0 lg:pr-2">
+          
+          {/* User Greeting & Live Location Badge */}
+          <motion.div variants={itemVariants} className="flex justify-between items-start pb-2 border-b border-slate-200/60 dark:border-slate-800/60">
+            <div>
+              {/* Mobile Location & GPS Selector */}
+              <div className="flex md:hidden items-center gap-2 mb-1.5">
+                <select 
+                  value={userLocation?.isRealGps ? "gps" : currentCity}
+                  onChange={(e) => {
+                    if (e.target.value === "gps") {
+                      acquireLocation(true);
+                    } else {
+                      setCurrentCity(e.target.value);
+                      setUserLocation(null);
+                    }
                   }}
-                />
-              ) : (
-                <User size={18} className="text-slate-600 dark:text-slate-300" />
-              )}
-            </Link>
-            <div className="flex flex-col gap-1 items-end">
-              <div className="flex items-center gap-1.5 bg-emerald-100 dark:bg-emerald-900/30 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-800 shadow-sm cursor-default">
-                <Leaf size={12} className="text-emerald-600 dark:text-emerald-400" />
-                <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">{carbonSavedGrams || 0}g</span>
+                  className="text-[10px] uppercase tracking-widest text-slate-500 font-bold bg-transparent outline-none cursor-pointer"
+                >
+                  {userLocation?.isRealGps && (
+                    <option value="gps" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-bold">
+                      📍 {userLocation.name} (Live GPS)
+                    </option>
+                  )}
+                  {Object.values(CITIES).map(city => (
+                    <option key={city.id} value={city.id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
+                      {city.name} {city.state}
+                    </option>
+                  ))}
+                </select>
+
+                {/* One-Click GPS Location Refresher */}
+                <button
+                  type="button"
+                  onClick={() => acquireLocation(true)}
+                  disabled={isLocating}
+                  className={`flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-bold tracking-tight transition-all active:scale-95 border cursor-pointer ${
+                    userLocation?.isRealGps
+                      ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-600 dark:text-emerald-400"
+                      : "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 hover:text-emerald-500"
+                  }`}
+                  title="Detect Exact Mobile Location"
+                >
+                  <Crosshair size={10} className={isLocating ? "animate-spin text-emerald-500" : (userLocation?.isRealGps ? "text-emerald-500" : "")} />
+                  <span>{isLocating ? "Locating..." : (userLocation?.isRealGps ? "GPS Active" : "Detect Location")}</span>
+                </button>
               </div>
-              <div className="flex items-center gap-1.5 bg-amber-100 dark:bg-amber-900/30 px-3 py-1 rounded-full border border-amber-200 dark:border-amber-800 shadow-sm cursor-default">
-                <Medal size={12} className="text-amber-600 dark:text-amber-400" />
-                <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold">{karmaPoints || 0} pts</span>
+
+              {/* Desktop Subtitle Pill */}
+              <div className="hidden md:flex items-center gap-1.5 mb-1 text-[11px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+                <Sparkles size={13} />
+                <span>Namma Bengaluru Transit Command Center</span>
+              </div>
+
+              <h2 className="text-2xl lg:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+                {tHome[appLang as keyof typeof tHome]?.greeting || tHome.en.greeting}, {userName ? (userName.toLowerCase() === "guest" ? "Jenny" : userName.split(" ")[0]) : "Jenny"} 👋
+              </h2>
+            </div>
+
+            {/* Mobile Profile & Badges */}
+            <div className="flex md:hidden flex-col items-end gap-2">
+              <Link href="/profile" className="w-10 h-10 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full flex items-center justify-center shadow-sm active:scale-95 transition-transform hover:bg-slate-50 dark:hover:bg-slate-800 overflow-hidden">
+                {profilePictureUrl ? (
+                  <img 
+                    src={profilePictureUrl} 
+                    alt="Profile" 
+                    className="w-full h-full object-cover" 
+                    onError={(e) => {
+                      (e.target as HTMLElement).style.display = "none";
+                    }}
+                  />
+                ) : (
+                  <User size={18} className="text-slate-600 dark:text-slate-300" />
+                )}
+              </Link>
+              <div className="flex flex-col gap-1 items-end">
+                <div className="flex items-center gap-1.5 bg-emerald-100 dark:bg-emerald-900/30 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-800 shadow-sm cursor-default">
+                  <Leaf size={12} className="text-emerald-600 dark:text-emerald-400" />
+                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">{carbonSavedGrams || 0}g</span>
+                </div>
+                <div className="flex items-center gap-1.5 bg-amber-100 dark:bg-amber-900/30 px-3 py-1 rounded-full border border-amber-200 dark:border-amber-800 shadow-sm cursor-default">
+                  <Medal size={12} className="text-amber-600 dark:text-amber-400" />
+                  <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold">{karmaPoints || 0} pts</span>
+                </div>
               </div>
             </div>
-          </div>
-        </motion.div>
+          </motion.div>
 
-        {/* LEFT COLUMN: Transit Search, Wallet, Rapid Transit & Environmental Telemetry */}
-        <div className="order-2 md:col-span-12 lg:col-span-5 xl:col-span-5 flex flex-col gap-5">
           {/* Where to? Navigation Search Bar */}
           <motion.div variants={itemVariants} className="relative group">
             <Link href="/route" className="block">
@@ -474,9 +483,9 @@ export default function VisionHome() {
         </div>
 
         {/* RIGHT COLUMN: Live Bengaluru Transit Radar & Interactive Fleet (Desktop Widescreen Viewport) */}
-        <div className="hidden lg:flex lg:flex-col lg:col-span-7 xl:col-span-7 lg:sticky lg:top-4 lg:self-start gap-3">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 shadow-sm flex flex-col gap-3">
-            <div className="flex items-center justify-between">
+        <div className="hidden lg:flex lg:flex-col lg:col-span-7 xl:col-span-7 lg:h-full lg:min-h-0">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 shadow-sm flex flex-col h-full gap-3">
+            <div className="flex items-center justify-between shrink-0">
               <div>
                 <div className="flex items-center gap-2 mb-0.5">
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
@@ -491,7 +500,7 @@ export default function VisionHome() {
               </div>
               <Link
                 href="/track"
-                className="text-xs font-bold bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900 text-emerald-700 dark:text-emerald-300 px-3 py-1.5 rounded-xl border border-emerald-200 dark:border-emerald-800 transition-colors flex items-center gap-1 shadow-xs"
+                className="text-xs font-bold bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900 text-emerald-700 dark:text-emerald-300 px-3 py-1.5 rounded-xl border border-emerald-200 dark:border-emerald-800 transition-colors flex items-center gap-1 shadow-xs cursor-pointer"
               >
                 <span>Full Screen</span>
                 <Compass size={13} />
@@ -499,7 +508,7 @@ export default function VisionHome() {
             </div>
 
             {/* Quick Corridor Filter Pills */}
-            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 shrink-0">
               {[
                 { code: "500D", label: "500D ORR (Silk Board ⇄ Hebbal)" },
                 { code: "335E", label: "335E (Majestic ⇄ Whitefield)" },
@@ -522,7 +531,7 @@ export default function VisionHome() {
             </div>
 
             {/* Live Interactive Mapbox Retina Container */}
-            <div className="w-full h-[400px] lg:h-[calc(100vh-270px)] lg:min-h-[420px] lg:max-h-[600px] rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 relative shadow-inner">
+            <div className="flex-1 w-full min-h-[350px] rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 relative shadow-inner">
               <LiveMap
                 busCode={desktopCorridor}
                 initialShowMetro={true}
@@ -531,7 +540,7 @@ export default function VisionHome() {
             </div>
 
             {/* Footer Metrics */}
-            <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 px-1 pt-1 border-t border-slate-100 dark:border-slate-800">
+            <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 px-1 pt-1 border-t border-slate-100 dark:border-slate-800 shrink-0">
               <span className="font-bold">5,192 Bus Stops · 121 Metro Stations · 4,400+ BMTC Routes</span>
               <span className="text-emerald-600 dark:text-emerald-400 font-black">60 FPS Real-time GPS</span>
             </div>

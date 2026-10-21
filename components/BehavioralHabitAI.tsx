@@ -83,49 +83,7 @@ export default function BehavioralHabitAI() {
     };
   }, [rideHistory]);
 
-  // 2. Intelligent Real-Time Prompt Triggering:
-  // - Only triggers during actual commute hours (not 2 AM or off-peak)
-  // - Checks if already booked for this window today
-  // - Checks if user dismissed recently (4-hour cooldown)
-  // - Checks session storage so navigating back to home DOES NOT re-trigger it every time!
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    // A. Must be an active commute window
-    if (!commuteContext.isCommuteHour) {
-      return;
-    }
-
-    const { dateStr, windowType } = commuteContext;
-
-    // B. Check if already booked for this window today
-    const bookedKey = `bv_habit_booked_${dateStr}_${windowType}`;
-    if (localStorage.getItem(bookedKey)) {
-      return;
-    }
-
-    // C. Check if dismissed recently (4-hour cooldown)
-    const dismissedUntil = localStorage.getItem("bv_habit_dismissed_until");
-    if (dismissedUntil && Date.now() < parseInt(dismissedUntil, 10)) {
-      return;
-    }
-
-    // D. Session check: Do NOT show again if already shown during this browser session
-    const sessionKey = `bv_habit_shown_${windowType}`;
-    if (sessionStorage.getItem(sessionKey)) {
-      return;
-    }
-
-    // Polite 2.5s delay to allow initial homepage content and telemetry to settle
-    const timer = setTimeout(() => {
-      setIsVisible(true);
-      sessionStorage.setItem(sessionKey, "true");
-    }, 2500);
-
-    return () => clearTimeout(timer);
-  }, [commuteContext]);
-
-  // Allow manual re-triggering from external events (e.g. user taps Habit insight chip)
+  // 2. On-demand Habit AI: Triggered explicitly when the user clicks the "Habit AI" button
   useEffect(() => {
     const handleManualTrigger = () => {
       setIsVisible(true);
@@ -203,7 +161,7 @@ export default function BehavioralHabitAI() {
 
   return (
     <AnimatePresence>
-      <div className="fixed bottom-24 left-0 right-0 max-w-md mx-auto px-4 z-[100] pointer-events-none">
+      <div className="fixed bottom-24 lg:bottom-8 left-4 right-4 lg:left-auto lg:right-8 max-w-md w-full z-[100] pointer-events-none">
         <motion.div
           initial={{ opacity: 0, y: 50, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
