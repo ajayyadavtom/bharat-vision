@@ -6,17 +6,24 @@ export async function POST(req: Request) {
   try {
     parsedBody = await req.json();
   } catch (e) {
+
+    
     // ignore
   }
 
+
+  
   const fallbackSarvam = Buffer.from("c2tfZzg0aWkzZXFfYVY3TlhCZFJkeUJYSGZWdTRRbFdvQUpR", "base64").toString("utf-8");
   const fallbackGemini = Buffer.from("QVEuQWI4Uk42SUhHZW1jTFNhUEVoMzJEd3NPdG5UdWNTZXlxcTJ1OUJGUThsNlVselNqYkE=", "base64").toString("utf-8");
 
+  
   const apiKey = process.env.SARVAM_API_KEY || fallbackSarvam;
   const geminiKey = process.env.GEMINI_API_KEY || fallbackGemini;
 
+  
   const { message, imageBase64, cityId, appLang = "en", history } = parsedBody;
 
+  
   const currentTime = new Date().toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata' });
   const userCityName = cityId === "delhi" ? "Delhi NCR" : "Bengaluru";
   const primaryLanguage = cityId === "delhi" ? "Hindi" : "Kannada";
