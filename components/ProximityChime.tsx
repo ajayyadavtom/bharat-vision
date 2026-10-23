@@ -31,6 +31,8 @@ import {
   getCuratedStopsForBus,
   CURATED_CORRIDOR_STOPS,
 } from "@/data/curatedCorridorStops";
+import { useAppStore } from "@/lib/store";
+import { sendSystemNotification, speakAnnouncement } from "@/lib/notifications";
 
 // Default fallback corridor if offline & no route matched
 const DEFAULT_FALLBACK_STOPS: StopTarget[] = [
@@ -328,37 +330,48 @@ export default function ProximityChime({
     };
   }, []);
 
-  // Execute Real Multimodal Deboarding Alarm (Chime + Speech + Vibration)
+  // Execute Real Multimodal Deboarding Alarm (Chime + Speech + Vibration + Push)
   const triggerAlarm = useCallback((target: StopTarget) => {
+    const notifs = useAppStore.getState().notificationSettings;
+    if (notifs && !notifs.proximity) {
+      console.log("Proximity alerts disabled in settings, skipping alarm.");
+      return;
+    }
+
     setHasTriggered(true);
 
-    // 1. Pleasant Transit Audio Chime
-    playTransitChime();
+    // 1. Pleasant Transit Audio Chime (if enabled)
+    if (!notifs || notifs.soundChimes) {
+      playTransitChime();
+    }
 
-    // 2. Hardware Vibration Alert (Pulse pattern)
-    if (typeof window !== "undefined" && "vibrate" in navigator) {
-      try {
-        navigator.vibrate([600, 250, 600, 250, 1000]);
-      } catch (e) {
-        console.warn("Vibration not allowed:", e);
+    // 2. Hardware Vibration Alert (Pulse pattern if enabled)
+    if (!notifs || notifs.vibration) {
+      if (typeof window !== "undefined" && "vibrate" in navigator) {
+        try {
+          navigator.vibrate([600, 250, 600, 250, 1000]);
+        } catch (e) {
+          console.warn("Vibration not allowed:", e);
+        }
       }
     }
 
-    // 3. Spoken Voice Alert (NLP Web Speech Synthesis)
-    if (typeof window !== "undefined" && "speechSynthesis" in window) {
-      try {
-        window.speechSynthesis.cancel(); // clear queue
-        const utterance = new SpeechSynthesisUtterance(
-          `Approaching ${target.name}. You are approximately 300 meters away. Please prepare to deboard at the next stop.`
-        );
-        utterance.rate = 0.95;
-        utterance.pitch = 1.05;
-        window.speechSynthesis.speak(utterance);
-      } catch (e) {
-        console.warn("Speech synthesis error:", e);
-      }
+    // 3. Spoken Voice Alert (NLP Web Speech Synthesis if enabled)
+    if (!notifs || notifs.voiceAnnouncements) {
+      speakAnnouncement(
+        `Approaching ${target.name}. You are approximately 300 meters away. Please prepare to deboard at the next stop.`
+      );
     }
-  }, []);
+
+    // 4. System / Browser Push Notification (for background / lockscreen awareness)
+    if (!notifs || notifs.pushEnabled) {
+      sendSystemNotification(`Approaching ${target.name} 📍`, {
+        body: `You are approximately 300m from ${target.name}. Prepare to deboard route ${busCode || "500D"}.`,
+        tag: `deboard-${target.name}`,
+        requireInteraction: true,
+      });
+    }
+  }, [busCode]);
 
   // Real-time calculation of distance to target stop from the moving bus/user GPS
   useEffect(() => {

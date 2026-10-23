@@ -18,6 +18,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
+import { sendSystemNotification, triggerVibration, playTransitChime } from "@/lib/notifications";
 
 interface RouteDeviationAIProps {
   externalTrigger?: boolean;
@@ -200,9 +201,7 @@ export default function RouteDeviationAI({
 
         // Require 2 consecutive GPS fixes off-route to prevent momentary GPS drift/jitter
         if (consecutiveDeviationsRef.current >= 2 && !isVisible && !cooldownActive) {
-          setIsVisible(true);
-          setVoteStatus("pending");
-          setLastPromptTime(Date.now());
+          triggerDeviationAlert();
         }
       } else {
         consecutiveDeviationsRef.current = 0;
@@ -228,14 +227,38 @@ export default function RouteDeviationAI({
     };
   }, [isVisible]);
 
+  // Unified Deviation Alert Displayer (respects notification settings)
+  const triggerDeviationAlert = useCallback(() => {
+    const notifs = useAppStore.getState().notificationSettings;
+    if (notifs && !notifs.deviations) {
+      console.log("Route deviation alerts disabled in settings.");
+      return;
+    }
+
+    setIsVisible(true);
+    setVoteStatus("pending");
+    setLastPromptTime(Date.now());
+
+    if (!notifs || notifs.soundChimes) {
+      playTransitChime();
+    }
+    if (!notifs || notifs.vibration) {
+      triggerVibration([300, 150, 300]);
+    }
+    if (!notifs || notifs.pushEnabled) {
+      sendSystemNotification(`Route Detour Alert • Route ${busRouteId || "500D"} ⚠️`, {
+        body: "Bus appears to have deviated from its designated corridor. Tap to verify and help commuters.",
+        tag: "route-deviation",
+      });
+    }
+  }, [busRouteId]);
+
   // Handle external manual test trigger from header
   useEffect(() => {
     if (externalTrigger) {
-      setIsVisible(true);
-      setVoteStatus("pending");
-      setLastPromptTime(Date.now());
+      triggerDeviationAlert();
     }
-  }, [externalTrigger]);
+  }, [externalTrigger, triggerDeviationAlert]);
 
   const handleVote = (hasDeviated: boolean) => {
     setVoteStatus("voting");
@@ -282,9 +305,7 @@ export default function RouteDeviationAI({
     setSpeedKmh(34);
     setIsInBus(true);
     setDeviationMeters(420);
-    setIsVisible(true);
-    setVoteStatus("pending");
-    setLastPromptTime(Date.now());
+    triggerDeviationAlert();
   };
 
   return (

@@ -5,22 +5,65 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Moon, Sun, Bell, Globe, Shield, User, ChevronRight, Terminal, LogOut, X, Activity, Server, Code } from "lucide-react";
+import { 
+  ArrowLeft, 
+  Moon, 
+  Sun, 
+  Bell, 
+  Globe, 
+  Shield, 
+  User, 
+  ChevronRight, 
+  Terminal, 
+  LogOut, 
+  X, 
+  Activity, 
+  Server, 
+  Code,
+  Volume2,
+  Smartphone,
+  Mic,
+  AlertTriangle,
+  CheckCircle2,
+  Sparkles,
+  Info,
+  Send,
+  Tag
+} from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAppStore } from "@/lib/store";
+import { 
+  getNotificationPermission, 
+  requestNotificationPermission, 
+  sendSystemNotification, 
+  playTransitChime, 
+  triggerVibration, 
+  speakAnnouncement,
+  NotificationPermissionStatus 
+} from "@/lib/notifications";
 
 export default function SettingsScreen() {
   const router = useRouter();
   const { theme, setTheme, systemTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const { privacyLiveLocation, setPrivacyLiveLocation, privacyCamera, setPrivacyCamera } = useAppStore();
+  const { 
+    privacyLiveLocation, 
+    setPrivacyLiveLocation, 
+    privacyCamera, 
+    setPrivacyCamera,
+    notificationSettings,
+    setNotificationSettings,
+    appLang, 
+    setAppLang 
+  } = useAppStore();
   
   // Modals state
   const [activeModal, setActiveModal] = useState<"terminal" | "notifications" | "language" | "privacy" | null>(null);
   
-  // Settings state
-  const [notifSettings, setNotifSettings] = useState({ proximity: true, deviations: true, marketing: false });
-  const { appLang, setAppLang } = useAppStore();
+  // Notification permission & test states
+  const [permissionStatus, setPermissionStatus] = useState<NotificationPermissionStatus>("default");
+  const [testToast, setTestToast] = useState<string | null>(null);
+  const [isTesting, setIsTesting] = useState(false);
   const lang = appLang;
 
   const t = {
@@ -39,12 +82,24 @@ export default function SettingsScreen() {
       devConsole: 'Developer Console',
       advDebug: 'Advanced debugging',
       signOut: 'Sign Out',
+      pushAlerts: 'Push Notifications',
+      pushDesc: 'Lockscreen & system tray alerts',
       proximity: 'Proximity Chimes',
-      proxDesc: 'Vibrate when bus is near',
+      proxDesc: 'Alert & vibrate when stop is ~300m away',
       deviations: 'Route Deviations',
-      devDesc: 'Alert me if bus takes detour',
-      marketing: 'Marketing Offers',
-      markDesc: 'Pass discounts & promos',
+      devDesc: 'Alert if bus detours off planned corridor',
+      soundChimes: 'Transit Audio Chimes',
+      soundDesc: '2-tone synthesized arrival chime (D5/A5)',
+      vibration: 'Haptic Vibration',
+      vibDesc: 'Physical vibration pattern on devices',
+      voiceAnnounce: 'Voice Deboarding Guidance',
+      voiceDesc: 'Speech synthesis upcoming stop announcements',
+      marketing: 'Pass Discounts & Offers',
+      markDesc: 'Concessions, passes & karma alerts',
+      testNotif: 'Send Test Notification',
+      permGranted: 'Active & Granted',
+      permBlocked: 'Blocked in Browser',
+      permDefault: 'Enable Browser Alerts',
       dataSecured: 'Your data is secured with AES-256 encryption.',
       liveLoc: 'Live Location Telemetry',
       liveLocDesc: 'Used for crowd-sourcing ETAs',
@@ -69,12 +124,24 @@ export default function SettingsScreen() {
       devConsole: 'ಡೆವಲಪರ್ ಕನ್ಸೋಲ್',
       advDebug: 'ಸುಧಾರಿತ ಡಿಬಗ್ಗಿಂಗ್',
       signOut: 'ಸೈನ್ ಔಟ್',
+      pushAlerts: 'ಪುಶ್ ಅಧಿಸೂಚನೆಗಳು',
+      pushDesc: 'ಲಾಕ್‌ಸ್ಕ್ರೀನ್ ಮತ್ತು ಸಿಸ್ಟಮ್ ಎಚ್ಚರಿಕೆಗಳು',
       proximity: 'ಸಾಮೀಪ್ಯ ಚೈಮ್ಸ್',
-      proxDesc: 'ಬಸ್ ಹತ್ತಿರವಿರುವಾಗ ಕಂಪಿಸಿ',
+      proxDesc: 'ನಿಲುಗಡೆ 300 ಮೀಟರ್ ಸಮೀಪವಿದ್ದಾಗ ಎಚ್ಚರಿಸಿ',
       deviations: 'ಮಾರ್ಗ ವಿಚಲನಗಳು',
       devDesc: 'ಬಸ್ ಮಾರ್ಗ ಬದಲಿಸಿದರೆ ಎಚ್ಚರಿಸಿ',
-      marketing: 'ಮಾರ್ಕೆಟಿಂಗ್ ಕೊಡುಗೆಗಳು',
-      markDesc: 'ಪಾಸ್ ರಿಯಾಯಿತಿಗಳು',
+      soundChimes: 'ಧ್ವನಿ ಚೈಮ್ಸ್',
+      soundDesc: 'ಆಗಮನಕ್ಕೆ ಮಧುರ ಧ್ವನಿ (D5/A5)',
+      vibration: 'ಕಂಪನ (Haptics)',
+      vibDesc: 'ಮೌನ ಎಚ್ಚರಿಕೆಗಳಿಗೆ ಮೊಬೈಲ್ ಕಂಪನ',
+      voiceAnnounce: 'ಧ್ವನಿ ಪ್ರಕಟಣೆಗಳು',
+      voiceDesc: 'ಮುಂದಿನ ನಿಲ್ದಾಣದ ಮಾತನಾಡುವ ಮಾರ್ಗದರ್ಶನ',
+      marketing: 'ಪಾಸ್ ರಿಯಾಯಿತಿಗಳು',
+      markDesc: 'ರಿಯಾಯಿತಿಗಳು ಮತ್ತು ಕೊಡುಗೆಗಳು',
+      testNotif: 'ಪರೀಕ್ಷಾ ಅಧಿಸೂಚನೆ ಕಳುಹಿಸಿ',
+      permGranted: 'ಸಕ್ರಿಯ ಮತ್ತು ಅನುಮೋದಿಸಲಾಗಿದೆ',
+      permBlocked: 'ಬ್ರೌಸರ್‌ನಲ್ಲಿ ನಿರ್ಬಂಧಿಸಲಾಗಿದೆ',
+      permDefault: 'ಅಧಿಸೂಚನೆ ಸಕ್ರಿಯಗೊಳಿಸಿ',
       dataSecured: 'ನಿಮ್ಮ ಡೇಟಾವನ್ನು ಸುರಕ್ಷಿತಗೊಳಿಸಲಾಗಿದೆ.',
       liveLoc: 'ಲೈವ್ ಸ್ಥಳ',
       liveLocDesc: 'ETA ಗಳಿಗಾಗಿ ಬಳಸಲಾಗುತ್ತದೆ',
@@ -99,12 +166,24 @@ export default function SettingsScreen() {
       devConsole: 'डेवलपर कंसोल',
       advDebug: 'उन्नत डिबगिंग',
       signOut: 'साइन आउट',
+      pushAlerts: 'पुश सूचनाएं',
+      pushDesc: 'लॉकस्क्रीन और सिस्टम ट्रे अलर्ट',
       proximity: 'प्रॉक्सिमिटी चाइम्स',
-      proxDesc: 'बस पास होने पर वाइब्रेट करें',
+      proxDesc: 'स्टॉप 300 मीटर पास होने पर अलर्ट और कंपन',
       deviations: 'रूट विचलन',
-      devDesc: 'बस के रास्ता बदलने पर अलर्ट करें',
-      marketing: 'मार्केटिंग ऑफ़र',
-      markDesc: 'पास छूट और प्रोमो',
+      devDesc: 'बस के रास्ता बदलने पर तुरंत अलर्ट करें',
+      soundChimes: 'ट्रांजिट ऑडियो चाइम्स',
+      soundDesc: 'मधुर 2-टोन आगमन चाइम (D5/A5)',
+      vibration: 'हैप्टिक कंपन',
+      vibDesc: 'साइलेंट अलर्ट के लिए मोबाइल कंपन',
+      voiceAnnounce: 'वॉयस घोषणाएं',
+      voiceDesc: 'आवाज द्वारा अगले स्टॉप का मार्गदर्शन',
+      marketing: 'पास छूट और ऑफ़र',
+      markDesc: 'रियायती पास और कर्मा रिवार्ड्स',
+      testNotif: 'परीक्षण सूचना भेजें',
+      permGranted: 'सक्रिय और स्वीकृत',
+      permBlocked: 'ब्राउज़र में अवरुद्ध है',
+      permDefault: 'ब्राउज़र अलर्ट चालू करें',
       dataSecured: 'आपका डेटा सुरक्षित है।',
       liveLoc: 'लाइव लोकेशन',
       liveLocDesc: 'ईटीए के लिए उपयोग किया जाता है',
@@ -117,10 +196,69 @@ export default function SettingsScreen() {
   };
 
 
-  // Prevent hydration mismatch
+  // Prevent hydration mismatch & sync browser permission status
   useEffect(() => {
     setMounted(true);
+    setPermissionStatus(getNotificationPermission());
   }, []);
+
+  const handleRequestPermission = async () => {
+    const status = await requestNotificationPermission();
+    setPermissionStatus(status);
+    if (status === "granted") {
+      setNotificationSettings({ pushEnabled: true });
+      sendSystemNotification("Bharat Vision • Notifications Enabled! 🎉", {
+        body: "Proximity chimes, route deviations, and live transit alerts are active.",
+        icon: "/icon.png"
+      });
+      setTestToast("Push notifications enabled & active!");
+      setTimeout(() => setTestToast(null), 3500);
+    }
+  };
+
+  const handleTestNotification = async () => {
+    setIsTesting(true);
+
+    // 1. Audio transit chime
+    if (notificationSettings?.soundChimes) {
+      playTransitChime();
+    }
+
+    // 2. Physical haptic vibration
+    if (notificationSettings?.vibration) {
+      triggerVibration([250, 100, 250]);
+    }
+
+    // 3. Voice deboarding announcement
+    if (notificationSettings?.voiceAnnouncements) {
+      speakAnnouncement("Approaching Kempegowda Majestic Station. Please prepare to deboard.");
+    }
+
+    // 4. System lockscreen / browser push notification
+    let pushDelivered = false;
+    if (notificationSettings?.pushEnabled && permissionStatus === "granted") {
+      pushDelivered = await sendSystemNotification("Bharat Vision • Live Transit Alert 🔔", {
+        body: "Approaching Kempegowda Majestic Station (~300m). Route 500D is on schedule.",
+        tag: "test-alert",
+        icon: "/icon.png"
+      });
+    }
+
+    if (pushDelivered) {
+      setTestToast("Test alert delivered to system tray & audio chime played!");
+    } else if (permissionStatus === "denied") {
+      setTestToast("Chime & vibration tested! (Browser blocked push notifications)");
+    } else if (permissionStatus === "default") {
+      setTestToast("Chime & vibration tested! Tap 'Enable Browser Alerts' for system push.");
+    } else {
+      setTestToast("Test chime and haptics triggered successfully!");
+    }
+
+    setTimeout(() => {
+      setIsTesting(false);
+      setTimeout(() => setTestToast(null), 3500);
+    }, 600);
+  };
 
   const handleLogout = async () => {
     // Preserve active profile picture in durable cache before session reset
@@ -225,7 +363,7 @@ export default function SettingsScreen() {
             
             <button 
               onClick={() => setActiveModal("notifications")}
-              className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+              className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer"
             >
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-emerald-50 dark:bg-emerald-900/30 rounded-lg text-emerald-600 dark:text-emerald-400">
@@ -233,10 +371,21 @@ export default function SettingsScreen() {
                 </div>
                 <div className="text-left">
                   <p className="text-sm font-bold text-slate-900 dark:text-white">Notifications & Alerts</p>
-                  <p className="text-xs text-slate-500">Chimes, vibrations, proximity</p>
+                  <p className="text-xs text-slate-500">
+                    {notificationSettings?.proximity ? "Proximity chimes active" : "Silent mode"} · {permissionStatus === "granted" ? "Push enabled" : "In-app alerts"}
+                  </p>
                 </div>
               </div>
-              <ChevronRight size={18} className="text-slate-400" />
+              <div className="flex items-center gap-2">
+                <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                  permissionStatus === "granted" 
+                    ? "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300"
+                    : "bg-slate-100 dark:bg-slate-800 text-slate-500"
+                }`}>
+                  {permissionStatus === "granted" ? "Active" : "Configure"}
+                </span>
+                <ChevronRight size={18} className="text-slate-400" />
+              </div>
             </button>
 
             <button 
@@ -317,7 +466,7 @@ export default function SettingsScreen() {
               initial={{ opacity: 0, y: 100 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 100 }}
-              className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl relative max-h-[80vh] flex flex-col overflow-hidden"
+              className="w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-2xl relative max-h-[85vh] flex flex-col overflow-hidden"
             >
               <button 
                 onClick={() => setActiveModal(null)} 
@@ -348,49 +497,298 @@ export default function SettingsScreen() {
 
               {/* NOTIFICATIONS MODAL */}
               {activeModal === "notifications" && (
-                <div className="h-full flex flex-col">
-                  <h3 className="text-xl font-black text-slate-900 dark:text-white mb-6">{t[lang as keyof typeof t].notifications}</h3>
-                  <div className="space-y-4">
-                    <button 
-                      onClick={() => {
-                        setNotifSettings(prev => ({...prev, proximity: !prev.proximity}));
-                        if (!notifSettings.proximity && typeof window !== 'undefined' && 'vibrate' in navigator) {
-                          navigator.vibrate([200, 100, 200]);
-                        }
-                      }}
-                      className="w-full text-left flex items-center justify-between bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 active:scale-95 transition-transform"
+                <div className="h-full flex flex-col min-h-0">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 mb-4 shrink-0 pr-8">
+                    <div>
+                      <h3 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
+                        <Bell size={20} className="text-emerald-500" />
+                        {t[lang as keyof typeof t].notifications}
+                      </h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Manage transit alarms, chimes, and system push alerts
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Scrollable Settings Content */}
+                  <div className="space-y-3 overflow-y-auto no-scrollbar flex-1 pr-1 pb-2">
+                    
+                    {/* Browser Push Permission Status Card */}
+                    <div className={`p-3.5 rounded-2xl border flex items-start justify-between gap-3 ${
+                      permissionStatus === "granted"
+                        ? "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800/60"
+                        : permissionStatus === "denied"
+                        ? "bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800/60"
+                        : "bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800/60"
+                    }`}>
+                      <div className="flex items-start gap-2.5">
+                        <div className="mt-0.5">
+                          {permissionStatus === "granted" ? (
+                            <CheckCircle2 size={16} className="text-emerald-600 dark:text-emerald-400" />
+                          ) : permissionStatus === "denied" ? (
+                            <AlertTriangle size={16} className="text-amber-600 dark:text-amber-400" />
+                          ) : (
+                            <Info size={16} className="text-blue-600 dark:text-blue-400" />
+                          )}
+                        </div>
+                        <div>
+                          <p className={`text-xs font-black ${
+                            permissionStatus === "granted" 
+                              ? "text-emerald-900 dark:text-emerald-300"
+                              : permissionStatus === "denied"
+                              ? "text-amber-900 dark:text-amber-300"
+                              : "text-blue-900 dark:text-blue-300"
+                          }`}>
+                            {permissionStatus === "granted" 
+                              ? t[lang as keyof typeof t].permGranted 
+                              : permissionStatus === "denied" 
+                              ? t[lang as keyof typeof t].permBlocked 
+                              : t[lang as keyof typeof t].pushAlerts}
+                          </p>
+                          <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-tight mt-0.5">
+                            {permissionStatus === "granted"
+                              ? "Lockscreen alerts & background deboarding notifications are active."
+                              : permissionStatus === "denied"
+                              ? "System alerts are blocked in site settings. Click site lock icon to allow."
+                              : "Allow browser push notifications for background transit updates."}
+                          </p>
+                        </div>
+                      </div>
+
+                      {permissionStatus !== "granted" && permissionStatus !== "denied" && (
+                        <button
+                          type="button"
+                          onClick={handleRequestPermission}
+                          className="bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold px-3 py-1.5 rounded-xl shrink-0 transition-colors cursor-pointer shadow-xs"
+                        >
+                          {t[lang as keyof typeof t].permDefault}
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Master Push Notification Toggle */}
+                    <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800/70 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-700">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-emerald-100 dark:bg-emerald-900/40 rounded-xl text-emerald-600 dark:text-emerald-400">
+                          <Bell size={18} />
+                        </div>
+                        <div>
+                          <p className="font-bold text-sm text-slate-900 dark:text-white">{t[lang as keyof typeof t].pushAlerts}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">{t[lang as keyof typeof t].pushDesc}</p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (permissionStatus === "default") {
+                            handleRequestPermission();
+                          } else {
+                            setNotificationSettings({ pushEnabled: !notificationSettings?.pushEnabled });
+                          }
+                        }}
+                        className={`w-11 h-6 rounded-full flex items-center p-1 transition-colors cursor-pointer ${
+                          notificationSettings?.pushEnabled ? 'bg-emerald-500 justify-end' : 'bg-slate-300 dark:bg-slate-600 justify-start'
+                        }`}
+                        title="Toggle System Push Alerts"
+                      >
+                        <div className="w-4 h-4 bg-white rounded-full shadow-md"></div>
+                      </button>
+                    </div>
+
+                    {/* Proximity Deboarding Alerts */}
+                    <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800/70 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-700">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-indigo-100 dark:bg-indigo-900/40 rounded-xl text-indigo-600 dark:text-indigo-400">
+                          <Sparkles size={18} />
+                        </div>
+                        <div>
+                          <p className="font-bold text-sm text-slate-900 dark:text-white">{t[lang as keyof typeof t].proximity}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">{t[lang as keyof typeof t].proxDesc}</p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setNotificationSettings({ proximity: !notificationSettings?.proximity })}
+                        className={`w-11 h-6 rounded-full flex items-center p-1 transition-colors cursor-pointer ${
+                          notificationSettings?.proximity ? 'bg-emerald-500 justify-end' : 'bg-slate-300 dark:bg-slate-600 justify-start'
+                        }`}
+                        title="Toggle Proximity Deboarding Alerts"
+                      >
+                        <div className="w-4 h-4 bg-white rounded-full shadow-md"></div>
+                      </button>
+                    </div>
+
+                    {/* Route Deviation Alerts */}
+                    <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800/70 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-700">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-amber-100 dark:bg-amber-900/40 rounded-xl text-amber-600 dark:text-amber-400">
+                          <AlertTriangle size={18} />
+                        </div>
+                        <div>
+                          <p className="font-bold text-sm text-slate-900 dark:text-white">{t[lang as keyof typeof t].deviations}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">{t[lang as keyof typeof t].devDesc}</p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setNotificationSettings({ deviations: !notificationSettings?.deviations })}
+                        className={`w-11 h-6 rounded-full flex items-center p-1 transition-colors cursor-pointer ${
+                          notificationSettings?.deviations ? 'bg-emerald-500 justify-end' : 'bg-slate-300 dark:bg-slate-600 justify-start'
+                        }`}
+                        title="Toggle Route Deviation Alerts"
+                      >
+                        <div className="w-4 h-4 bg-white rounded-full shadow-md"></div>
+                      </button>
+                    </div>
+
+                    {/* Transit Audio Chimes */}
+                    <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800/70 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-700">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-teal-100 dark:bg-teal-900/40 rounded-xl text-teal-600 dark:text-teal-400">
+                          <Volume2 size={18} />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="font-bold text-sm text-slate-900 dark:text-white">{t[lang as keyof typeof t].soundChimes}</p>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                playTransitChime();
+                              }}
+                              className="text-[9px] font-black uppercase text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/60 px-2 py-0.5 rounded-md hover:underline cursor-pointer border border-teal-200 dark:border-teal-800"
+                            >
+                              Play Chime
+                            </button>
+                          </div>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">{t[lang as keyof typeof t].soundDesc}</p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setNotificationSettings({ soundChimes: !notificationSettings?.soundChimes })}
+                        className={`w-11 h-6 rounded-full flex items-center p-1 transition-colors cursor-pointer ${
+                          notificationSettings?.soundChimes ? 'bg-emerald-500 justify-end' : 'bg-slate-300 dark:bg-slate-600 justify-start'
+                        }`}
+                        title="Toggle Transit Audio Chimes"
+                      >
+                        <div className="w-4 h-4 bg-white rounded-full shadow-md"></div>
+                      </button>
+                    </div>
+
+                    {/* Haptic Vibration */}
+                    <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800/70 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-700">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-purple-100 dark:bg-purple-900/40 rounded-xl text-purple-600 dark:text-purple-400">
+                          <Smartphone size={18} />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="font-bold text-sm text-slate-900 dark:text-white">{t[lang as keyof typeof t].vibration}</p>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                triggerVibration([200, 100, 200]);
+                              }}
+                              className="text-[9px] font-black uppercase text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/60 px-2 py-0.5 rounded-md hover:underline cursor-pointer border border-purple-200 dark:border-purple-800"
+                            >
+                              Test Haptic
+                            </button>
+                          </div>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">{t[lang as keyof typeof t].vibDesc}</p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setNotificationSettings({ vibration: !notificationSettings?.vibration })}
+                        className={`w-11 h-6 rounded-full flex items-center p-1 transition-colors cursor-pointer ${
+                          notificationSettings?.vibration ? 'bg-emerald-500 justify-end' : 'bg-slate-300 dark:bg-slate-600 justify-start'
+                        }`}
+                        title="Toggle Haptic Vibration"
+                      >
+                        <div className="w-4 h-4 bg-white rounded-full shadow-md"></div>
+                      </button>
+                    </div>
+
+                    {/* Voice Deboarding Announcements */}
+                    <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800/70 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-700">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-sky-100 dark:bg-sky-900/40 rounded-xl text-sky-600 dark:text-sky-400">
+                          <Mic size={18} />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="font-bold text-sm text-slate-900 dark:text-white">{t[lang as keyof typeof t].voiceAnnounce}</p>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                speakAnnouncement("Approaching Silk Board Junction. Prepare to deboard.");
+                              }}
+                              className="text-[9px] font-black uppercase text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-950/60 px-2 py-0.5 rounded-md hover:underline cursor-pointer border border-sky-200 dark:border-sky-800"
+                            >
+                              Test Speech
+                            </button>
+                          </div>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">{t[lang as keyof typeof t].voiceDesc}</p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setNotificationSettings({ voiceAnnouncements: !notificationSettings?.voiceAnnouncements })}
+                        className={`w-11 h-6 rounded-full flex items-center p-1 transition-colors cursor-pointer ${
+                          notificationSettings?.voiceAnnouncements ? 'bg-emerald-500 justify-end' : 'bg-slate-300 dark:bg-slate-600 justify-start'
+                        }`}
+                        title="Toggle Voice Deboarding Announcements"
+                      >
+                        <div className="w-4 h-4 bg-white rounded-full shadow-md"></div>
+                      </button>
+                    </div>
+
+                    {/* Pass Discounts & Marketing */}
+                    <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800/70 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-700">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-rose-100 dark:bg-rose-900/40 rounded-xl text-rose-600 dark:text-rose-400">
+                          <Tag size={18} />
+                        </div>
+                        <div>
+                          <p className="font-bold text-sm text-slate-900 dark:text-white">{t[lang as keyof typeof t].marketing}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">{t[lang as keyof typeof t].markDesc}</p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setNotificationSettings({ marketing: !notificationSettings?.marketing })}
+                        className={`w-11 h-6 rounded-full flex items-center p-1 transition-colors cursor-pointer ${
+                          notificationSettings?.marketing ? 'bg-emerald-500 justify-end' : 'bg-slate-300 dark:bg-slate-600 justify-start'
+                        }`}
+                        title="Toggle Pass Discounts & Promotions"
+                      >
+                        <div className="w-4 h-4 bg-white rounded-full shadow-md"></div>
+                      </button>
+                    </div>
+
+                  </div>
+
+                  {/* Feedback Toast */}
+                  {testToast && (
+                    <div className="mt-2 p-2.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-xl text-xs font-bold text-emerald-700 dark:text-emerald-300 flex items-center gap-2 animate-in fade-in duration-150">
+                      <CheckCircle2 size={14} className="shrink-0" />
+                      <span>{testToast}</span>
+                    </div>
+                  )}
+
+                  {/* Bottom Multi-Channel Test Button */}
+                  <div className="pt-3 border-t border-slate-100 dark:border-slate-800 mt-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={handleTestNotification}
+                      disabled={isTesting}
+                      className="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-extrabold p-3 rounded-2xl flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md disabled:opacity-50 text-xs"
                     >
-                      <div>
-                        <p className="font-bold text-sm text-slate-900 dark:text-white">{t[lang as keyof typeof t].proximity}</p>
-                        <p className="text-xs text-slate-500">{t[lang as keyof typeof t].proxDesc}</p>
-                      </div>
-                      <div className={`w-10 h-6 rounded-full flex items-center p-1 transition-colors ${notifSettings.proximity ? 'bg-emerald-500 justify-end' : 'bg-slate-300 dark:bg-slate-600 justify-start'}`}>
-                         <div className="w-4 h-4 bg-white rounded-full shadow-md"></div>
-                      </div>
-                    </button>
-                    <button 
-                      onClick={() => setNotifSettings(prev => ({...prev, deviations: !prev.deviations}))}
-                      className="w-full text-left flex items-center justify-between bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 active:scale-95 transition-transform"
-                    >
-                      <div>
-                        <p className="font-bold text-sm text-slate-900 dark:text-white">{t[lang as keyof typeof t].deviations}</p>
-                        <p className="text-xs text-slate-500">{t[lang as keyof typeof t].devDesc}</p>
-                      </div>
-                      <div className={`w-10 h-6 rounded-full flex items-center p-1 transition-colors ${notifSettings.deviations ? 'bg-emerald-500 justify-end' : 'bg-slate-300 dark:bg-slate-600 justify-start'}`}>
-                         <div className="w-4 h-4 bg-white rounded-full shadow-md"></div>
-                      </div>
-                    </button>
-                    <button 
-                      onClick={() => setNotifSettings(prev => ({...prev, marketing: !prev.marketing}))}
-                      className="w-full text-left flex items-center justify-between bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 active:scale-95 transition-transform"
-                    >
-                      <div>
-                        <p className="font-bold text-sm text-slate-900 dark:text-white">{t[lang as keyof typeof t].marketing}</p>
-                        <p className="text-xs text-slate-500">{t[lang as keyof typeof t].markDesc}</p>
-                      </div>
-                      <div className={`w-10 h-6 rounded-full flex items-center p-1 transition-colors ${notifSettings.marketing ? 'bg-emerald-500 justify-end' : 'bg-slate-300 dark:bg-slate-600 justify-start'}`}>
-                         <div className="w-4 h-4 bg-white rounded-full shadow-md"></div>
-                      </div>
+                      <Send size={15} />
+                      <span>{isTesting ? "Testing Audio, Haptics & Push..." : t[lang as keyof typeof t].testNotif}</span>
                     </button>
                   </div>
                 </div>

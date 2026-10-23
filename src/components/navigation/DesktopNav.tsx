@@ -19,7 +19,8 @@ import {
   Crosshair, 
   User, 
   Sparkles,
-  Bus
+  Bus,
+  Settings
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useAppStore } from "@/lib/store";
@@ -211,6 +212,19 @@ export default function DesktopNav() {
             >
               {mounted && resolvedTheme === "dark" ? <Sun size={16} className="text-amber-400" /> : <Moon size={16} className="text-slate-700 dark:text-slate-300" />}
             </button>
+
+            {/* Settings & Notifications Link */}
+            <Link
+              href="/settings"
+              className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors border ${
+                pathname === "/settings"
+                  ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30"
+                  : "bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700"
+              }`}
+              title="Settings & Notifications"
+            >
+              <Settings size={16} />
+            </Link>
 
             {/* User Profile Avatar Link */}
             <Link

@@ -82,6 +82,16 @@ export interface StudentVerificationDetails {
   verifiedAt: number;
 }
 
+export interface NotificationSettings {
+  pushEnabled: boolean;
+  proximity: boolean;
+  deviations: boolean;
+  soundChimes: boolean;
+  vibration: boolean;
+  voiceAnnouncements: boolean;
+  marketing: boolean;
+}
+
 interface AppState {
   appLang: string;
   setAppLang: (lang: string) => void;
@@ -105,6 +115,8 @@ interface AppState {
   // Settings
   privacyLiveLocation: boolean;
   privacyCamera: boolean;
+  notificationSettings: NotificationSettings;
+  setNotificationSettings: (settings: Partial<NotificationSettings>) => void;
   
   addMoney: (amount: number) => Promise<void>;
   deductBalance: (amount: number) => Promise<void>;
@@ -227,6 +239,31 @@ export const useAppStore = create<AppState>()(
       
       privacyLiveLocation: true,
       privacyCamera: true,
+      notificationSettings: {
+        pushEnabled: true,
+        proximity: true,
+        deviations: true,
+        soundChimes: true,
+        vibration: true,
+        voiceAnnouncements: true,
+        marketing: false,
+      },
+      setNotificationSettings: (settings) => {
+        set((state) => ({
+          notificationSettings: {
+            ...(state.notificationSettings || {
+              pushEnabled: true,
+              proximity: true,
+              deviations: true,
+              soundChimes: true,
+              vibration: true,
+              voiceAnnouncements: true,
+              marketing: false,
+            }),
+            ...settings,
+          },
+        }));
+      },
       activePass: null,
       activePasses: [],
       setActivePass: (pass) => set({ activePass: pass }),
