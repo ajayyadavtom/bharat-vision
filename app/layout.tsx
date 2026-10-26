@@ -4,6 +4,7 @@ import "./globals.css";
 import BottomNav from "../src/components/navigation/BottomNav";
 import DesktopNav from "../src/components/navigation/DesktopNav";
 import PwaRegistry from "../components/PwaRegistry";
+import PullToRefresh from "../components/PullToRefresh";
 
 export const viewport: Viewport = {
   themeColor: "#0f172a",
@@ -59,7 +60,9 @@ export default function RootLayout({
             <main className="w-full max-w-md md:max-w-none mx-auto h-[100dvh] md:h-screen relative shadow-2xl md:shadow-none bg-white dark:bg-slate-900 md:bg-slate-50 md:dark:bg-slate-950 overflow-hidden md:flex md:flex-col">
               <DesktopNav />
               <div className="flex-1 w-full min-h-0 overflow-hidden relative">
-                {children}
+                <PullToRefresh>
+                  {children}
+                </PullToRefresh>
               </div>
               <BottomNav />
             </main>
