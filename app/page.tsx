@@ -258,7 +258,7 @@ export default function VisionHome() {
               </div>
 
               <h2 className="text-2xl lg:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-                {tHome[appLang as keyof typeof tHome]?.greeting || tHome.en.greeting}, {userName ? (userName.toLowerCase() === "guest" ? "Jenny" : userName.split(" ")[0]) : "Jenny"} 👋
+                {tHome[appLang as keyof typeof tHome]?.greeting || tHome.en.greeting}, {userName ? (userName.toLowerCase() === "guest" ? "Ajay" : userName.split(" ")[0]) : "Ajay"} 👋
               </h2>
             </div>
 
