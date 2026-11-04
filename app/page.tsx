@@ -49,7 +49,9 @@ export default function VisionHome() {
     setCurrentCity, 
     addMoney, 
     fetchUserData, 
-    profilePictureUrl 
+    profilePictureUrl,
+    userLocation,
+    setUserLocation,
   } = useAppStore();
 
   const cityData = getCityData(currentCity);
@@ -59,12 +61,6 @@ export default function VisionHome() {
   const [liveWeather, setLiveWeather] = useState<RealtimeWeatherData | null>(null);
   const [showClimateModal, setShowClimateModal] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
-  const [userLocation, setUserLocation] = useState<{
-    coords: [number, number];
-    name: string;
-    city: string;
-    isRealGps: boolean;
-  } | null>(null);
 
   // Core Location & Weather Synchronizer
   const acquireLocation = async (manual: boolean = false) => {
@@ -75,9 +71,11 @@ export default function VisionHome() {
       
       const newLoc = {
         coords: [coords.latitude, coords.longitude] as [number, number],
+        locality: geoInfo.locality,
         name: geoInfo.locality,
         city: geoInfo.city,
-        isRealGps: true,
+        isRealGps: coords.isRealGps,
+        timestamp: Date.now(),
       };
       setUserLocation(newLoc);
 
@@ -222,9 +220,9 @@ export default function VisionHome() {
                   }}
                   className="text-[10px] uppercase tracking-widest text-slate-500 font-bold bg-transparent outline-none cursor-pointer"
                 >
-                  {userLocation?.isRealGps && (
+                  {userLocation && (
                     <option value="gps" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-bold">
-                      📍 {userLocation.name} (Live GPS)
+                      📍 {userLocation.locality} ({userLocation.isRealGps ? "Live GPS" : "Live"})
                     </option>
                   )}
                   {Object.values(CITIES).map(city => (
@@ -240,21 +238,33 @@ export default function VisionHome() {
                   onClick={() => acquireLocation(true)}
                   disabled={isLocating}
                   className={`flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-bold tracking-tight transition-all active:scale-95 border cursor-pointer ${
-                    userLocation?.isRealGps
+                    userLocation
                       ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-600 dark:text-emerald-400"
                       : "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 hover:text-emerald-500"
                   }`}
-                  title="Detect Exact Mobile Location"
+                  title="Detect Exact Location"
                 >
-                  <Crosshair size={10} className={isLocating ? "animate-spin text-emerald-500" : (userLocation?.isRealGps ? "text-emerald-500" : "")} />
-                  <span>{isLocating ? "Locating..." : (userLocation?.isRealGps ? "GPS Active" : "Detect Location")}</span>
+                  <Crosshair size={10} className={isLocating ? "animate-spin text-emerald-500" : (userLocation ? "text-emerald-500" : "")} />
+                  <span>{isLocating ? "Locating..." : (userLocation ? (userLocation.isRealGps ? "GPS Active" : "Live") : "Detect Location")}</span>
                 </button>
               </div>
 
               {/* Desktop Subtitle Pill */}
-              <div className="hidden md:flex items-center gap-1.5 mb-1 text-[11px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+              <div className="hidden md:flex items-center gap-2 mb-1 text-[11px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
                 <Sparkles size={13} />
                 <span>Namma Bengaluru Transit Command Center</span>
+                {userLocation && (
+                  <button
+                    type="button"
+                    onClick={() => acquireLocation(true)}
+                    disabled={isLocating}
+                    title="Click to refresh live GPS location"
+                    className="flex items-center gap-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-[10px] font-bold lowercase capitalize tracking-tight transition-all active:scale-95 cursor-pointer"
+                  >
+                    <Crosshair size={10} className={isLocating ? "animate-spin text-emerald-500" : "text-emerald-500"} />
+                    <span>📍 {userLocation.locality}</span>
+                  </button>
+                )}
               </div>
 
               <h2 className="text-2xl lg:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
@@ -412,8 +422,8 @@ export default function VisionHome() {
                     }
                   </p>
                   <p className="text-[10px] text-slate-500 font-medium flex items-center gap-1">
-                    <MapPin size={10} className={userLocation?.isRealGps ? "text-emerald-500" : ""} /> 
-                    {userLocation?.isRealGps ? `${userLocation.name}, ${userLocation.city}` : cityData.name} 
+                    <MapPin size={10} className={userLocation ? "text-emerald-500" : ""} /> 
+                    {userLocation ? `${userLocation.locality || userLocation.name || "Live Location"}, ${userLocation.city}` : cityData.name} 
                     · Feels {liveWeather?.apparentTemperature ?? "--"}°C
                   </p>
                 </div>
@@ -534,6 +544,7 @@ export default function VisionHome() {
             <div className="flex-1 w-full min-h-[350px] rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 relative shadow-inner">
               <LiveMap
                 busCode={desktopCorridor}
+                userLocation={userLocation?.coords}
                 initialShowMetro={true}
                 initialShowStops={true}
               />

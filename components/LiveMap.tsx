@@ -17,6 +17,7 @@ import { supabase } from "@/lib/supabase";
 import { useAppStore } from "@/lib/store";
 import { getCityData } from "@/lib/cityData";
 import { MAPBOX_PUBLIC_TOKEN, MAPBOX_STYLES, MapboxStyleOption } from "@/lib/mapbox";
+import { requestBrowserLocation, reverseGeocodeCoordinates } from "@/lib/location";
 import metroData from "@/data/namma_metro.json";
 import { getCuratedStopsForBus } from "@/data/curatedCorridorStops";
 
@@ -1003,21 +1004,23 @@ export default function LiveMap({
                 {hub.name}
               </button>
             ))}
-            {typeof navigator !== "undefined" && "geolocation" in navigator && (
-              <button
-                type="button"
-                onClick={() => {
-                  navigator.geolocation.getCurrentPosition(
-                    (pos) =>
-                      handleSetLocation([pos.coords.latitude, pos.coords.longitude], "Real GPS Location"),
-                    () => alert("Could not fetch GPS permission.")
-                  );
-                }}
-                className="bg-emerald-500 hover:bg-emerald-400 text-white text-[10px] font-black px-2.5 py-1 rounded-xl whitespace-nowrap shadow-sm active:scale-95 transition-all cursor-pointer"
-              >
-                🎯 Use Real GPS
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  setLocationToast("📡 Detecting live location...");
+                  const coords = await requestBrowserLocation();
+                  const geoInfo = await reverseGeocodeCoordinates(coords.latitude, coords.longitude);
+                  handleSetLocation([coords.latitude, coords.longitude], geoInfo.locality);
+                } catch (err) {
+                  setLocationToast("Could not determine live location.");
+                  setTimeout(() => setLocationToast(null), 3000);
+                }
+              }}
+              className="bg-emerald-500 hover:bg-emerald-400 text-white text-[10px] font-black px-2.5 py-1 rounded-xl whitespace-nowrap shadow-sm active:scale-95 transition-all cursor-pointer"
+            >
+              🎯 Use Live GPS
+            </button>
           </div>
         </div>
       )}

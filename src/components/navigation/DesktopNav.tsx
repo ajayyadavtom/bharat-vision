@@ -37,6 +37,8 @@ export default function DesktopNav() {
     setCurrentCity,
     addMoney,
     profilePictureUrl,
+    userLocation,
+    setUserLocation,
   } = useAppStore();
 
   const cityData = getCityData(currentCity);
@@ -68,7 +70,15 @@ export default function DesktopNav() {
       setIsLocating(true);
       const coords = await requestBrowserLocation();
       const geoInfo = await reverseGeocodeCoordinates(coords.latitude, coords.longitude);
-      setGpsLocationName(geoInfo.locality || geoInfo.city);
+      const locName = geoInfo.locality || geoInfo.city || "Live Location";
+      setGpsLocationName(locName);
+      setUserLocation({
+        coords: [coords.latitude, coords.longitude],
+        locality: locName,
+        city: geoInfo.city || "Bengaluru",
+        isRealGps: coords.isRealGps,
+        timestamp: Date.now(),
+      });
     } catch (e) {
       console.warn("GPS acquire error:", e);
     } finally {
@@ -112,10 +122,21 @@ export default function DesktopNav() {
             <div className="hidden sm:block h-6 w-px bg-slate-200 dark:border-slate-800 shrink-0" />
             <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800/80 px-2 xl:px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-700/60 shrink-0">
               <select
-                value={currentCity}
-                onChange={(e) => setCurrentCity(e.target.value)}
-                className="text-xs font-bold text-slate-700 dark:text-slate-200 bg-transparent outline-none cursor-pointer pr-1"
+                value={userLocation?.isRealGps ? "gps" : currentCity}
+                onChange={(e) => {
+                  if (e.target.value === "gps") {
+                    handleAcquireLocation();
+                  } else {
+                    setCurrentCity(e.target.value);
+                  }
+                }}
+                className="text-xs font-bold text-slate-700 dark:text-slate-200 bg-transparent outline-none cursor-pointer pr-1 max-w-[130px] truncate"
               >
+                {userLocation && (
+                  <option value="gps" className="bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 font-bold">
+                    📍 {userLocation.locality} ({userLocation.isRealGps ? "Live GPS" : "Live"})
+                  </option>
+                )}
                 {Object.values(CITIES).map((c) => (
                   <option key={c.id} value={c.id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
                     {c.name}
@@ -127,17 +148,20 @@ export default function DesktopNav() {
                 type="button"
                 onClick={handleAcquireLocation}
                 disabled={isLocating}
-                title="Detect GPS Location"
-                className="text-slate-400 hover:text-emerald-500 transition-colors cursor-pointer shrink-0"
+                title={userLocation?.locality ? `Live: ${userLocation.locality} (Click to refresh)` : "Detect Live Location"}
+                className={`transition-all cursor-pointer shrink-0 flex items-center gap-1 px-1.5 py-0.5 rounded-lg active:scale-95 ${
+                  isLocating
+                    ? "text-amber-500 bg-amber-500/10"
+                    : userLocation
+                    ? "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10"
+                    : "text-slate-400 hover:text-emerald-500 hover:bg-slate-200/60 dark:hover:bg-slate-700/60"
+                }`}
               >
-                <Crosshair size={13} className={isLocating ? "animate-spin text-emerald-500" : (gpsLocationName ? "text-emerald-500" : "")} />
-              </button>
-
-              {gpsLocationName && (
-                <span className="hidden 2xl:inline text-[10px] text-emerald-600 dark:text-emerald-400 font-bold max-w-[90px] truncate">
-                  {gpsLocationName}
+                <Crosshair size={13} className={isLocating ? "animate-spin text-emerald-500" : (userLocation ? "text-emerald-500" : "")} />
+                <span className="text-[10px] font-extrabold tracking-tight">
+                  {isLocating ? "Locating..." : userLocation ? (userLocation.isRealGps ? "GPS Active" : "Live") : "Detect"}
                 </span>
-              )}
+              </button>
             </div>
           </div>
 

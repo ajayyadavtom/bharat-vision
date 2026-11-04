@@ -20,8 +20,10 @@
 # production
 /build
 
-# misc
-.DS_Store
+# IDE & tooling
+.vs/
+.idea/
+.vscode/
 *.pem
 
 # debug

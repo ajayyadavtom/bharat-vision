@@ -34,6 +34,7 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useAppStore } from "@/lib/store";
 import { fetchMapboxRoute } from "@/lib/mapbox";
+import { requestBrowserLocation, reverseGeocodeCoordinates } from "@/lib/location";
 import { 
   calculateBestBusSuggestion, 
   searchBmtcStops, 
@@ -99,28 +100,23 @@ export default function RoutePlannerScreen() {
     { label: "Yeshwanthpur", query: "Yeshwanthpur Railway Station" }
   ];
 
-  // Request browser geolocation
-  const detectLiveLocation = useCallback(() => {
-    if (typeof window !== "undefined" && "geolocation" in navigator) {
-      setLocatingUser(true);
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const coords: [number, number] = [pos.coords.latitude, pos.coords.longitude];
-          setUserLoc(coords);
-          setLocatingUser(false);
-          const nearest = findNearestStop(coords[0], coords[1]);
-          setLiveLocationAddress(`Near ${nearest.name}`);
-        },
-        (err) => {
-          console.warn("Geolocation fallback to central Bengaluru:", err);
-          const fallbackCoords: [number, number] = [12.9172, 77.6228]; // Central Silk Board default
-          setUserLoc(fallbackCoords);
-          setLocatingUser(false);
-          const nearest = findNearestStop(fallbackCoords[0], fallbackCoords[1]);
-          setLiveLocationAddress(`Near ${nearest.name}`);
-        },
-        { enableHighAccuracy: true, timeout: 6000 }
-      );
+  // Request browser geolocation with multi-tiered fallback
+  const detectLiveLocation = useCallback(async () => {
+    setLocatingUser(true);
+    try {
+      const coords = await requestBrowserLocation();
+      const newCoords: [number, number] = [coords.latitude, coords.longitude];
+      setUserLoc(newCoords);
+      const geoInfo = await reverseGeocodeCoordinates(coords.latitude, coords.longitude);
+      setLiveLocationAddress(`Near ${geoInfo.locality}`);
+    } catch (err) {
+      console.warn("Geolocation fallback to central Bengaluru:", err);
+      const fallbackCoords: [number, number] = [12.9172, 77.6228]; // Central Silk Board default
+      setUserLoc(fallbackCoords);
+      const nearest = findNearestStop(fallbackCoords[0], fallbackCoords[1]);
+      setLiveLocationAddress(`Near ${nearest.name}`);
+    } finally {
+      setLocatingUser(false);
     }
   }, []);
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Navigation, Clock, Map as MapIcon, Zap, MapPin, AlertTriangle, Search, ChevronRight, Bus, Layers } from "lucide-react";
+import { Navigation, Clock, Map as MapIcon, Zap, MapPin, AlertTriangle, Search, ChevronRight, Bus, Layers, Crosshair } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import dynamic from "next/dynamic";
 
@@ -12,6 +12,8 @@ import ProximityChime from "../../components/ProximityChime";
 import SmartBoardingCard from "../../components/SmartBoardingCard";
 import CrowdReportPrompt from "../../components/CrowdReportPrompt";
 import SmartTripPlanner from "../../components/SmartTripPlanner";
+import { useAppStore } from "@/lib/store";
+import { requestBrowserLocation, reverseGeocodeCoordinates } from "@/lib/location";
 
 interface BmtcSearchResult {
   routeNumber: string;
@@ -45,16 +47,46 @@ export default function TrackScreen() {
   const [activeRouteDetails, setActiveRouteDetails] = useState<BmtcRouteDetails | null>(null);
   const [showAllStops, setShowAllStops] = useState(false);
   const [destination, setDestination] = useState("");
-  const [userLoc, setUserLoc] = useState<[number, number] | null>(null);
+  const { userLocation, setUserLocation } = useAppStore();
+  const [userLoc, setUserLoc] = useState<[number, number] | null>(
+    userLocation?.coords || null
+  );
+  const [locLabel, setLocLabel] = useState<string>(
+    userLocation?.locality || "Central Silk Board"
+  );
+  const [isDetectingLoc, setIsDetectingLoc] = useState(false);
 
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
+  const handleDetectLocation = async () => {
+    try {
+      setIsDetectingLoc(true);
+      const coords = await requestBrowserLocation();
+      const geoInfo = await reverseGeocodeCoordinates(coords.latitude, coords.longitude);
+      const newCoords: [number, number] = [coords.latitude, coords.longitude];
+      setUserLoc(newCoords);
+      setLocLabel(geoInfo.locality);
+      setUserLocation({
+        coords: newCoords,
+        locality: geoInfo.locality,
+        city: geoInfo.city || "Bengaluru",
+        isRealGps: coords.isRealGps,
+        timestamp: Date.now(),
+      });
+    } catch (e) {
+      console.warn("Detect location error in /track:", e);
+    } finally {
+      setIsDetectingLoc(false);
+    }
+  };
+
+  // Sync if store location changes or detect on initial mount
   useEffect(() => {
-    if (typeof window !== "undefined" && "geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => setUserLoc([pos.coords.latitude, pos.coords.longitude]),
-        (err) => console.log("Loc error", err)
-      );
+    if (userLocation?.coords) {
+      setUserLoc(userLocation.coords);
+      setLocLabel(userLocation.locality);
+    } else {
+      handleDetectLocation();
     }
   }, []);
 
@@ -257,8 +289,22 @@ export default function TrackScreen() {
           <div className="flex items-center gap-1.5 text-[11px] text-slate-600 dark:text-slate-300 min-w-0">
             <span className="text-blue-500 font-black">📍 Your Location:</span>
             <span className="font-extrabold truncate text-slate-800 dark:text-slate-200">
-              {userLoc ? `${userLoc[0].toFixed(3)}, ${userLoc[1].toFixed(3)}` : "Central Silk Board"}
+              {locLabel}
             </span>
+            <button
+              type="button"
+              onClick={handleDetectLocation}
+              disabled={isDetectingLoc}
+              title="Detect Exact GPS Location"
+              className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold border transition-all active:scale-95 cursor-pointer shrink-0 ${
+                userLocation?.isRealGps
+                  ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-600 dark:text-emerald-400"
+                  : "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 hover:text-emerald-500"
+              }`}
+            >
+              <Crosshair size={10} className={isDetectingLoc ? "animate-spin text-emerald-500" : (userLocation?.isRealGps ? "text-emerald-500" : "")} />
+              <span>{isDetectingLoc ? "Locating..." : userLocation ? (userLocation.isRealGps ? "GPS Active" : "Live") : "Detect"}</span>
+            </button>
           </div>
           <div className="flex items-center gap-1 shrink-0">
             <span className="text-[9px] text-slate-400 font-bold hidden sm:inline">Quick set:</span>
@@ -271,7 +317,10 @@ export default function TrackScreen() {
               <button
                 key={hub.label}
                 type="button"
-                onClick={() => setUserLoc(hub.coords)}
+                onClick={() => {
+                  setUserLoc(hub.coords);
+                  setLocLabel(hub.label);
+                }}
                 className="text-[9px] font-black bg-white dark:bg-slate-900 hover:bg-blue-50 dark:hover:bg-blue-950/40 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:border-blue-400 px-2 py-0.5 rounded-lg active:scale-95 transition-all cursor-pointer shadow-xs"
               >
                 {hub.label}

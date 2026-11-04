@@ -92,6 +92,15 @@ export interface NotificationSettings {
   marketing: boolean;
 }
 
+export interface AppUserLocation {
+  coords: [number, number];
+  locality: string;
+  name?: string;
+  city: string;
+  isRealGps: boolean;
+  timestamp: number;
+}
+
 interface AppState {
   appLang: string;
   setAppLang: (lang: string) => void;
@@ -102,6 +111,8 @@ interface AppState {
   carbonSavedGrams: number;
   isInitialized: boolean;
   currentCity: string;
+  userLocation: AppUserLocation | null;
+  setUserLocation: (loc: AppUserLocation | null) => void;
   
   // Persisted local UI state
   chatMessages: ChatMessage[];
@@ -239,6 +250,8 @@ export const useAppStore = create<AppState>()(
       
       privacyLiveLocation: true,
       privacyCamera: true,
+      userLocation: null,
+      setUserLocation: (loc) => set({ userLocation: loc }),
       notificationSettings: {
         pushEnabled: true,
         proximity: true,
@@ -728,6 +741,7 @@ export const useAppStore = create<AppState>()(
         privacyLiveLocation: state.privacyLiveLocation,
         privacyCamera: state.privacyCamera,
         currentCity: state.currentCity,
+        userLocation: state.userLocation,
         karmaPoints: state.karmaPoints,
         walletBalance: state.walletBalance,
         carbonSavedGrams: state.carbonSavedGrams,
