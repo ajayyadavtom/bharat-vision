@@ -19,7 +19,7 @@ export default function ChatScreen() {
   const [isOnline, setIsOnline] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Monitor network online/offline state
+  // Monitor network online/offline staterrr
   useEffect(() => {
     setIsOnline(typeof navigator !== "undefined" ? navigator.onLine : true);
     const handleOnline = () => setIsOnline(true);
