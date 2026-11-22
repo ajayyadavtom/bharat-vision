@@ -6,6 +6,7 @@ import L from "leaflet";
 
 import metroData from "@/data/namma_metro.json";
 import { MAPBOX_PUBLIC_TOKEN, MAPBOX_STYLES, MapboxStyleOption } from "@/lib/mapbox";
+import { getMetroRouteGeometry, findMetroRoute } from "@/lib/metroRouter";
 
 interface MetroMapProps {
   originStationId?: string;
@@ -14,6 +15,7 @@ interface MetroMapProps {
   onSelectDestination?: (stationId: string) => void;
   activeLineFilter?: string;
   onSelectLineFilter?: (line: string) => void;
+  routePath?: [number, number][];
   className?: string;
 }
 
@@ -108,6 +110,7 @@ export default function MetroMap({
   onSelectDestination,
   activeLineFilter = "All",
   onSelectLineFilter,
+  routePath,
   className = "w-full h-full",
 }: MetroMapProps) {
   const [selectedFilter, setSelectedFilter] = useState<string>(activeLineFilter);
@@ -147,8 +150,33 @@ export default function MetroMap({
     [destStationId]
   );
 
-  // Dynamic bounds
+  // Real Metro Track Polyline Geometry (follows track curves, not a straight chord!)
+  const selectedRouteCoordinates: [number, number][] = useMemo(() => {
+    if (routePath && routePath.length > 1) {
+      return routePath;
+    }
+    if (originStationId && destStationId && originStationId !== destStationId) {
+      return getMetroRouteGeometry(originStationId, destStationId);
+    }
+    return [];
+  }, [routePath, originStationId, destStationId]);
+
+  // Set of station IDs along the selected route for visual highlight
+  const selectedRouteStationIds = useMemo(() => {
+    if (originStationId && destStationId && originStationId !== destStationId) {
+      const res = findMetroRoute(originStationId, destStationId);
+      if (res?.path) {
+        return new Set(res.path);
+      }
+    }
+    return new Set<string>();
+  }, [originStationId, destStationId]);
+
+  // Dynamic bounds auto-fitting the entire curved metro track of the selected journey
   const mapBounds: L.LatLngBoundsExpression | undefined = useMemo(() => {
+    if (selectedRouteCoordinates && selectedRouteCoordinates.length > 1) {
+      return L.latLngBounds(selectedRouteCoordinates);
+    }
     if (originStation && destStation) {
       return L.latLngBounds(
         [originStation.lat, originStation.lon],
@@ -156,7 +184,7 @@ export default function MetroMap({
       );
     }
     return undefined;
-  }, [originStation, destStation]);
+  }, [selectedRouteCoordinates, originStation, destStation]);
 
   const centerCoordinates: [number, number] = [12.9757, 77.585]; // Central Bengaluru / Majestic
 
@@ -330,28 +358,32 @@ export default function MetroMap({
           />
         ))}
 
-        {/* Highlight Path between Origin & Destination if selected */}
-        {originStation && destStation && (
+        {/* Highlight Path between Origin & Destination along Metro Tracks (Not a straight line!) */}
+        {selectedRouteCoordinates && selectedRouteCoordinates.length > 1 && (
           <>
+            {/* Dark casing/shadow line for sharp contrast against light/dark tiles */}
+            <Polyline
+              key="selected-trip-casing"
+              positions={selectedRouteCoordinates}
+              color="#090d16"
+              weight={9}
+              opacity={0.8}
+            />
+            {/* Vivid cyan/blue glow line */}
             <Polyline
               key="selected-trip-glow"
-              positions={[
-                [originStation.lat, originStation.lon],
-                [destStation.lat, destStation.lon],
-              ]}
+              positions={selectedRouteCoordinates}
               color="#0284c7"
               weight={6}
-              opacity={0.6}
+              opacity={0.85}
             />
+            {/* Vivid cyan dashed foreground path */}
             <Polyline
               key="selected-trip-line"
-              positions={[
-                [originStation.lat, originStation.lon],
-                [destStation.lat, destStation.lon],
-              ]}
+              positions={selectedRouteCoordinates}
               color="#38bdf8"
               weight={3.5}
-              dashArray="4, 6"
+              dashArray="6, 6"
               opacity={1}
             />
           </>
@@ -362,6 +394,7 @@ export default function MetroMap({
           const isOrigin = originStation?.id === station.id;
           const isDest = destStation?.id === station.id;
           const isInterchange = station.isInterchange;
+          const isOnSelectedRoute = selectedRouteStationIds.has(station.id);
 
           const fillColor = isOrigin
             ? "#10b981"
@@ -379,7 +412,7 @@ export default function MetroMap({
             ? "#ec4899"
             : "#3b82f6";
 
-          const radius = isOrigin || isDest ? 9 : isInterchange ? 7 : 5;
+          const radius = isOrigin || isDest ? 9 : isOnSelectedRoute ? 7 : isInterchange ? 7 : 5;
 
           return (
             <CircleMarker
@@ -387,8 +420,8 @@ export default function MetroMap({
               center={[station.lat, station.lon]}
               radius={radius}
               pathOptions={{
-                color: isOrigin || isDest ? "#ffffff" : isInterchange ? "#f59e0b" : "#ffffff",
-                weight: isOrigin || isDest ? 3.5 : isInterchange ? 3 : 2,
+                color: isOrigin || isDest ? "#ffffff" : isOnSelectedRoute ? "#38bdf8" : isInterchange ? "#f59e0b" : "#ffffff",
+                weight: isOrigin || isDest ? 3.5 : isOnSelectedRoute ? 3 : isInterchange ? 3 : 2,
                 fillColor: fillColor,
                 fillOpacity: 1,
               }}

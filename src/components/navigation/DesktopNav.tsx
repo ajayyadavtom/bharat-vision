@@ -57,12 +57,12 @@ export default function DesktopNav() {
   }
 
   const navLinks = [
-    { name: "Home", href: "/", icon: Home },
-    { name: "Live Track", href: "/track", icon: MapIcon, badge: "BMTC GTFS" },
-    { name: "Namma Metro", href: "/metro", icon: TrainFront, badge: "BMRCL" },
-    { name: "Pass & NCMC", href: "/pass", icon: QrCode },
-    { name: "SafeKeep", href: "/safety", icon: ShieldAlert },
-    { name: "Vanara AI", href: "/chat", icon: MessageCircle, isVanara: true },
+    { name: "Home", shortName: "Home", href: "/", icon: Home },
+    { name: "Live Track", shortName: "Track", href: "/track", icon: MapIcon, badge: "BMTC GTFS" },
+    { name: "Namma Metro", shortName: "Metro", href: "/metro", icon: TrainFront, badge: "BMRCL" },
+    { name: "Pass & NCMC", shortName: "Pass", href: "/pass", icon: QrCode },
+    { name: "SafeKeep", shortName: "Safety", href: "/safety", icon: ShieldAlert },
+    { name: "Vanara AI", shortName: "Vanara AI", href: "/chat", icon: MessageCircle, isVanara: true },
   ];
 
   const handleAcquireLocation = async () => {
@@ -94,17 +94,17 @@ export default function DesktopNav() {
   return (
     <>
       <header className="hidden md:flex sticky top-0 z-[110] w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-xs select-none">
-        <div className="max-w-[1720px] mx-auto w-full px-4 sm:px-6 lg:px-8 xl:px-10 h-16 flex items-center justify-between gap-2 lg:gap-4">
+        <div className="max-w-[1720px] mx-auto w-full px-3 sm:px-4 lg:px-6 xl:px-8 h-16 flex items-center justify-between gap-2 lg:gap-3 xl:gap-4">
           
           {/* Brand Identity & City Selection */}
-          <div className="flex items-center gap-2.5 lg:gap-4 shrink-0">
-            <Link href="/" className="flex items-center gap-2 lg:gap-2.5 group shrink-0">
-              <div className="w-9 h-9 lg:w-10 lg:h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white shadow-md shadow-emerald-500/20 group-hover:scale-105 transition-transform shrink-0">
-                <Bus size={20} className="text-white" />
+          <div className="flex items-center gap-2 lg:gap-3 xl:gap-4 shrink-0">
+            <Link href="/" className="flex items-center gap-2 group shrink-0">
+              <div className="w-8 h-8 lg:w-9 lg:h-9 xl:w-10 xl:h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white shadow-md shadow-emerald-500/20 group-hover:scale-105 transition-transform shrink-0">
+                <Bus size={18} className="text-white" />
               </div>
               <div className="flex flex-col shrink-0">
                 <div className="flex items-center gap-1.5">
-                  <span className="font-black text-sm lg:text-base tracking-tight text-slate-900 dark:text-white leading-none whitespace-nowrap">
+                  <span className="font-black text-xs lg:text-sm xl:text-base tracking-tight text-slate-900 dark:text-white leading-none whitespace-nowrap">
                     BHARAT <span className="text-emerald-600 dark:text-emerald-400">VISION</span>
                   </span>
                   <span className="flex h-2 w-2 relative shrink-0">
@@ -112,15 +112,15 @@ export default function DesktopNav() {
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
                   </span>
                 </div>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider leading-tight mt-0.5 hidden xl:block whitespace-nowrap">
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider leading-tight mt-0.5 hidden 2xl:block whitespace-nowrap">
                   Bengaluru Transit Hub
                 </span>
               </div>
             </Link>
 
             {/* City & Live GPS Selector */}
-            <div className="hidden sm:block h-6 w-px bg-slate-200 dark:border-slate-800 shrink-0" />
-            <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800/80 px-2 xl:px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-700/60 shrink-0">
+            <div className="hidden lg:block h-5 w-px bg-slate-200 dark:bg-slate-800 shrink-0" />
+            <div className="flex items-center gap-1 lg:gap-1.5 bg-slate-100 dark:bg-slate-800/80 px-1.5 lg:px-2 xl:px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-700/60 shrink-0">
               <select
                 value={userLocation?.isRealGps ? "gps" : currentCity}
                 onChange={(e) => {
@@ -130,7 +130,7 @@ export default function DesktopNav() {
                     setCurrentCity(e.target.value);
                   }
                 }}
-                className="text-xs font-bold text-slate-700 dark:text-slate-200 bg-transparent outline-none cursor-pointer pr-1 max-w-[130px] truncate"
+                className="text-xs font-bold text-slate-700 dark:text-slate-200 bg-transparent outline-none cursor-pointer pr-1 max-w-[80px] lg:max-w-[95px] xl:max-w-[130px] truncate"
               >
                 {userLocation && (
                   <option value="gps" className="bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 font-bold">
@@ -158,7 +158,7 @@ export default function DesktopNav() {
                 }`}
               >
                 <Crosshair size={13} className={isLocating ? "animate-spin text-emerald-500" : (userLocation ? "text-emerald-500" : "")} />
-                <span className="text-[10px] font-extrabold tracking-tight">
+                <span className="hidden 2xl:inline text-[10px] font-extrabold tracking-tight">
                   {isLocating ? "Locating..." : userLocation ? (userLocation.isRealGps ? "GPS Active" : "Live") : "Detect"}
                 </span>
               </button>
@@ -166,7 +166,7 @@ export default function DesktopNav() {
           </div>
 
           {/* Desktop Navigation Links */}
-          <nav className="flex items-center gap-0.5 xl:gap-1.5 shrink min-w-0">
+          <nav className="flex items-center justify-center gap-1 lg:gap-1.5 xl:gap-2 flex-1 min-w-0 overflow-x-auto no-scrollbar py-1">
             {navLinks.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
@@ -174,7 +174,7 @@ export default function DesktopNav() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`flex items-center gap-1.5 xl:gap-2 px-2.5 xl:px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 ${
+                  className={`flex items-center gap-1.5 px-2 xl:px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 ${
                     isActive
                       ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 shadow-xs"
                       : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
@@ -189,7 +189,10 @@ export default function DesktopNav() {
                   ) : (
                     <Icon size={15} className="shrink-0" />
                   )}
-                  <span>{item.name}</span>
+                  <span>
+                    <span className="hidden 2xl:inline">{item.name}</span>
+                    <span className="inline 2xl:hidden">{item.shortName}</span>
+                  </span>
                   {item.badge && (
                     <span className="hidden 2xl:inline text-[9px] px-1.5 py-0.2 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 uppercase tracking-tighter font-black shrink-0">
                       {item.badge}
@@ -201,9 +204,9 @@ export default function DesktopNav() {
           </nav>
 
           {/* Desktop User Telemetry & Actions */}
-          <div className="flex items-center gap-2 xl:gap-3 shrink-0">
+          <div className="flex items-center gap-1.5 lg:gap-2 xl:gap-2.5 shrink-0">
             {/* Wallet Widget */}
-            <div className="flex items-center gap-1.5 xl:gap-2 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/50 pl-2.5 xl:pl-3 pr-1 py-1 rounded-xl shrink-0">
+            <div className="flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/50 pl-2 lg:pl-2.5 pr-1 py-1 rounded-xl shrink-0">
               <Wallet size={14} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
               <div className="text-left shrink-0">
                 <span className="text-[11px] font-black text-emerald-800 dark:text-emerald-200 block leading-none whitespace-nowrap">
@@ -213,7 +216,7 @@ export default function DesktopNav() {
               <button
                 type="button"
                 onClick={() => setIsTopUpOpen(true)}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg px-2 py-0.5 text-[10px] font-black tracking-tight transition-colors flex items-center gap-0.5 cursor-pointer shadow-xs active:scale-95 shrink-0 whitespace-nowrap"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg px-1.5 lg:px-2 py-0.5 text-[10px] font-black tracking-tight transition-colors flex items-center gap-0.5 cursor-pointer shadow-xs active:scale-95 shrink-0 whitespace-nowrap"
               >
                 <Plus size={11} /> Top Up
               </button>
@@ -229,7 +232,7 @@ export default function DesktopNav() {
             <button
               type="button"
               onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-              className="w-8 h-8 xl:w-9 xl:h-9 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center transition-colors cursor-pointer border border-slate-200 dark:border-slate-700 shrink-0"
+              className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center transition-colors cursor-pointer border border-slate-200 dark:border-slate-700 shrink-0"
               title="Toggle Theme"
             >
               {mounted && resolvedTheme === "dark" ? <Sun size={15} className="text-amber-400" /> : <Moon size={15} className="text-slate-700 dark:text-slate-300" />}
@@ -238,7 +241,7 @@ export default function DesktopNav() {
             {/* Settings & Notifications Link */}
             <Link
               href="/settings"
-              className={`w-8 h-8 xl:w-9 xl:h-9 rounded-xl flex items-center justify-center transition-colors border shrink-0 ${
+              className={`w-8 h-8 rounded-xl flex items-center justify-center transition-colors border shrink-0 ${
                 pathname === "/settings"
                   ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30"
                   : "bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700"
@@ -251,10 +254,10 @@ export default function DesktopNav() {
             {/* User Profile Avatar Link */}
             <Link
               href="/profile"
-              className="flex items-center gap-2 pl-0.5 sm:pl-1 group shrink-0"
+              className="flex items-center gap-1.5 lg:gap-2 pl-0.5 group shrink-0"
               title="View Profile & Transit Pass"
             >
-              <div className="w-8 h-8 xl:w-9 xl:h-9 rounded-full bg-slate-200 dark:bg-slate-800 border-2 border-emerald-500/40 overflow-hidden flex items-center justify-center group-hover:border-emerald-500 transition-colors shrink-0 shadow-xs">
+              <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 border-2 border-emerald-500/40 overflow-hidden flex items-center justify-center group-hover:border-emerald-500 transition-colors shrink-0 shadow-xs">
                 {profilePictureUrl ? (
                   <img
                     src={profilePictureUrl}

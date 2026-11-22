@@ -21,12 +21,33 @@ export default function ChatScreen() {
 
   // Monitor network online/offline staterrr
   useEffect(() => {
-    setIsOnline(typeof navigator !== "undefined" ? navigator.onLine : true);
-    const handleOnline = () => setIsOnline(true);
+    let isMounted = true;
+    const checkConnection = async () => {
+      try {
+        const res = await fetch("/api/chat", { method: "GET", cache: "no-store" });
+        if (res.ok && isMounted) {
+          setIsOnline(true);
+          return;
+        }
+      } catch (e) {
+        // network probe failed
+      }
+      if (isMounted) {
+        setIsOnline(typeof navigator !== "undefined" ? navigator.onLine : false);
+      }
+    };
+
+    checkConnection();
+    const handleOnline = () => {
+      setIsOnline(true);
+      checkConnection();
+    };
     const handleOffline = () => setIsOnline(false);
+
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
     return () => {
+      isMounted = false;
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
     };
@@ -65,24 +86,16 @@ export default function ChatScreen() {
     setInputText("");
     setIsLoading(true);
 
-    // 1. Instant on-device execution if currently offline
-    if (typeof navigator !== "undefined" && !navigator.onLine) {
-      setTimeout(() => {
-        const offlineReply = generateOfflineTransitReply(text || "Where am I?", appLang, currentCity);
-        const botMsg: ChatMessage = { id: Date.now() + 1, text: offlineReply, sender: "bot" };
-        addChatMessage(botMsg);
-        setIsLoading(false);
-        setIsListening(false);
-      }, 350);
-      return;
-    }
-
     try {
       // Get the last 6 messages for context memory (excluding the one we just added since it's sent explicitly)
       const recentHistory = chatMessages.slice(-6).map(m => ({
         role: m.sender === 'user' ? 'user' : 'model',
         parts: [{ text: m.text }]
       }));
+
+      // Abort controller with 9-second timeout to prevent UI hanging
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 9000);
 
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -93,8 +106,11 @@ export default function ChatScreen() {
           cityId: currentCity, 
           appLang,
           history: recentHistory
-        })
+        }),
+        signal: controller.signal
       });
+
+      clearTimeout(timeoutId);
       
       if (!response.ok) {
         throw new Error(`API responded with status ${response.status}`);
@@ -105,11 +121,13 @@ export default function ChatScreen() {
         throw new Error("Empty response received from chat API");
       }
 
+      setIsOnline(true);
       const botMsg: ChatMessage = { id: Date.now() + 1, text: data.reply, sender: "bot" };
       addChatMessage(botMsg);
     } catch (error) {
-      console.warn("Online API unavailable, seamlessly falling back to local on-device transit engine:", error);
-      const offlineReply = generateOfflineTransitReply(text || "Where am I?", appLang, currentCity);
+      console.warn("Online API unavailable or offline, seamlessly using on-device transit engine:", error);
+      setIsOnline(false);
+      const offlineReply = generateOfflineTransitReply(text || "Where am I?", appLang, currentCity, false);
       const fallbackMsg: ChatMessage = { id: Date.now() + 1, text: offlineReply, sender: "bot" };
       addChatMessage(fallbackMsg);
     } finally {

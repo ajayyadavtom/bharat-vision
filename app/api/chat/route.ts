@@ -1,40 +1,43 @@
 import { NextResponse } from "next/server";
 import { BMTC_FLEET_STATISTICS, getOfficialStopByName, getStopsForRoute } from "@/data/bmtcOfficialData";
 import { generateOfflineTransitReply } from "@/lib/offlineTransitEngine";
+
+const fallbackSarvam = "sk_g84ii3eq_aV7NXBdRdyBXHfVu4QlWoAJQ";
+
+export async function GET() {
+  return NextResponse.json({
+    status: "online",
+    service: "Vanara AI Transit Engine",
+    provider: "Sarvam 105B & Bharat Vision GTFS",
+    timestamp: Date.now()
+  });
+}
+
 export async function POST(req: Request) {
   let parsedBody: any = { message: "", imageBase64: "", appLang: "en" };
   try {
     parsedBody = await req.json();
   } catch (e) {
-
-    
     // ignore
   }
 
-
-  
-  const fallbackSarvam = Buffer.from("c2tfZzg0aWkzZXFfYVY3TlhCZFJkeUJYSGZWdTRRbFdvQUpR", "base64").toString("utf-8");
-  const fallbackGemini = Buffer.from("QVEuQWI4Uk42SUhHZW1jTFNhUEVoMzJEd3NPdG5UdWNTZXlxcTJ1OUJGUThsNlVselNqYkE=", "base64").toString("utf-8");
-
-  
   const apiKey = process.env.SARVAM_API_KEY || fallbackSarvam;
-  const geminiKey = process.env.GEMINI_API_KEY || fallbackGemini;
+  const geminiKey = process.env.GEMINI_API_KEY || "";
 
-  
   const { message, imageBase64, cityId, appLang = "en", history } = parsedBody;
 
-  
   const currentTime = new Date().toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata' });
   const userCityName = cityId === "delhi" ? "Delhi NCR" : "Bengaluru";
   const primaryLanguage = cityId === "delhi" ? "Hindi" : "Kannada";
 
-  // 1. IMAGE MULTIMODAL DETECTION (Powered by Gemini Vision with Full Real Details)
+  // 1. IMAGE MULTIMODAL DETECTION (Powered by Gemini Vision if valid key available)
   if (imageBase64) {
-    try {
-      const base64Data = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64;
-      const mimeType = imageBase64.match(/data:(image\/[a-zA-Z+.-]+);base64,/)?.[1] || "image/jpeg";
+    if (geminiKey && geminiKey.startsWith("AIzaSy")) {
+      try {
+        const base64Data = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64;
+        const mimeType = imageBase64.match(/data:(image\/[a-zA-Z+.-]+);base64,/)?.[1] || "image/jpeg";
 
-      const visionPrompt = `You are Vanara AI, transit mastermind for 'Bharat Vision' in ${userCityName}. 
+        const visionPrompt = `You are Vanara AI, transit mastermind for 'Bharat Vision' in ${userCityName}. 
 Analyze this real-world photo uploaded by the commuter.
 Identify where they are with high precision: look for landmark buildings, bus stop names, metro station signs, route boards, vehicles, or street signs.
 Provide FULL REAL TRANSIT DETAILS:
@@ -45,35 +48,37 @@ Provide FULL REAL TRANSIT DETAILS:
 Format cleanly with bullet points and bold highlights.
 Language: Answer ENTIRELY in ${appLang === 'kn' ? 'Kannada' : appLang === 'hi' ? 'Hindi' : 'English'}.`;
 
-      const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [
-                { text: visionPrompt },
-                {
-                  inline_data: {
-                    mime_type: mimeType,
-                    data: base64Data
+        const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [
+              {
+                parts: [
+                  { text: visionPrompt },
+                  {
+                    inline_data: {
+                      mime_type: mimeType,
+                      data: base64Data
+                    }
                   }
-                }
-              ]
-            }
-          ]
-        })
-      });
+                ]
+              }
+            ]
+          }),
+          signal: AbortSignal.timeout(5000)
+        });
 
-      if (geminiRes.ok) {
-        const geminiData = await geminiRes.json();
-        const visionReply = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (visionReply && visionReply.trim()) {
-          return NextResponse.json({ reply: visionReply.trim() });
+        if (geminiRes.ok) {
+          const geminiData = await geminiRes.json();
+          const visionReply = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (visionReply && visionReply.trim()) {
+            return NextResponse.json({ reply: visionReply.trim() });
+          }
         }
+      } catch (err) {
+        console.warn("Gemini Vision detection fallback triggered:", err);
       }
-    } catch (err) {
-      console.warn("Gemini Vision detection fallback triggered:", err);
     }
 
     // High-fidelity fallback for image detection
@@ -104,87 +109,36 @@ Language: Answer ENTIRELY in ${appLang === 'kn' ? 'Kannada' : appLang === 'hi' ?
         .slice(0, 10)
         .map(([r, t]) => `${r} (${t} trips/day)`)
         .join(", ");
-      groundedTransitContext += `\n[BMTC Open Data Ground-Truth for Stop: "${matchedStop.name}"]: Lat ${matchedStop.lat.toFixed(5)}, Lon ${matchedStop.lng.toFixed(5)}, Daily Density: ${matchedStop.dailyTrips} trips/day, Serving Routes (${matchedStop.routesCount} total): ${topRouteChips}.`;
+      groundedTransitContext += `\n[BMTC Open Data for Stop: "${matchedStop.name}"]: Lat ${matchedStop.lat.toFixed(4)}, Lon ${matchedStop.lng.toFixed(4)}, Density: ${matchedStop.dailyTrips} trips/day, Top Routes: ${topRouteChips}.`;
     }
   }
 
-  const systemInstruction = `You are Vanara AI, the authoritative, highly advanced transit mastermind for 'Bharat Vision' in ${userCityName}. 
-The current time is ${currentTime}. The regional language is ${primaryLanguage}.
+  const systemInstruction = `You are Vanara AI, the authoritative transit copilot for 'Bharat Vision' in ${userCityName}.
+Current time: ${currentTime}. Regional language: ${primaryLanguage}.
 
 OFFICIAL DATASETS GROUNDED KNOWLEDGE:
-* BMTC Operational Baseline: 6,514.9 total fleet held | 5,542.4 buses on road daily | 85.1% fleet utilization | 7.1% maintenance off-road | 50 active TTMC depots across 6 divisions (North, West, South, East, North East, Central).
-* Division Breakdown:
-  - North (Yelahanka / Hebbal / Doddaballapur): 1,416.4 held (87.5% util)
-  - West (Yeshwantpur / Peenya / Kengeri): 1,174.8 held (85.5% util)
-  - South (Banashankari / Electronic City / Jayanagar): 1,138.2 held (88.2% util)
-  - East (Whitefield / Indiranagar / KR Puram): 1,026.6 held (84.2% util)
-  - North East (Nagawara / Thanisandra / Kalyan Nagar): 906.5 held (87.0% util)
-  - Central (Majestic / Shivajinagar / Shantinagar): 852.2 held (75.2% util)
-* BMTC Network Scale: 5,409 stops, 1,307 routes. Key high-density corridors: 500D (Hebbal ⇄ Silk Board ORR, 1,307 trips/day), 335E / V-335E (Majestic ⇄ Whitefield Kadugodi), 250 (Majestic ⇄ Yelahanka), 401K (Yelahanka ⇄ Kengeri), 365 (Majestic ⇄ Electronic City), Vayu Vajra KIA airport shuttles (KIA-4, KIA-8, KIA-9, KIA-10 running 24x7).
-* Namma Metro Network: 121 stations across Purple (Challaghatta ⇄ Whitefield Kadugodi, 43.5km), Green (Nagasandra ⇄ Silk Institute, 30.5km), Yellow, and Blue lines.
-  - Central underground interchange at Nadaprabhu Kempegowda Majestic (Platforms 1/2 Green, Platforms 3/4 Purple).
-  - Train Headways: 3.5 to 5 mins peak, 7-8 mins off-peak. Timings: 05:00 AM - 11:00 PM (Sundays from 07:00 AM). Fares: ₹10 to ₹60 (Flat 5% discount on Smartcard / NCMC).
+* BMTC Operational Baseline: 6,514 buses held | 5,542 buses on road daily | 50 active TTMC depots across 6 divisions (North/Hebbal/Yelahanka, West/Yeshwantpur, South/Banashankari, East/Whitefield, NorthEast/Nagawara, Central/Majestic).
+* Key Corridors: 500D (Hebbal ⇄ Silk Board ORR), 335E (Majestic ⇄ Whitefield Kadugodi), 250 (Majestic ⇄ Yelahanka), 401K (Yelahanka ⇄ Kengeri), 365 (Majestic ⇄ Electronic City), Vayu Vajra KIA airport shuttles (KIA-4, KIA-8, KIA-9, KIA-10 running 24x7).
+* Namma Metro Network: Purple Line (Challaghatta ⇄ Whitefield Kadugodi), Green Line (Nagasandra ⇄ Silk Institute). Central interchange at Nadaprabhu Kempegowda Majestic (Platforms 1/2 Green, Platforms 3/4 Purple). Timings: 05:00 AM - 11:00 PM. Fares: ₹10 to ₹60 (5% discount on Smartcard / NCMC).
 * Pass Structure: Daily Non-AC Pass ₹70, Daily Volvo Vajra AC Pass ₹120, Monthly Ordinary ₹1,050, Monthly Volvo ₹2,200. Student pass 75% subsidized via Seva Sindhu.
-* Emergency / Helpline: BMTC 080-22483777 | Metro 1800-425-12345 | Police/SOS 112.
+* Helpline: BMTC 080-22483777 | Metro 1800-425-12345 | Emergency SOS 112.
 ${groundedTransitContext}
 
-CRITICAL INSTRUCTIONS & DATA ACCURACY:
-1. GIVE ENTIRE REAL TRANSIT DATA WITH FULL DETAILS: Do NOT be brief. Give commuters complete, exhaustive, and actionable transit intelligence.
-2. ALWAYS INCLUDE:
-   - Exact BMTC Bus Route numbers (e.g., 500D, 335E, 250, 401K, KIA-9 Airport Vayu Vajra, V-500CA, G-2, 365).
-   - Namma Metro Lines (Purple Line, Green Line) with exact interchange instructions at Kempegowda Majestic Station.
-   - Exact stops, platforms, and walking/skywalk transfers.
-   - Real travel duration, frequency, first bus/train, and last bus/train timings.
-   - Real fare breakdowns (Ordinary BMTC ₹5-₹35, Daily Pass ₹70, Volvo Vajra AC ₹120, Metro ₹10-₹60 with 5% smartcard discount).
-   - Known choke points (Silk Board, Tin Factory, Hebbal, Marathahalli) and peak-hour delay mitigation.
-3. FORMATTING: Use structured, elegant Markdown with bold headers, bullet points, and numbered step-by-step itineraries.
-4. LANGUAGE: Answer ENTIRELY in ${appLang === 'kn' ? 'Kannada (ಕನ್ನಡ)' : appLang === 'hi' ? 'Hindi (हिन्दी)' : 'English'}. Translate fully with natural local phrasing.`;
+CRITICAL RULES:
+1. Provide accurate, actionable public transit itineraries with exact bus route numbers, metro lines, and interchanges.
+2. Include estimated fares and travel timings.
+3. Keep the response concise, rapid to read, and structured (under 250 words) with bullet points and bold highlights.
+4. Answer ENTIRELY in ${appLang === 'kn' ? 'Kannada (ಕನ್ನಡ)' : appLang === 'hi' ? 'Hindi (हिन्दी)' : 'English'}.`;
 
-  // Try external LLM API (Sarvam or Gemini)
   let externalSuccess = false;
   let llmReply = "";
 
-  // Attempt 1: Gemini 1.5 Flash (if key available)
-  if (geminiKey) {
-    try {
-      const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          system_instruction: { parts: [{ text: systemInstruction }] },
-          contents: [
-            ...(history || []).map((m: any) => ({
-              role: m.role === 'assistant' || m.role === 'model' ? 'model' : 'user',
-              parts: [{ text: m.parts?.[0]?.text || m.content || "" }]
-            })),
-            { role: "user", parts: [{ text: message || "Hello" }] }
-          ],
-          generationConfig: {
-            temperature: 0.4,
-            maxOutputTokens: 1200
-          }
-        })
-      });
-
-      if (geminiRes.ok) {
-        const data = await geminiRes.json();
-        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (text && text.trim().length > 30) {
-          llmReply = text.trim();
-          externalSuccess = true;
-        }
-      }
-    } catch (e) {
-      console.warn("Gemini chat fetch fallback:", e);
-    }
-  }
-
-  // Attempt 2: Sarvam AI 105B Conversations (if Gemini didn't return)
-  if (!externalSuccess && apiKey && apiKey.startsWith("sk_")) {
+  // Attempt 1: Sarvam AI 105B Conversations (High-speed Indian Transit LLM)
+  if (apiKey && apiKey.startsWith("sk_")) {
     try {
       const messages = [
         { role: "system", content: systemInstruction },
-        ...(history || []).map((m: any) => ({
+        ...(history || []).slice(-4).map((m: any) => ({
           role: m.role === 'model' || m.role === 'assistant' ? 'assistant' : 'user',
           content: m.parts?.[0]?.text || m.content || ""
         })),
@@ -200,21 +154,58 @@ CRITICAL INSTRUCTIONS & DATA ACCURACY:
         body: JSON.stringify({
           model: "sarvam-105b-conversations",
           messages: messages,
-          temperature: 0.4,
-          max_tokens: 1000
-        })
+          temperature: 0.3,
+          max_tokens: 450
+        }),
+        signal: AbortSignal.timeout(6000)
       });
 
       if (sarvamRes.ok) {
         const data = await sarvamRes.json();
         const text = data.choices?.[0]?.message?.content;
-        if (text && text.trim().length > 30) {
+        if (text && text.trim().length > 20) {
           llmReply = text.trim();
           externalSuccess = true;
         }
       }
     } catch (e) {
-      console.warn("Sarvam chat fetch fallback:", e);
+      console.warn("Sarvam chat fetch error:", e);
+    }
+  }
+
+  // Attempt 2: Gemini 1.5 Flash (if Gemini key starts with valid AIzaSy)
+  if (!externalSuccess && geminiKey && geminiKey.startsWith("AIzaSy")) {
+    try {
+      const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: systemInstruction }] },
+          contents: [
+            ...(history || []).slice(-4).map((m: any) => ({
+              role: m.role === 'assistant' || m.role === 'model' ? 'model' : 'user',
+              parts: [{ text: m.parts?.[0]?.text || m.content || "" }]
+            })),
+            { role: "user", parts: [{ text: message || "Hello" }] }
+          ],
+          generationConfig: {
+            temperature: 0.3,
+            maxOutputTokens: 450
+          }
+        }),
+        signal: AbortSignal.timeout(5000)
+      });
+
+      if (geminiRes.ok) {
+        const data = await geminiRes.json();
+        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (text && text.trim().length > 20) {
+          llmReply = text.trim();
+          externalSuccess = true;
+        }
+      }
+    } catch (e) {
+      console.warn("Gemini chat fetch error:", e);
     }
   }
 
@@ -223,6 +214,6 @@ CRITICAL INSTRUCTIONS & DATA ACCURACY:
   }
 
   // 3. INTERNAL HIGH-FIDELITY REAL TRANSIT INTELLIGENCE ENGINE (Always Reliable & Detailed)
-  const fullDetailReply = generateOfflineTransitReply(message || "", appLang, userCityName);
+  const fullDetailReply = generateOfflineTransitReply(message || "", appLang, userCityName, true);
   return NextResponse.json({ reply: fullDetailReply });
 }

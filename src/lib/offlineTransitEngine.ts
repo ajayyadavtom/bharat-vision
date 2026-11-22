@@ -110,19 +110,26 @@ const CORRIDOR_KNOWLEDGE_BASE: Record<string, CorridorDetails> = {
 };
 
 /**
- * Main On-Device Offline Transit Intelligence Generator
+ * Main Transit Intelligence Generator (On-Device & Server Fallback)
  */
 export function generateOfflineTransitReply(
   query: string,
   appLang: string = "en",
-  cityName: string = "bengaluru"
+  cityName: string = "bengaluru",
+  isServer: boolean = false
 ): string {
   const q = query.toLowerCase().trim();
-  const offlineBadge = appLang === "kn"
-    ? `> ⚡ **ಆಫ್‌ಲೈನ್ ಬಿಎಂಟಿಸಿ & ಮೆಟ್ರೋ ಮೋಡ್:** ಇಂಟರ್ನೆಟ್ ಇಲ್ಲದೆ ಸ್ಥಳೀಯ ಡೇಟಾಬೇಸ್‌ನಿಂದ ನೇರವಾಗಿ ಒದಗಿಸಲಾಗಿದೆ.\n\n`
-    : appLang === "hi"
-    ? `> ⚡ **ऑफलाइन बीएमटीसी एवं मेट्रो मोड:** बिना इंटरनेट के स्थानीय डेटाबेस से तुरंत लोड किया गया।\n\n`
-    : `> ⚡ **Offline Transit Mode:** Answered directly from on-device BMTC & Namma Metro local database (Zero Internet Needed).\n\n`;
+  const offlineBadge = isServer
+    ? (appLang === "kn"
+      ? `> ⚡ **ವಾನರ ಸಾರಿಗೆ ಜ್ಞಾನಕೋಶ:** ಬೆಂಗಳೂರು ಬಿಎಂಟಿಸಿ & ನಮ್ಮ ಮೆಟ್ರೋ ಅಧಿಕೃತ ಡೇಟಾಬೇಸ್‌ನಿಂದ ಪರಿಶೀಲಿಸಲಾಗಿದೆ.\n\n`
+      : appLang === "hi"
+      ? `> ⚡ **वानर ट्रांजिट इंटेलिजेंस:** आधिकारिक बीएमटीसी एवं नम्मा मेट्रो डेटाबेस द्वारा सत्यापित।\n\n`
+      : `> ⚡ **Vanara Transit Intelligence:** Verified from official BMTC & Namma Metro transit directory.\n\n`)
+    : (appLang === "kn"
+      ? `> ⚡ **ಆಫ್‌ಲೈನ್ ಬಿಎಂಟಿಸಿ & ಮೆಟ್ರೋ ಮೋಡ್:** ಇಂಟರ್ನೆಟ್ ಇಲ್ಲದೆ ಸ್ಥಳೀಯ ಡೇಟಾಬೇಸ್‌ನಿಂದ ನೇರವಾಗಿ ಒದಗಿಸಲಾಗಿದೆ.\n\n`
+      : appLang === "hi"
+      ? `> ⚡ **ऑफलाइन बीएमटीसी एवं मेट्रो मोड:** बिना इंटरनेट के स्थानीय डेटाबेस से तुरंत लोड किया गया।\n\n`
+      : `> ⚡ **Offline Transit Mode:** Answered directly from on-device BMTC & Namma Metro local database (Zero Internet Needed).\n\n`);
 
   // 0A. SPECIAL QUERY: WHY IS 500D ALWAYS LATE? (ORR Bottleneck Intelligence)
   if (q.includes("500d") && (q.includes("late") || q.includes("delay") || q.includes("slow") || q.includes("traffic") || q.includes("stuck") || q.includes("why"))) {
@@ -513,9 +520,9 @@ ${matchedCorridor.steps.map((s, idx) => `**Step ${idx + 1}:** ${s}`).join("\n")}
     }
   }
 
-  // 7. COMPREHENSIVE GENERAL OFFLINE TRANSIT GUIDE
+  // 7. COMPREHENSIVE GENERAL TRANSIT GUIDE
   if (appLang === "kn") {
-    return offlineBadge + `### 🗺️ ವಾನರ ಎಐ: ಬೆಂಗಳೂರು ನೈಜ ಸಾರಿಗೆ ಮಾರ್ಗದರ್ಶಿ (Offline Transit Mastermind)
+    return offlineBadge + `### 🗺️ ವಾನರ ಎಐ: ಬೆಂಗಳೂರು ನೈಜ ಸಾರಿಗೆ ಮಾರ್ಗದರ್ಶಿ (Transit Mastermind)
 
 ನಿಮ್ಮ ಪ್ರಶ್ನೆ: **"${query}"**
 
@@ -528,7 +535,7 @@ ${matchedCorridor.steps.map((s, idx) => `**Step ${idx + 1}:** ${s}`).join("\n")}
 * **ದರ & ಪಾಸ್:** ಸಾಮಾನ್ಯ ಪಾಸ್: **₹70** | ವಜ್ರ ಎಸಿ ಪಾಸ್: **₹120** | ಮೆಟ್ರೋ: **₹10 - ₹60** (ಸ್ಮಾರ್ಟ್‌ಕಾರ್ಡ್‌ಗೆ 5% ರಿಯಾಯಿತಿ).
 * **ಸಹಾಯವಾಣಿ:** ಬಿಎಂಟಿಸಿ: **080-22483777** | ಮೆಟ್ರೋ: **1800-425-12345** | ತುರ್ತು ಸಹಾಯ: **112**.`;
   } else if (appLang === "hi") {
-    return offlineBadge + `### 🗺️ वानर एआई: बेंगलुरु वास्तविक ट्रांजिट गाइड (Offline Transit Mastermind)
+    return offlineBadge + `### 🗺️ वानर एआई: बेंगलुरु वास्तविक ट्रांजिट गाइड (Transit Mastermind)
 
 आपकी क्वेरी: **"${query}"**
 
@@ -541,7 +548,7 @@ ${matchedCorridor.steps.map((s, idx) => `**Step ${idx + 1}:** ${s}`).join("\n")}
 * **किराया एवं पास:** दैनिक साधारण पास: **₹70** | दैनिक वज्र एसी पास: **₹120** | मेट्रो: **₹10 - ₹60** (5% छूट)।
 * **हेल्पलाइन:** बीएमटीसी: **080-22483777** | मेट्रो: **1800-425-12345** | पुलिस/इमरजेंसी: **112**।`;
   } else {
-    return offlineBadge + `### 🗺️ Vanara AI: Bengaluru Offline Transit Mastermind
+    return offlineBadge + `### 🗺️ Vanara AI: Bengaluru Transit Mastermind
 
 Inquiry: **"${query}"**
 

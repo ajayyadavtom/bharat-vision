@@ -28,6 +28,7 @@ import QRCode from "react-qr-code";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAppStore, TransitTicketRecord } from "@/lib/store";
 import metroData from "@/data/namma_metro.json";
+import { calculateMetroTrip, MetroStationNode } from "@/lib/metroRouter";
 
 // Dynamic import of Leaflet Metro Map (Client-side only)
 const MetroMap = dynamic(() => import("@/components/MetroMap"), { 
@@ -40,71 +41,7 @@ const MetroMap = dynamic(() => import("@/components/MetroMap"), {
   )
 });
 
-interface MetroStationNode {
-  id: string;
-  name: string;
-  lat: number;
-  lon: number;
-  lines: string[];
-  isInterchange: boolean;
-}
-
 type LineFilterKey = "All" | "Purple" | "Green" | "Yellow" | "Blue" | "Pink";
-
-// Build Adjacency Graph from metroData.lineSequences
-const networkGraph = new Map<string, { to: string; line: string }[]>();
-
-function addEdge(u: string, v: string, line: string) {
-  if (!networkGraph.has(u)) networkGraph.set(u, []);
-  if (!networkGraph.has(v)) networkGraph.set(v, []);
-  networkGraph.get(u)!.push({ to: v, line });
-  networkGraph.get(v)!.push({ to: u, line });
-}
-
-const sequences = (metroData as { lineSequences?: Record<string, string[]> }).lineSequences || {};
-if (sequences.purple) {
-  for (let i = 0; i < sequences.purple.length - 1; i++) addEdge(sequences.purple[i], sequences.purple[i + 1], "Purple");
-}
-if (sequences.green) {
-  for (let i = 0; i < sequences.green.length - 1; i++) addEdge(sequences.green[i], sequences.green[i + 1], "Green");
-}
-if (sequences.yellow) {
-  for (let i = 0; i < sequences.yellow.length - 1; i++) addEdge(sequences.yellow[i], sequences.yellow[i + 1], "Yellow");
-}
-if (sequences.pink) {
-  for (let i = 0; i < sequences.pink.length - 1; i++) addEdge(sequences.pink[i], sequences.pink[i + 1], "Pink");
-}
-if (sequences.blue) {
-  for (let i = 0; i < sequences.blue.length - 1; i++) addEdge(sequences.blue[i], sequences.blue[i + 1], "Blue");
-}
-
-// Shortest path BFS on Metro Network
-function findShortestRoute(startId: string, endId: string) {
-  if (startId === endId) return null;
-  const queue: { id: string; path: string[]; lines: string[] }[] = [
-    { id: startId, path: [startId], lines: [] }
-  ];
-  const visited = new Set<string>([startId]);
-
-  while (queue.length > 0) {
-    const cur = queue.shift()!;
-    if (cur.id === endId) {
-      return cur;
-    }
-    const neighbors = networkGraph.get(cur.id) || [];
-    for (const n of neighbors) {
-      if (!visited.has(n.to)) {
-        visited.add(n.to);
-        queue.push({
-          id: n.to,
-          path: [...cur.path, n.to],
-          lines: [...cur.lines, n.line]
-        });
-      }
-    }
-  }
-  return null;
-}
 
 export default function MetroScreen() {
   const { walletBalance, deductBalance, fetchUserData, activeTickets, addActiveTickets, markTicketValidated } = useAppStore();
@@ -165,7 +102,7 @@ export default function MetroScreen() {
     return pool;
   }, [activeLineFilter, purpleStations, greenStations, yellowStations, blueStations, pinkStations, ALL_STATIONS, stationSearch]);
 
-  // Authentic BMRCL Journey & Fare Engine
+  // Authentic BMRCL Journey & Fare Engine with real curved track geometry
   const trip = useMemo(() => {
     if (!originStation || !destStation || originStation.id === destStation.id) {
       return { 
@@ -175,60 +112,22 @@ export default function MetroScreen() {
         interchange: false, 
         path: [] as MetroStationNode[],
         transferInfo: null as { station: MetroStationNode; fromLine: string; toLine: string } | null,
-        mainLine: ""
+        mainLine: "",
+        coordinates: [] as [number, number][],
       };
     }
 
-    const routeResult = findShortestRoute(originStation.id, destStation.id);
-
-    if (routeResult && routeResult.path.length > 1) {
-      const pathStations = routeResult.path
-        .map((id) => ALL_STATIONS.find((s) => s.id === id))
-        .filter((s): s is MetroStationNode => !!s);
-
-      // Detect transfer
-      let transferInfo: { station: MetroStationNode; fromLine: string; toLine: string } | null = null;
-      for (let i = 0; i < routeResult.lines.length - 1; i++) {
-        if (routeResult.lines[i] !== routeResult.lines[i + 1]) {
-          const xferStation = ALL_STATIONS.find((s) => s.id === routeResult.path[i + 1]);
-          if (xferStation) {
-            transferInfo = {
-              station: xferStation,
-              fromLine: routeResult.lines[i],
-              toLine: routeResult.lines[i + 1],
-            };
-            break;
-          }
-        }
-      }
-
-      const stops = Math.max(1, pathStations.length - 1);
-      const interchange = transferInfo !== null;
-      const mainLine = routeResult.lines[0] || originStation.lines[0];
-
-      // Official BMRCL Fare Matrix
-      let fare = 10;
-      if (stops <= 1) fare = 10;
-      else if (stops <= 3) fare = 15;
-      else if (stops <= 5) fare = 20;
-      else if (stops <= 7) fare = 25;
-      else if (stops <= 10) fare = 30;
-      else if (stops <= 13) fare = 35;
-      else if (stops <= 16) fare = 40;
-      else if (stops <= 19) fare = 45;
-      else if (stops <= 23) fare = 50;
-      else fare = 60; // Max cap
-
-      const duration = Math.round(stops * 2.2 + (interchange ? 5 : 2));
-
+    const calculated = calculateMetroTrip(originStation.id, destStation.id);
+    if (calculated) {
       return {
-        fare,
-        duration,
-        stops,
-        interchange,
-        path: pathStations,
-        transferInfo,
-        mainLine,
+        fare: calculated.fare,
+        duration: calculated.durationMinutes,
+        stops: calculated.stops,
+        interchange: calculated.interchange,
+        path: calculated.path,
+        transferInfo: calculated.transferInfo,
+        mainLine: calculated.mainLine,
+        coordinates: calculated.coordinates,
       };
     }
 
@@ -263,8 +162,12 @@ export default function MetroScreen() {
       path,
       transferInfo: null,
       mainLine: originStation.lines[0],
+      coordinates: [
+        [originStation.lat, originStation.lon],
+        [destStation.lat, destStation.lon],
+      ] as [number, number][],
     };
-  }, [originStation, destStation, ALL_STATIONS]);
+  }, [originStation, destStation]);
 
   const totalFare = trip.fare * ticketQuantity;
 
@@ -378,84 +281,67 @@ export default function MetroScreen() {
   ];
 
   return (
-    <div className="flex flex-col lg:grid lg:grid-cols-12 lg:gap-x-8 lg:gap-y-4 h-[100dvh] lg:h-full overflow-y-auto no-scrollbar pb-[120px] lg:pb-8 bg-slate-50 dark:bg-surface-black px-4 lg:px-10 xl:px-14 pt-6 lg:pt-4 text-slate-900 dark:text-slate-100 lg:max-w-[1720px] lg:mx-auto lg:w-full [&>*]:shrink-0">
+    <div className="flex flex-col lg:grid lg:grid-cols-12 h-[100dvh] lg:h-full overflow-y-auto lg:overflow-hidden no-scrollbar pb-[120px] lg:pb-0 bg-slate-50 dark:bg-surface-black relative max-w-[1720px] mx-auto w-full lg:px-8 xl:px-12 lg:py-4 lg:gap-6 text-slate-900 dark:text-slate-100">
       
-      {/* Header & Live Wallet Display */}
-      <div className="order-1 lg:col-span-12 mb-4 flex justify-between items-start gap-2 shrink-0">
-        <div>
-          <div className="flex items-center gap-1.5 mb-1">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-            <h2 className="text-[10px] text-emerald-600 dark:text-emerald-400 uppercase tracking-widest font-black">
-              Official BMRCL Network
-            </h2>
-          </div>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white flex items-center gap-2">
-            <TrainFront className="text-purple-600 dark:text-purple-400" size={26} /> Namma Metro
-          </h1>
-          <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-            121 Stations · 5 Lines · Official GeoJSON Routing
-          </p>
-        </div>
+      {/* LEFT COLUMN: Controls, Line Filters, Journey Planner, Trip Details & Summary */}
+      <div className="contents lg:flex lg:flex-col lg:col-span-5 xl:col-span-5 lg:h-full lg:overflow-y-auto no-scrollbar lg:gap-3.5 lg:pr-2">
 
-        {/* Live Wallet Badge */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-2xl flex items-center gap-2.5 shadow-sm shrink-0">
-          <div className="bg-emerald-50 dark:bg-emerald-950/60 p-1.5 rounded-xl">
-            <Wallet size={15} className="text-emerald-600 dark:text-emerald-400" />
-          </div>
+        {/* Header & Live Wallet Display */}
+        <div className="order-1 lg:order-none mb-2 p-4 pt-6 lg:p-0 flex justify-between items-start gap-2 shrink-0">
           <div>
-            <span className="text-[9px] text-slate-500 dark:text-slate-400 uppercase font-bold block leading-none">Wallet</span>
-            <span className="text-slate-900 dark:text-white font-black text-xs leading-none">₹{walletBalance.toFixed(2)}</span>
+            <div className="flex items-center gap-1.5 mb-1">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+              <h2 className="text-[10px] text-emerald-600 dark:text-emerald-400 uppercase tracking-widest font-black">
+                Official BMRCL Network
+              </h2>
+            </div>
+            <h1 className="text-2xl font-black text-slate-900 dark:text-white flex items-center gap-2">
+              <TrainFront className="text-purple-600 dark:text-purple-400" size={26} /> Namma Metro
+            </h1>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+              121 Stations · 5 Lines · Official GeoJSON Routing
+            </p>
+          </div>
+
+          {/* Live Wallet Badge */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-2xl flex items-center gap-2.5 shadow-sm shrink-0">
+            <div className="bg-emerald-50 dark:bg-emerald-950/60 p-1.5 rounded-xl">
+              <Wallet size={15} className="text-emerald-600 dark:text-emerald-400" />
+            </div>
+            <div>
+              <span className="text-[9px] text-slate-500 dark:text-slate-400 uppercase font-bold block leading-none">Wallet</span>
+              <span className="text-slate-900 dark:text-white font-black text-xs leading-none">₹{walletBalance.toFixed(2)}</span>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Official Line Toggle Tabs */}
-      <div className="order-2 lg:order-none lg:col-span-5 xl:col-span-4 lg:col-start-1 flex items-center gap-1.5 bg-white dark:bg-slate-900/90 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 mb-3.5 overflow-x-auto no-scrollbar shrink-0 min-h-[46px] shadow-xs">
-        {lineFilters.map((filter) => {
-          const isSelected = activeLineFilter === filter.key;
-          return (
-            <button
-              key={filter.key}
-              type="button"
-              onClick={() => setActiveLineFilter(filter.key)}
-              className={`py-2 px-3.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer ${
-                isSelected
-                  ? filter.activeClass
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
-              }`}
-            >
-              {filter.dotColor && <span className={`w-2 h-2 rounded-full ${filter.dotColor}`} />}
-              <span>{filter.label} ({filter.count})</span>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Interactive Namma Metro Network Map */}
-      <div className="order-3 lg:order-none lg:col-start-6 xl:col-start-5 lg:col-span-7 xl:col-span-8 lg:row-start-2 lg:row-span-12 lg:sticky lg:top-4 lg:self-start mb-4 shrink-0 w-full">
-        <div className="flex items-center justify-between mb-1.5 px-1">
-          <span className="text-[11px] font-black uppercase text-purple-700 dark:text-purple-300 tracking-wider flex items-center gap-1.5">
-            <MapPin size={13} className="text-purple-600 dark:text-purple-400" /> Interactive Metro Map
-          </span>
-          <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">
-            Tap stations to set From/To
-          </span>
+        {/* Official Line Toggle Tabs */}
+        <div className="order-2 lg:order-none px-4 lg:px-0 shrink-0">
+          <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900/90 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-x-auto no-scrollbar shrink-0 min-h-[46px] shadow-xs">
+            {lineFilters.map((filter) => {
+              const isSelected = activeLineFilter === filter.key;
+              return (
+                <button
+                  key={filter.key}
+                  type="button"
+                  onClick={() => setActiveLineFilter(filter.key)}
+                  className={`py-2 px-3.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer ${
+                    isSelected
+                      ? filter.activeClass
+                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
+                  }`}
+                >
+                  {filter.dotColor && <span className={`w-2 h-2 rounded-full ${filter.dotColor}`} />}
+                  <span>{filter.label} ({filter.count})</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
-        <div id="interactive-metro-map" className="w-full h-64 lg:h-[calc(100vh-140px)] lg:min-h-[620px] lg:max-h-[860px] bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-md relative">
-          <MetroMap
-            originStationId={origin}
-            destStationId={destination}
-            onSelectOrigin={(id) => setOrigin(id)}
-            onSelectDestination={(id) => setDestination(id)}
-            activeLineFilter={activeLineFilter}
-            onSelectLineFilter={(line) => setActiveLineFilter(line as LineFilterKey)}
-          />
-        </div>
-      </div>
 
-      {/* Station Selector Card */}
-      <div className="order-4 lg:order-none lg:col-span-5 xl:col-span-4 lg:col-start-1 bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-200 dark:border-slate-800 mb-4 shadow-sm shrink-0">
-        <div className="flex justify-between items-center mb-3">
+        {/* Station Selector Card */}
+        <div className="order-4 lg:order-none px-4 lg:px-0 bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm shrink-0">
+          <div className="flex justify-between items-center mb-3">
           <h3 className="text-xs uppercase tracking-wider font-black text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
             <Compass size={14} className="text-purple-500" /> Plan Journey
           </h3>
@@ -564,8 +450,9 @@ export default function MetroScreen() {
         <motion.div 
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="order-5 lg:order-none lg:col-span-5 xl:col-span-4 lg:col-start-1 bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 mb-4 shadow-sm shrink-0"
+          className="order-5 lg:order-none px-4 lg:px-0 shrink-0"
         >
+          <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
           {/* Fare & Metrics Grid */}
           <div className="grid grid-cols-3 gap-2 text-center border-b border-slate-100 dark:border-slate-800 pb-4 mb-4">
             <div>
@@ -868,11 +755,12 @@ export default function MetroScreen() {
               })()}
             </div>
           )}
+          </div>
         </motion.div>
       )}
 
       {/* Official 5-Line Network Summary Cards */}
-      <div className="order-6 lg:order-none lg:col-span-5 xl:col-span-4 lg:col-start-1 mb-6 shrink-0">
+      <div className="order-6 lg:order-none px-4 lg:px-0 mb-6 lg:mb-2 shrink-0">
         <div className="flex items-center justify-between mb-2 px-1">
           <h3 className="text-xs uppercase tracking-wider font-black text-slate-700 dark:text-slate-300">
             Namma Metro Lines Overview
@@ -1027,6 +915,31 @@ export default function MetroScreen() {
             <p className="text-[10px] text-slate-700 dark:text-slate-300 font-semibold truncate" title="Kalena Agrahara ⇄ Nagawara">Kalena Agrahara ⇄ Nagawara</p>
             <span className="text-[9px] text-slate-500 dark:text-slate-400 block mt-1">{pinkStations.length} Stations · 21.4 km</span>
           </div>
+        </div>
+      </div>
+
+      </div>
+
+      {/* RIGHT COLUMN: Interactive Namma Metro Network Map */}
+      <div className="order-3 lg:order-none lg:col-span-7 xl:col-span-7 lg:h-full lg:min-h-0 px-4 lg:px-0 my-2 lg:my-0 flex flex-col">
+        <div className="flex items-center justify-between mb-1.5 px-1 shrink-0">
+          <span className="text-[11px] font-black uppercase text-purple-700 dark:text-purple-300 tracking-wider flex items-center gap-1.5">
+            <MapPin size={13} className="text-purple-600 dark:text-purple-400" /> Interactive Metro Map
+          </span>
+          <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">
+            Tap stations to set From/To
+          </span>
+        </div>
+        <div id="interactive-metro-map" className="w-full h-80 sm:h-96 lg:h-auto lg:flex-1 lg:min-h-0 bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-lg relative flex-1">
+          <MetroMap
+            originStationId={origin}
+            destStationId={destination}
+            routePath={trip.coordinates}
+            onSelectOrigin={(id) => setOrigin(id)}
+            onSelectDestination={(id) => setDestination(id)}
+            activeLineFilter={activeLineFilter}
+            onSelectLineFilter={(line) => setActiveLineFilter(line as LineFilterKey)}
+          />
         </div>
       </div>
 
