@@ -76,8 +76,6 @@ html, body {
   overscroll-behavior: contain;
   overscroll-behavior-y: contain;
   touch-action: pan-y;
-  transform: translateZ(0);
-  will-change: scroll-position;
 }
 
 /* Leaflet map tile rendering & clarity optimizations */

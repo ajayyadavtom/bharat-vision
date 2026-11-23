@@ -190,7 +190,7 @@ export default function NcmcTopUpModal({ isOpen, onClose, onProceedToPay, defaul
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[250] flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-md p-4 overflow-y-auto">
+      <div className="fixed inset-0 z-[250] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 overflow-y-auto">
         <motion.div
           initial={{ opacity: 0, y: 50, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}

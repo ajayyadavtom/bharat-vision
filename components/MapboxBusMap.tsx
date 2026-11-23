@@ -104,7 +104,7 @@ export default function MapboxBusMap({
   className = "w-full h-full",
   onBusUpdate,
   showControls = true,
-  showMetroLayers = true,
+  showMetroLayers = false,
   initialMetroStation,
 }: MapboxBusMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);

@@ -67,18 +67,36 @@ export async function fetchMapboxRoute(
   origin: [number, number], // [lat, lng]
   destination: [number, number] // [lat, lng]
 ): Promise<[number, number][] | null> {
-  try {
-    const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${origin[1]},${origin[0]};${destination[1]},${destination[0]}?geometries=geojson&overview=full&access_token=${MAPBOX_PUBLIC_TOKEN}`;
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    const data = await res.json();
-    if (data.routes && data.routes[0]?.geometry?.coordinates) {
-      // Mapbox returns [lng, lat], Leaflet requires [lat, lng]
-      return data.routes[0].geometry.coordinates.map((coord: [number, number]) => [coord[1], coord[0]]);
+  // 1. Try Mapbox Directions API if access token is available
+  if (MAPBOX_PUBLIC_TOKEN && MAPBOX_PUBLIC_TOKEN.trim() !== "") {
+    try {
+      const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${origin[1]},${origin[0]};${destination[1]},${destination[0]}?geometries=geojson&overview=full&access_token=${MAPBOX_PUBLIC_TOKEN}`;
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.routes && data.routes[0]?.geometry?.coordinates) {
+          // Mapbox returns [lng, lat], Leaflet requires [lat, lng]
+          return data.routes[0].geometry.coordinates.map((coord: [number, number]) => [coord[1], coord[0]]);
+        }
+      }
+    } catch (err) {
+      console.warn("Mapbox directions routing failed, attempting OSRM fallback:", err);
     }
-    return null;
-  } catch (err) {
-    console.warn("Mapbox directions routing failed:", err);
-    return null;
   }
+
+  // 2. Fallback to free public OSRM router so routes ALWAYS follow actual road geometry and never draw straight lines
+  try {
+    const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${origin[1]},${origin[0]};${destination[1]},${destination[0]}?overview=full&geometries=geojson`;
+    const res = await fetch(osrmUrl);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.routes && data.routes[0]?.geometry?.coordinates) {
+        return data.routes[0].geometry.coordinates.map((coord: [number, number]) => [coord[1], coord[0]]);
+      }
+    }
+  } catch (osrmErr) {
+    console.warn("OSRM fallback routing failed:", osrmErr);
+  }
+
+  return null;
 }

@@ -300,50 +300,27 @@ export default function RouteDeviationAI({
     if (resetTrigger) resetTrigger();
   }, [resetTrigger]);
 
-  // Diagnostic simulation trigger for manual testing
-  const handleSimulateDetour = () => {
-    setSpeedKmh(34);
-    setIsInBus(true);
-    setDeviationMeters(420);
-    triggerDeviationAlert();
-  };
-
   return (
     <>
       {/* Real-time Telemetry Status Bar for Anomaly Engine */}
-      <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md px-3.5 py-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs mb-3">
-        <div className="flex items-center gap-2">
-          <span
-            className={`w-2 h-2 rounded-full ${
-              isInBus
-                ? "bg-emerald-500 animate-pulse shadow-[0_0_6px_rgba(16,185,129,0.8)]"
-                : "bg-slate-400"
-            }`}
-          />
-          <span className="font-bold">
-            {isInBus ? `On Bus (${speedKmh} km/h)` : "Stationary / Walking"}
-          </span>
-          <span className="text-slate-300 dark:text-slate-700">|</span>
-          <span>Corridor Offset: {deviationMeters}m</span>
-        </div>
+      {isInBus && (
+        <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md px-3.5 py-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs mb-3">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_6px_rgba(16,185,129,0.8)]" />
+            <span className="font-bold text-slate-800 dark:text-slate-200">
+              On Bus ({speedKmh} km/h)
+            </span>
+            <span className="text-slate-300 dark:text-slate-700">|</span>
+            <span>Corridor Offset: {deviationMeters}m</span>
+          </div>
 
-        <div className="flex items-center gap-2">
-          {cooldownRemainingSec > 0 && !isVisible ? (
+          {cooldownRemainingSec > 0 && !isVisible && (
             <span className="text-[9px] font-semibold text-amber-600 dark:text-amber-400">
               Cooldown: {Math.floor(cooldownRemainingSec / 60)}m {cooldownRemainingSec % 60}s
             </span>
-          ) : (
-            <button
-              type="button"
-              onClick={handleSimulateDetour}
-              className="text-[9px] font-black text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
-              title="Test real anomaly detection algorithm"
-            >
-              Simulate Detour
-            </button>
           )}
         </div>
-      </div>
+      )}
 
       {/* Real-Time Anomaly Modal (Strictly 10-Min Cooldown & In-Bus Velocity Gated) */}
       <AnimatePresence>

@@ -37,9 +37,30 @@ interface BmtcRouteDetails {
   coordinates: [number, number][];
 }
 
+interface LiveFleetVehicle {
+  busId: string;
+  lat: number;
+  lng: number;
+  latitude?: number;
+  longitude?: number;
+  speed: number;
+  bearing: number;
+  origin: string;
+  destination: string;
+  nextStop: string;
+  eta: string;
+  etaMinutes: number;
+  fare: number;
+  occupancy?: number;
+  crowdLevel?: string;
+  routeId?: string;
+  routeName?: string;
+}
+
 export default function TrackScreen() {
   const [triggerAnomaly, setTriggerAnomaly] = useState(false);
-  const [busCode, setBusCode] = useState("500D");
+  // Default to empty busCode so page loads clean with no default route mapping
+  const [busCode, setBusCode] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<BmtcSearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -47,6 +68,13 @@ export default function TrackScreen() {
   const [activeRouteDetails, setActiveRouteDetails] = useState<BmtcRouteDetails | null>(null);
   const [showAllStops, setShowAllStops] = useState(false);
   const [destination, setDestination] = useState("");
+
+  // Live Multi-Bus Fleet State
+  const [liveVehicles, setLiveVehicles] = useState<LiveFleetVehicle[]>([]);
+  const [selectedBusId, setSelectedBusId] = useState<string | null>(null);
+  const [focusCoords, setFocusCoords] = useState<[number, number] | null>(null);
+  const [isLoadingFleet, setIsLoadingFleet] = useState(false);
+
   const { userLocation, setUserLocation } = useAppStore();
   const [userLoc, setUserLoc] = useState<[number, number] | null>(
     userLocation?.coords || null
@@ -118,6 +146,57 @@ export default function TrackScreen() {
     };
   }, [busCode]);
 
+  // Poll real-time BMTC live fleet for the searched bus route every 5 seconds
+  useEffect(() => {
+    if (!busCode) {
+      setLiveVehicles([]);
+      setSelectedBusId(null);
+      setFocusCoords(null);
+      return;
+    }
+
+    let isMounted = true;
+    async function fetchFleet() {
+      try {
+        setIsLoadingFleet(true);
+        const res = await fetch(`/api/bmtc/live?route=${encodeURIComponent(busCode)}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted && data.success && Array.isArray(data.vehicles)) {
+            setLiveVehicles(data.vehicles);
+            setSelectedBusId((current) => {
+              if (current && data.vehicles.some((v: any) => v.busId === current)) {
+                return current;
+              }
+              return data.vehicles[0]?.busId || null;
+            });
+          }
+        }
+      } catch (err) {
+        console.warn("Could not load live BMTC fleet:", err);
+      } finally {
+        if (isMounted) setIsLoadingFleet(false);
+      }
+    }
+
+    fetchFleet();
+    const interval = setInterval(fetchFleet, 5000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [busCode]);
+
+  const handleSelectBus = (id: string) => {
+    setSelectedBusId(id);
+    const v = liveVehicles.find((bus) => bus.busId === id);
+    if (v) {
+      setFocusCoords([v.lat, v.lng]);
+    }
+  };
+
+  const selectedBus = liveVehicles.find((v) => v.busId === selectedBusId) || liveVehicles[0] || null;
+
   // Autocomplete search across all 7,475 BMTC routes
   useEffect(() => {
     const q = searchQuery.trim();
@@ -164,6 +243,7 @@ export default function TrackScreen() {
   };
 
   const popularCorridors = [
+    { code: "285H", label: "285H (Koluvarayanahalli ⇄ KR Market)" },
     { code: "500D", label: "500D (Silk Board ⇄ Hebbal)" },
     { code: "335E", label: "335E (Majestic ⇄ Whitefield)" },
     { code: "250", label: "250 (Majestic ⇄ Yelahanka)" },
@@ -329,6 +409,191 @@ export default function TrackScreen() {
           </div>
         </div>
 
+        {/* Clean Empty State Prompt when no bus number is searched */}
+        {!busCode && (
+          <div className="order-4 lg:order-none shrink-0 px-4 lg:px-0">
+            <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm text-center">
+              <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center mx-auto mb-3 text-2xl">
+                🚌
+              </div>
+              <h3 className="text-base font-extrabold text-slate-900 dark:text-white mb-1">
+                Track Live BMTC Buses
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 max-w-sm mx-auto">
+                Type any bus number (e.g. <strong>285H</strong>, <strong>500D</strong>, <strong>335E</strong>, <strong>KIA-9</strong>) above to view all active buses on track, where they are coming from, live speed, and next-stop arrival ETAs.
+              </p>
+              <div className="flex flex-wrap gap-2 justify-center">
+                {popularCorridors.slice(0, 4).map((c) => (
+                  <button
+                    key={c.code}
+                    type="button"
+                    onClick={() => {
+                      setBusCode(c.code);
+                      setSearchQuery(c.code);
+                    }}
+                    className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-emerald-500 hover:text-white transition-all cursor-pointer shadow-xs active:scale-95"
+                  >
+                    Track {c.code}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* LIVE FLEET SELECTOR: Displays count of buses on track and lets user pick which bus to track */}
+        {busCode && (
+          <div className="order-4 lg:order-none shrink-0 px-4 lg:px-0 flex flex-col gap-3">
+            {/* Live Buses Count & Status Header */}
+            <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-700 text-white rounded-3xl p-4 shadow-md flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="relative flex items-center justify-center">
+                  <div className="w-3.5 h-3.5 rounded-full bg-emerald-300 animate-ping absolute" />
+                  <div className="w-3.5 h-3.5 rounded-full bg-emerald-200 relative" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black tracking-wide flex items-center gap-2">
+                    <span>{liveVehicles.length} Live Buses Active</span>
+                    <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-bold">
+                      Route {busCode}
+                    </span>
+                  </h3>
+                  <p className="text-[11px] text-emerald-100 font-medium">
+                    {activeRouteDetails?.origin || "Origin"} ➔ {activeRouteDetails?.destination || "Destination"}
+                  </p>
+                </div>
+              </div>
+              <div className="text-right text-[10px] font-bold text-emerald-100 bg-white/10 px-2.5 py-1 rounded-xl">
+                {isLoadingFleet ? "Updating..." : "5s Live Telemetry"}
+              </div>
+            </div>
+
+            {/* Live Buses Selection Grid */}
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                <span>Select Bus on Track ({liveVehicles.length}):</span>
+                <span className="text-emerald-600 dark:text-emerald-400 font-bold lowercase">
+                  tap to center live GPS
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {liveVehicles.map((vehicle) => {
+                  const isSelected = vehicle.busId === (selectedBusId || liveVehicles[0]?.busId);
+                  return (
+                    <button
+                      key={vehicle.busId}
+                      type="button"
+                      onClick={() => handleSelectBus(vehicle.busId)}
+                      className={`text-left p-3 rounded-2xl border transition-all cursor-pointer relative ${
+                        isSelected
+                          ? "bg-emerald-500/10 dark:bg-emerald-950/40 border-emerald-500 ring-2 ring-emerald-500/40 shadow-md"
+                          : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-emerald-400 hover:shadow-sm"
+                      }`}
+                    >
+                      {/* Top Row: Reg Plate & Speed */}
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-1.5">
+                          <span className={`w-2 h-2 rounded-full ${isSelected ? "bg-emerald-500 animate-pulse" : "bg-slate-400"}`} />
+                          <span className="font-black text-xs font-mono px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700">
+                            {vehicle.busId}
+                          </span>
+                        </div>
+                        <span className="text-[10px] font-extrabold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md">
+                          ⚡ {vehicle.speed} km/h
+                        </span>
+                      </div>
+
+                      {/* Where it is coming from & heading */}
+                      <div className="text-[11px] mb-2 space-y-0.5">
+                        <p className="text-slate-600 dark:text-slate-400 font-medium truncate">
+                          <strong className="text-emerald-600 dark:text-emerald-400 font-bold">From:</strong> {vehicle.origin}
+                        </p>
+                        <p className="text-slate-600 dark:text-slate-400 font-medium truncate">
+                          <strong className="text-rose-500 font-bold">To:</strong> {vehicle.destination}
+                        </p>
+                      </div>
+
+                      {/* Next Stop & ETA */}
+                      <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800 text-[10px]">
+                        <span className="font-bold text-slate-700 dark:text-slate-300 truncate max-w-[140px]">
+                          🚏 {vehicle.nextStop}
+                        </span>
+                        <span className="font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-1.5 py-0.5 rounded">
+                          ETA {vehicle.eta}
+                        </span>
+                      </div>
+
+                      {isSelected && (
+                        <div className="absolute top-2 right-2 text-[8px] font-black uppercase tracking-wider bg-emerald-500 text-white px-1.5 py-0.5 rounded-md shadow-xs">
+                          Tracking
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Currently Selected Bus Live Telemetry Card */}
+            {selectedBus && (
+              <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-4 shadow-sm">
+                <div className="flex items-center justify-between pb-2 mb-3 border-b border-slate-100 dark:border-slate-800">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">🚌</span>
+                    <div>
+                      <h4 className="text-xs font-black text-slate-900 dark:text-white">
+                        Live Tracking: {selectedBus.busId}
+                      </h4>
+                      <p className="text-[10px] text-slate-400 font-mono">
+                        GPS: {selectedBus.lat.toFixed(4)}° N, {selectedBus.lng.toFixed(4)}° E · Bearing {selectedBus.bearing}°
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-lg">
+                    ● Active Telemetry
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-4 gap-2 text-center mb-3">
+                  <div className="p-2 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                    <span className="text-[9px] uppercase font-bold text-slate-400 block">Next ETA</span>
+                    <span className="text-xs font-black text-emerald-600 dark:text-emerald-400 block mt-0.5">{selectedBus.eta}</span>
+                  </div>
+                  <div className="p-2 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                    <span className="text-[9px] uppercase font-bold text-slate-400 block">Speed</span>
+                    <span className="text-xs font-black text-slate-900 dark:text-white block mt-0.5">{selectedBus.speed} km/h</span>
+                  </div>
+                  <div className="p-2 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                    <span className="text-[9px] uppercase font-bold text-slate-400 block">Fare</span>
+                    <span className="text-xs font-black text-indigo-600 dark:text-indigo-400 block mt-0.5">₹{selectedBus.fare}</span>
+                  </div>
+                  <div className="p-2 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                    <span className="text-[9px] uppercase font-bold text-slate-400 block">Crowd</span>
+                    <span className="text-xs font-black text-amber-600 dark:text-amber-400 block mt-0.5">{selectedBus.crowdLevel || "Moderate"}</span>
+                  </div>
+                </div>
+
+                {/* Where it came from & Next stop details */}
+                <div className="bg-slate-50 dark:bg-slate-800/40 p-3 rounded-2xl border border-slate-100 dark:border-slate-800 text-xs space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase">Origin (Departed From):</span>
+                    <span className="font-extrabold text-slate-800 dark:text-slate-200">{selectedBus.origin}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase">Approaching Stop:</span>
+                    <span className="font-extrabold text-emerald-600 dark:text-emerald-400">{selectedBus.nextStop}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase">Final Terminus:</span>
+                    <span className="font-extrabold text-slate-800 dark:text-slate-200">{selectedBus.destination}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Selected Route Alignment & Bus Stops Timeline Drawer */}
         {activeRouteDetails && (
           <div className="order-5 lg:order-none shrink-0 px-4 lg:px-0">
@@ -456,9 +721,13 @@ export default function TrackScreen() {
             userLocation={userLoc}
             routeStops={activeRouteDetails?.stops}
             routePath={activeRouteDetails?.coordinates}
-            initialShowMetro={true}
-            initialShowStops={true}
+            initialShowMetro={false}
+            initialShowStops={false}
             onUserLocationChange={(newLoc) => setUserLoc(newLoc)}
+            vehicles={liveVehicles}
+            selectedVehicleId={selectedBusId}
+            onSelectVehicle={handleSelectBus}
+            focusCoords={focusCoords}
           />
         </div>
       </div>

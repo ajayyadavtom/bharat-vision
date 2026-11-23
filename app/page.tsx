@@ -550,8 +550,8 @@ export default function VisionHome() {
               <LiveMap
                 busCode={desktopCorridor}
                 userLocation={userLocation?.coords}
-                initialShowMetro={true}
-                initialShowStops={true}
+                initialShowMetro={false}
+                initialShowStops={false}
               />
             </div>
 

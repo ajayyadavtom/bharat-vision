@@ -686,7 +686,7 @@ export default function ProfileScreen() {
       {/* Ride History Modal */}
       <AnimatePresence>
         {showHistory && (
-          <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
             <motion.div
               initial={{ opacity: 0, y: 100 }}
               animate={{ opacity: 1, y: 0 }}
@@ -931,7 +931,7 @@ export default function ProfileScreen() {
       {/* Real-Time Student ID OCR Scanner Modal */}
       <AnimatePresence>
         {showScanner && (
-          <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-black/60 dark:bg-black/80 backdrop-blur-md p-4">
+          <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 dark:bg-black/80 backdrop-blur-md p-4 overflow-y-auto">
             <motion.div
               initial={{ opacity: 0, y: 100 }}
               animate={{ opacity: 1, y: 0 }}

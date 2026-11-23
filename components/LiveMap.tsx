@@ -87,10 +87,14 @@ function SmoothBusMarker({
   bus,
   routeId,
   crowdStatus,
+  isSelected,
+  onSelect,
 }: {
-  bus: LiveVehicle;
+  bus: LiveVehicle & { origin?: string; destination?: string; fare?: number; route_name?: string };
   routeId: string;
   crowdStatus?: CrowdsourcedBusStatus;
+  isSelected?: boolean;
+  onSelect?: () => void;
 }) {
   const [pos, setPos] = useState<[number, number]>([bus.lat, bus.lng]);
   const prevPos = useRef<[number, number]>([bus.lat, bus.lng]);
@@ -148,31 +152,49 @@ function SmoothBusMarker({
 
   const dynamicBusIcon = useMemo(() => {
     if (typeof window === "undefined" || !L.divIcon) return undefined as any;
+    const ringStyle = isSelected
+      ? "box-shadow: 0 0 0 4px #10b981, 0 6px 20px rgba(16,185,129,0.7); transform: scale(1.15);"
+      : "box-shadow: 0 4px 14px rgba(0,0,0,0.35);";
+
     return L.divIcon({
       className: "custom-bus-marker",
       html: `
-        <div style="position: relative; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;">
-          <div style="position: absolute; width: 100%; height: 100%; border-radius: 50%; background-color: ${crowdColor}; opacity: 0.25; transform: scale(1.4); animation: pulse 2s infinite;"></div>
-          <div style="background-color: ${crowdColor}; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2.5px solid #ffffff; box-shadow: 0 4px 14px rgba(0,0,0,0.35); color: #ffffff; font-size: 15px; z-index: 2;">🚌</div>
+        <div style="position: relative; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+          ${isSelected ? '<div style="position: absolute; top: -18px; background-color: #10b981; color: #ffffff; font-size: 8px; font-weight: 900; padding: 1.5px 6px; border-radius: 9999px; box-shadow: 0 2px 8px rgba(0,0,0,0.4); border: 1px solid #ffffff; z-index: 10; white-space: nowrap; animation: bounce 1.5s infinite;">TRACKING</div>' : ""}
+          <div style="position: absolute; width: 100%; height: 100%; border-radius: 50%; background-color: ${isSelected ? "#10b981" : crowdColor}; opacity: ${isSelected ? 0.4 : 0.25}; transform: scale(1.4); animation: pulse 2s infinite;"></div>
+          <div style="background-color: ${crowdColor}; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2.5px solid #ffffff; ${ringStyle} color: #ffffff; font-size: 15px; z-index: 2;">🚌</div>
           <div style="position: absolute; top: -4px; right: -6px; background-color: #0f172a; color: #ffffff; font-size: 9px; font-weight: 800; padding: 1.5px 5px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.4); z-index: 3; box-shadow: 0 2px 6px rgba(0,0,0,0.4);">${bus.spd}kph</div>
           <div style="position: absolute; bottom: -5px; background-color: ${crowdColor}; color: #ffffff; font-size: 8px; font-weight: 900; padding: 1px 4px; border-radius: 9999px; border: 1px solid #ffffff; z-index: 4; white-space: nowrap;">${crowdLabel}</div>
         </div>
       `,
-      iconSize: [44, 44],
-      iconAnchor: [22, 22],
+      iconSize: [48, 48],
+      iconAnchor: [24, 24],
     });
-  }, [crowdColor, bus.spd, crowdLabel]);
+  }, [crowdColor, bus.spd, crowdLabel, isSelected]);
 
   return (
-    <Marker position={pos} icon={dynamicBusIcon}>
+    <Marker
+      position={pos}
+      icon={dynamicBusIcon}
+      zIndexOffset={isSelected ? 1000 : 100}
+      eventHandlers={{
+        click: () => onSelect?.(),
+      }}
+    >
       <Popup>
-        <div className="text-gray-900 font-sans p-1 min-w-[170px]">
+        <div className="text-gray-900 font-sans p-1 min-w-[190px]">
           <p className="font-black text-sm text-slate-800 border-b border-slate-200 pb-1 mb-2 flex items-center justify-between">
             <span>Route {routeId}</span>
-            <span className="text-[10px] font-normal text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded font-mono">
+            <span className="text-[10px] font-mono font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">
               {bus.v_id}
             </span>
           </p>
+          {bus.origin && bus.destination && (
+            <div className="text-[10px] text-slate-600 bg-slate-50 p-1.5 rounded-lg border border-slate-100 mb-2">
+              <p className="font-bold text-slate-800 line-clamp-1">📍 From: {bus.origin}</p>
+              <p className="font-bold text-slate-800 line-clamp-1 mt-0.5">🏁 To: {bus.destination}</p>
+            </div>
+          )}
           <div className="flex justify-between items-center mb-1">
             <span className="text-[10px] text-gray-500 font-bold uppercase">Speed</span>
             <span className="text-xs font-bold text-gray-900">{bus.spd} km/h</span>
@@ -190,7 +212,7 @@ function SmoothBusMarker({
           <div className="bg-slate-50 border border-slate-100 rounded-lg p-2 mt-2">
             <div className="flex justify-between items-center mb-1">
               <span className="text-[10px] text-slate-500 font-bold uppercase">Next Stop</span>
-              <span className="text-[10px] font-bold text-slate-800 truncate max-w-[110px] block">
+              <span className="text-[10px] font-bold text-slate-800 truncate max-w-[120px] block">
                 {bus.nxt_stp}
               </span>
             </div>
@@ -201,33 +223,58 @@ function SmoothBusMarker({
               </span>
             </div>
           </div>
+          {onSelect && (
+            <button
+              type="button"
+              onClick={() => onSelect()}
+              className={`w-full mt-2 py-1 px-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                isSelected
+                  ? "bg-emerald-600 text-white"
+                  : "bg-slate-900 text-white hover:bg-emerald-600"
+              }`}
+            >
+              {isSelected ? "✓ Currently Tracking" : "Track This Bus"}
+            </button>
+          )}
         </div>
       </Popup>
     </Marker>
   );
 }
 
-// Controller that ONLY fits bounds on explicit route change or recenter trigger
-// PREVENTS MAP ZOOM SNAP-BACK / FIGHT BUG & AUTO-FITS WHEN ROUTE BOUNDS ARRIVE
+// Controller that fits bounds on route change, recenter trigger, or flies to focused bus
 function MapController({
   center,
   zoom,
   bounds,
   routeKey,
   recenterTrigger,
+  focusCoords,
 }: {
   center?: [number, number];
   zoom?: number;
   bounds?: L.LatLngBoundsExpression;
   routeKey?: string;
   recenterTrigger: number;
+  focusCoords?: [number, number] | null;
 }) {
   const map = useMap();
   const prevRouteKeyRef = useRef<string | undefined>(undefined);
   const prevRecenterRef = useRef<number>(recenterTrigger);
   const lastFittedBoundsKeyRef = useRef<string | null>(null);
+  const prevFocusCoordsRef = useRef<string | null>(null);
 
   useEffect(() => {
+    // When a specific vehicle is clicked/selected, fly straight to its coordinates
+    if (focusCoords && focusCoords.length === 2) {
+      const coordKey = `${focusCoords[0].toFixed(5)},${focusCoords[1].toFixed(5)}`;
+      if (prevFocusCoordsRef.current !== coordKey) {
+        prevFocusCoordsRef.current = coordKey;
+        map.flyTo(focusCoords, 15, { animate: true, duration: 1.0 });
+        return;
+      }
+    }
+
     const routeChanged = prevRouteKeyRef.current !== routeKey;
     const recenterClicked = prevRecenterRef.current !== recenterTrigger;
     const boundsKey = routeKey ? `${routeKey}-${bounds ? "has-bounds" : "no-bounds"}` : null;
@@ -237,7 +284,6 @@ function MapController({
     prevRecenterRef.current = recenterTrigger;
 
     // Auto-fit bounds on route change, when route bounds load from API, or explicit recenter click!
-    // NEVER on re-render, vehicle telemetry tick, or user manual zoom!
     if (routeChanged || recenterClicked || needsInitialBoundsFit) {
       if (bounds) {
         map.fitBounds(bounds, { padding: [50, 50], maxZoom: 16, animate: true });
@@ -248,7 +294,7 @@ function MapController({
         map.flyTo(center, zoom || 13, { animate: true, duration: 1.0 });
       }
     }
-  }, [bounds, center, zoom, routeKey, recenterTrigger, map]);
+  }, [bounds, center, zoom, routeKey, recenterTrigger, focusCoords, map]);
 
   return null;
 }
@@ -426,15 +472,39 @@ const BENGALURU_LOCATION_PRESETS = [
   { name: "Airport (KIA)", coords: [13.1986, 77.7066] as [number, number] },
 ];
 
+export interface LiveVehicleTelemetry {
+  busId: string;
+  lat: number;
+  lng: number;
+  latitude?: number;
+  longitude?: number;
+  speed: number;
+  bearing: number;
+  routeId?: string;
+  routeName?: string;
+  origin?: string;
+  destination?: string;
+  nextStop?: string;
+  eta?: string;
+  etaMinutes?: number;
+  fare?: number;
+  occupancy?: number;
+  crowdLevel?: string;
+}
+
 export default function LiveMap({
   busCode = "",
   destination = "",
   userLocation = null,
   routePath = null,
   routeStops = null,
-  initialShowMetro = true,
-  initialShowStops = true,
+  initialShowMetro = false,
+  initialShowStops = false,
   onUserLocationChange,
+  vehicles = [],
+  selectedVehicleId = null,
+  onSelectVehicle,
+  focusCoords = null,
 }: {
   busCode?: string;
   destination?: string;
@@ -444,6 +514,10 @@ export default function LiveMap({
   initialShowMetro?: boolean;
   initialShowStops?: boolean;
   onUserLocationChange?: (coords: [number, number], label?: string) => void;
+  vehicles?: LiveVehicleTelemetry[];
+  selectedVehicleId?: string | null;
+  onSelectVehicle?: (busId: string) => void;
+  focusCoords?: [number, number] | null;
 }) {
   const { currentCity } = useAppStore();
   const cityData = getCityData(currentCity);
@@ -497,13 +571,13 @@ export default function LiveMap({
     );
   }, [activeMetroLineFilter]);
 
-  // Mapbox style configuration
-  const [styleKey, setStyleKey] = useState<string>("navigation");
+  // Mapbox style configuration (defaults to clean streets view, not navigation)
+  const [styleKey, setStyleKey] = useState<string>("streets");
   const [isStyleMenuOpen, setIsStyleMenuOpen] = useState(false);
   const [tileError, setTileError] = useState(false);
   const [recenterTrigger, setRecenterTrigger] = useState(0);
 
-  const activeStyle: MapboxStyleOption = MAPBOX_STYLES[styleKey] || MAPBOX_STYLES.navigation;
+  const activeStyle: MapboxStyleOption = MAPBOX_STYLES[styleKey] || MAPBOX_STYLES.streets;
 
   // Fetch real BMTC route alignment and stops when busCode changes
   useEffect(() => {
@@ -534,7 +608,11 @@ export default function LiveMap({
   }, [busCode]);
 
   // Combine provided route path, fetched BMTC path, or curated corridor path
+  // NOTE: When no route is selected, returns empty array (NO DEFAULT ROUTE OVERLAY)
   const effectiveRoutePath: [number, number][] = useMemo(() => {
+    if (!busCode && (!routePath || routePath.length === 0)) {
+      return [];
+    }
     if (routePath && routePath.length > 1) {
       return routePath;
     }
@@ -547,20 +625,13 @@ export default function LiveMap({
     if (bmtcRouteData?.stops && bmtcRouteData.stops.length > 1) {
       return bmtcRouteData.stops.map((s) => [s.lat, s.lon] as [number, number]);
     }
-    const curated = getCuratedStopsForBus(busCode);
-    if (curated && curated.length > 1) {
-      return curated.map((s) => [s.lat, s.lng] as [number, number]);
+    if (busCode) {
+      const curated = getCuratedStopsForBus(busCode);
+      if (curated && curated.length > 1) {
+        return curated.map((s) => [s.lat, s.lng] as [number, number]);
+      }
     }
-    // Default Outer Ring Road arterial fallback
-    return [
-      [12.9181, 77.6232],
-      [12.9243, 77.6507],
-      [12.9277, 77.6804],
-      [12.9425, 77.6971],
-      [12.9569, 77.7006],
-      [13.0012, 77.6756],
-      [13.0358, 77.597],
-    ];
+    return [];
   }, [routePath, bmtcRouteData, routeStops, busCode]);
 
   // Combine provided stops or fetched BMTC stops
@@ -741,6 +812,35 @@ export default function LiveMap({
     return () => clearInterval(interval);
   }, [effectiveRoutePath, effectiveStops, busCode]);
 
+  // Effective vehicles to display on map: priority to real API live vehicles
+  const displayVehicles = useMemo(() => {
+    if (vehicles && vehicles.length > 0) {
+      return vehicles.map((v) => ({
+        v_id: v.busId,
+        lat: v.lat || v.latitude || 12.9716,
+        lng: v.lng || v.longitude || 77.5946,
+        spd: v.speed || 30,
+        hdg: v.bearing || 0,
+        occ: v.occupancy || 50,
+        nxt_stp: v.nextStop || "Next Stop",
+        eta_sec: (v.etaMinutes || 4) * 60,
+        route_id: v.routeId || busCode,
+        origin: v.origin,
+        destination: v.destination,
+        fare: v.fare,
+      }));
+    }
+    if (busCode && liveMovingBuses.length > 0) {
+      return liveMovingBuses.map((v) => ({
+        ...v,
+        origin: bmtcRouteData?.origin || "Origin Terminal",
+        destination: bmtcRouteData?.destination || "Destination Terminal",
+        fare: 25,
+      }));
+    }
+    return [];
+  }, [vehicles, liveMovingBuses, busCode, bmtcRouteData]);
+
   // Recenter trigger
   const handleRecenter = useCallback(() => {
     setRecenterTrigger((prev) => prev + 1);
@@ -789,44 +889,6 @@ export default function LiveMap({
     };
   }, []);
 
-  // Start & Destination Markers for navigation routes
-  const startPoint =
-    effectiveRoutePath && effectiveRoutePath.length > 0 ? effectiveRoutePath[0] : null;
-  const destPoint =
-    effectiveRoutePath && effectiveRoutePath.length > 1
-      ? effectiveRoutePath[effectiveRoutePath.length - 1]
-      : null;
-
-  const startIcon = useMemo(() => {
-    if (typeof window === "undefined" || !L.divIcon) return undefined as any;
-    return L.divIcon({
-      className: "custom-route-start-marker",
-      html: `
-        <div style="display: flex; flex-direction: column; align-items: center; pointer-events: auto;">
-          <div style="background-color: #10b981; color: #ffffff; font-size: 9px; font-weight: 900; letter-spacing: 0.5px; padding: 2px 7px; border-radius: 9999px; box-shadow: 0 4px 10px rgba(16,185,129,0.5); border: 1.5px solid #ffffff; white-space: nowrap;">ORIGIN</div>
-          <div style="width: 14px; height: 14px; border-radius: 50%; background-color: #10b981; border: 3px solid #ffffff; box-shadow: 0 2px 8px rgba(0,0,0,0.3); margin-top: 1px;"></div>
-        </div>
-      `,
-      iconSize: [60, 36],
-      iconAnchor: [30, 34],
-    });
-  }, []);
-
-  const destIcon = useMemo(() => {
-    if (typeof window === "undefined" || !L.divIcon) return undefined as any;
-    return L.divIcon({
-      className: "custom-route-dest-marker",
-      html: `
-        <div style="display: flex; flex-direction: column; align-items: center; pointer-events: auto;">
-          <div style="background-color: #ef4444; color: #ffffff; font-size: 9px; font-weight: 900; letter-spacing: 0.5px; padding: 2px 7px; border-radius: 9999px; box-shadow: 0 4px 10px rgba(239,68,68,0.5); border: 1.5px solid #ffffff; white-space: nowrap;">DESTINATION</div>
-          <div style="width: 14px; height: 14px; border-radius: 50%; background-color: #ef4444; border: 3px solid #ffffff; box-shadow: 0 2px 8px rgba(0,0,0,0.3); margin-top: 1px;"></div>
-        </div>
-      `,
-      iconSize: [80, 36],
-      iconAnchor: [40, 34],
-    });
-  }, []);
-
   const userLocationMarkerIcon = useMemo(() => {
     if (typeof window === "undefined" || !L.divIcon) return undefined as any;
     return L.divIcon({
@@ -852,9 +914,10 @@ export default function LiveMap({
             type="button"
             onClick={() => setIsStyleMenuOpen((prev) => !prev)}
             className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-800 shadow-xl flex items-center gap-1.5 text-[11px] font-bold text-slate-800 dark:text-slate-100 hover:border-emerald-500 transition-all cursor-pointer"
+            title="Map Display Theme"
           >
             <span>{activeStyle.icon}</span>
-            <span>{activeStyle.label}</span>
+            <span>Map: {activeStyle.label}</span>
             <span className="text-[9px] text-slate-400">▾</span>
           </button>
 
@@ -963,15 +1026,17 @@ export default function LiveMap({
         </button>
       </div>
 
-      {/* WebSocket Status Badge Overlay */}
-      <div className="absolute top-3 right-3 z-[400] flex flex-col items-end gap-1.5">
-        <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-800 flex items-center gap-2 shadow-xl">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]"></span>
-          <span className="text-[9px] font-black tracking-widest text-slate-800 dark:text-slate-200 uppercase">
-            Live Bus Moving · {busCode || "500D"}
-          </span>
+      {/* WebSocket Status Badge Overlay (Only when bus is active) */}
+      {busCode && displayVehicles.length > 0 && (
+        <div className="absolute top-3 right-3 z-[400] flex flex-col items-end gap-1.5">
+          <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-800 flex items-center gap-2 shadow-xl">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]"></span>
+            <span className="text-[9px] font-black tracking-widest text-slate-800 dark:text-slate-200 uppercase">
+              {displayVehicles.length} Buses Live · {busCode}
+            </span>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* "Set My Location" Active Mode Banner */}
       {isSettingLocation && (
@@ -1035,13 +1100,21 @@ export default function LiveMap({
 
       {/* Legend Badge */}
       <div className="absolute bottom-3 left-3 z-[400] bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center gap-2.5 shadow-xl text-[8px] font-black">
-        <span className="text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
-          Route {busCode || "500D"}
-        </span>
-        <span className="flex items-center gap-1 border-l border-slate-300 dark:border-slate-700 pl-2 text-slate-600 dark:text-slate-300">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span>{liveMovingBuses.length} Moving Buses</span>
-        </span>
+        {busCode ? (
+          <>
+            <span className="text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+              Route {busCode}
+            </span>
+            <span className="flex items-center gap-1 border-l border-slate-300 dark:border-slate-700 pl-2 text-slate-600 dark:text-slate-300">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span>{displayVehicles.length} Active Buses</span>
+            </span>
+          </>
+        ) : (
+          <span className="text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+            BMTC Live Hub · Search a bus to track
+          </span>
+        )}
         {currentUserLocation && (
           <span className="border-l border-slate-300 dark:border-slate-700 pl-2 text-blue-600 dark:text-blue-400">
             📍 {userLocationLabel}
@@ -1061,12 +1134,13 @@ export default function LiveMap({
         {/* MapResizer ensures Leaflet recalculates pixel boundaries on mount, resize, and breakpoint changes */}
         <MapResizer />
 
-        {/* MapController fits bounds ONCE per route change or recenter, NEVER on render/telemetry */}
+        {/* MapController fits bounds ONCE per route change or recenter, or flies to focused bus */}
         <MapController
           center={cityData.coordinates}
           bounds={mapBounds}
-          routeKey={busCode || "500D"}
+          routeKey={busCode || ""}
           recenterTrigger={recenterTrigger}
+          focusCoords={focusCoords}
         />
 
         {/* Map Click Handler for Setting User Location */}
@@ -1249,12 +1323,14 @@ export default function LiveMap({
         )}
 
         {/* LIVE MOVING BUSES: Shown along the road path for whatever bus the user chooses */}
-        {liveMovingBuses.map((bus) => (
+        {displayVehicles.map((bus) => (
           <SmoothBusMarker
             key={bus.v_id}
             bus={bus}
             routeId={bus.route_id}
             crowdStatus={crowdReports[bus.route_id]}
+            isSelected={bus.v_id === selectedVehicleId}
+            onSelect={() => onSelectVehicle?.(bus.v_id)}
           />
         ))}
 
@@ -1276,28 +1352,6 @@ export default function LiveMap({
               opacity={1}
             />
           </>
-        )}
-
-        {/* Start / Origin Marker */}
-        {startPoint && (
-          <Marker position={startPoint} icon={startIcon}>
-            <Popup>
-              <div className="font-bold text-xs p-1 text-slate-900">
-                Origin / Boarding Terminal
-              </div>
-            </Popup>
-          </Marker>
-        )}
-
-        {/* Destination Marker */}
-        {destPoint && (
-          <Marker position={destPoint} icon={destIcon}>
-            <Popup>
-              <div className="font-bold text-xs p-1 text-slate-900">
-                Destination Arrival Terminal
-              </div>
-            </Popup>
-          </Marker>
         )}
       </MapContainer>
     </div>

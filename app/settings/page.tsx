@@ -2,6 +2,7 @@
 
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -521,46 +522,55 @@ export default function SettingsScreen() {
 
       </div>
 
-      {/* --- MODALS --- */}
-      <AnimatePresence>
-        {activeModal && (
-          <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-            <motion.div
-              initial={{ opacity: 0, y: 100 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 100 }}
-              className="w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-2xl relative max-h-[85vh] flex flex-col overflow-hidden"
+      {/* --- MODALS (Rendered via Portal to ensure full viewport overlay and smooth scrolling) --- */}
+      {mounted && typeof document !== "undefined" && createPortal(
+        <AnimatePresence>
+          {activeModal && (
+            <div 
+              className="fixed inset-0 z-[250] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 sm:p-6 overflow-y-auto"
+              onClick={(e) => {
+                if (e.target === e.currentTarget) setActiveModal(null);
+              }}
             >
-              <button 
-                onClick={() => setActiveModal(null)} 
-                className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-900 dark:text-white z-10"
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 15 }}
+                transition={{ duration: 0.18, ease: "easeOut" }}
+                className="w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-2xl relative max-h-[82vh] flex flex-col overflow-hidden my-auto"
+                onClick={(e) => e.stopPropagation()}
               >
-                <X size={20} />
-              </button>
+                <button 
+                  onClick={() => setActiveModal(null)} 
+                  className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 dark:text-slate-400 z-10 p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                  aria-label="Close modal"
+                >
+                  <X size={20} />
+                </button>
 
-              {/* TERMINAL MODAL */}
-              {activeModal === "terminal" && (
-                <div className="h-full flex flex-col font-mono">
-                  <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-                    <Terminal size={20} className="text-emerald-500" /> System Terminal
-                  </h3>
-                  <div className="bg-slate-950 p-4 rounded-xl flex-1 overflow-y-auto no-scrollbar text-xs text-emerald-400 leading-relaxed shadow-inner">
-                    <p>{`> Initializing Bharat Vision v0.1.0`}</p>
-                    <p>{`> Connecting to GTFS-RT Pipeline... OK`}</p>
-                    <p>{`> Supabase Auth verified [User: ACTIVE]`}</p>
-                    <p>{`> Geolocation watcher: STANDBY`}</p>
-                    <p className="text-yellow-400">{`> WARN: GPS accuracy degraded (Indoor)`}</p>
-                    <p>{`> Ping AWS ap-south-1: 42ms`}</p>
-                    <p>{`> React Hydration: SUCCESS`}</p>
-                    <p>{`> OCR Neural Net: LOADED (Cache Hit)`}</p>
-                    <p className="animate-pulse mt-4">_</p>
+                {/* TERMINAL MODAL */}
+                {activeModal === "terminal" && (
+                  <div className="flex flex-col min-h-0 flex-1 font-mono">
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2 shrink-0">
+                      <Terminal size={20} className="text-emerald-500" /> System Terminal
+                    </h3>
+                    <div className="bg-slate-950 p-4 rounded-2xl flex-1 min-h-[220px] max-h-[55vh] overflow-y-auto no-scrollbar text-xs text-emerald-400 leading-relaxed shadow-inner overscroll-contain">
+                      <p>{`> Initializing Bharat Vision v0.1.0`}</p>
+                      <p>{`> Connecting to GTFS-RT Pipeline... OK`}</p>
+                      <p>{`> Supabase Auth verified [User: ACTIVE]`}</p>
+                      <p>{`> Geolocation watcher: STANDBY`}</p>
+                      <p className="text-yellow-400">{`> WARN: GPS accuracy degraded (Indoor)`}</p>
+                      <p>{`> Ping AWS ap-south-1: 42ms`}</p>
+                      <p>{`> React Hydration: SUCCESS`}</p>
+                      <p>{`> OCR Neural Net: LOADED (Cache Hit)`}</p>
+                      <p className="animate-pulse mt-4">_</p>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
               {/* NOTIFICATIONS MODAL */}
               {activeModal === "notifications" && (
-                <div className="h-full flex flex-col min-h-0">
+                <div className="flex flex-col min-h-0 flex-1">
                   <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 mb-4 shrink-0 pr-8">
                     <div>
                       <h3 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
@@ -574,7 +584,7 @@ export default function SettingsScreen() {
                   </div>
 
                   {/* Scrollable Settings Content */}
-                  <div className="space-y-3 overflow-y-auto no-scrollbar flex-1 pr-1 pb-2">
+                  <div className="space-y-3 overflow-y-auto no-scrollbar flex-1 pr-1 pb-6 overscroll-contain">
                     
                     {/* Browser Push Permission Status Card */}
                     <div className={`p-3.5 rounded-2xl border flex items-start justify-between gap-3 ${
@@ -859,29 +869,59 @@ export default function SettingsScreen() {
 
               {/* LANGUAGE MODAL */}
               {activeModal === "language" && (
-                <div className="h-full flex flex-col">
-                  <h3 className="text-xl font-black text-slate-900 dark:text-white mb-6">{t[lang as keyof typeof t].appLang}</h3>
-                  <div className="space-y-3">
+                <div className="flex flex-col min-h-0 flex-1">
+                  <h3 className="text-xl font-black text-slate-900 dark:text-white mb-4 shrink-0">{t[lang as keyof typeof t].appLang}</h3>
+                  <div className="space-y-3 overflow-y-auto no-scrollbar flex-1 pb-3 overscroll-contain">
                     <button 
-                      onClick={() => setAppLang("en")}
-                      className={`w-full text-left p-4 rounded-xl font-bold flex justify-between items-center transition-colors ${lang === 'en' ? 'bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-500/50 text-emerald-700 dark:text-emerald-400' : 'bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'}`}
+                      onClick={() => {
+                        setAppLang("en");
+                        setActiveModal(null);
+                      }}
+                      className={`w-full text-left p-4 rounded-2xl font-bold flex justify-between items-center transition-all cursor-pointer ${
+                        lang === 'en' 
+                          ? 'bg-emerald-50 dark:bg-emerald-900/25 border-2 border-emerald-500 text-emerald-700 dark:text-emerald-400 shadow-sm' 
+                          : 'bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+                      }`}
                     >
-                      English
-                      {lang === 'en' && <div className="w-4 h-4 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-900 shadow-sm"></div>}
+                      <div>
+                        <div className="text-base font-bold">English</div>
+                        <div className="text-xs text-slate-500 dark:text-slate-400 font-normal">Default app interface language</div>
+                      </div>
+                      {lang === 'en' && <div className="w-5 h-5 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-900 flex items-center justify-center text-white text-[10px] font-black">✓</div>}
                     </button>
                     <button 
-                      onClick={() => setAppLang("kn")}
-                      className={`w-full text-left p-4 rounded-xl font-bold flex justify-between items-center transition-colors ${lang === 'kn' ? 'bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-500/50 text-emerald-700 dark:text-emerald-400' : 'bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'}`}
+                      onClick={() => {
+                        setAppLang("kn");
+                        setActiveModal(null);
+                      }}
+                      className={`w-full text-left p-4 rounded-2xl font-bold flex justify-between items-center transition-all cursor-pointer ${
+                        lang === 'kn' 
+                          ? 'bg-emerald-50 dark:bg-emerald-900/25 border-2 border-emerald-500 text-emerald-700 dark:text-emerald-400 shadow-sm' 
+                          : 'bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+                      }`}
                     >
-                      ಕನ್ನಡ (Kannada)
-                      {lang === 'kn' && <div className="w-4 h-4 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-900 shadow-sm"></div>}
+                      <div>
+                        <div className="text-base font-bold">ಕನ್ನಡ (Kannada)</div>
+                        <div className="text-xs text-slate-500 dark:text-slate-400 font-normal">ಕರ್ನಾಟಕ ರಾಜ್ಯ ಅಧಿಕೃತ ಭಾಷೆ</div>
+                      </div>
+                      {lang === 'kn' && <div className="w-5 h-5 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-900 flex items-center justify-center text-white text-[10px] font-black">✓</div>}
                     </button>
                     <button 
-                      onClick={() => setAppLang("hi")}
-                      className={`w-full text-left p-4 rounded-xl font-bold flex justify-between items-center transition-colors ${lang === 'hi' ? 'bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-500/50 text-emerald-700 dark:text-emerald-400' : 'bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'}`}
+                      onClick={() => {
+                        setAppLang("hi");
+                        setActiveModal(null);
+                      }}
+                      className={`w-full text-left p-4 rounded-2xl font-bold flex justify-between items-center transition-all cursor-pointer ${
+                        lang === 'hi' 
+                          ? 'bg-emerald-50 dark:bg-emerald-900/25 border-2 border-emerald-500 text-emerald-700 dark:text-emerald-400 shadow-sm' 
+                          : 'bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+                      }`}
                     >
-                      हिन्दी (Hindi)
-                      {lang === 'hi' && <div className="w-4 h-4 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-900 shadow-sm"></div>}
+                      <div>
+                        <div className="text-base font-bold">हिन्दी (Hindi)</div>
+                        <div className="text-xs text-slate-500 dark:text-slate-400 font-normal">अखिल भारतीय संपर्क भाषा</div>
+                      </div>
+                      {lang === 'hi' && <div className="w-5 h-5 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-900 flex items-center justify-center text-white text-[10px] font-black">✓</div>}
                     </button>
                   </div>
                 </div>
@@ -889,9 +929,9 @@ export default function SettingsScreen() {
 
               {/* PRIVACY MODAL */}
               {activeModal === "privacy" && (
-                <div className="h-full flex flex-col">
-                  <h3 className="text-xl font-black text-slate-900 dark:text-white mb-6">{t[lang as keyof typeof t].privacy}</h3>
-                  <div className="space-y-4">
+                <div className="flex flex-col min-h-0 flex-1">
+                  <h3 className="text-xl font-black text-slate-900 dark:text-white mb-4 shrink-0">{t[lang as keyof typeof t].privacy}</h3>
+                  <div className="space-y-4 overflow-y-auto no-scrollbar flex-1 pr-1 pb-6 overscroll-contain">
                     <div className="flex items-center gap-3 mb-2">
                       <Shield size={24} className="text-indigo-500" />
                       <p className="text-sm font-bold text-slate-900 dark:text-white">{t[lang as keyof typeof t].dataSecured}</p>
@@ -968,7 +1008,9 @@ export default function SettingsScreen() {
             </motion.div>
           </div>
         )}
-      </AnimatePresence>
+      </AnimatePresence>,
+      document.body
+    )}
     </div>
   );
 }

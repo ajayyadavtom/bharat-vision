@@ -8,7 +8,6 @@ import {
   X,
   CheckCircle2,
   Medal,
-  Activity,
   AlertCircle,
   Sparkles,
 } from "lucide-react";
@@ -47,7 +46,7 @@ export default function CrowdReportPrompt({
   busId = "500D",
   availableBuses = ["500D", "335E", "250"],
   onReportSubmitted,
-  enableSimulation = true,
+  enableSimulation = false,
 }: CrowdReportPromptProps) {
   const [selectedBus, setSelectedBus] = useState<string>(busId);
   const [isMoving, setIsMoving] = useState(false);
@@ -197,48 +196,11 @@ export default function CrowdReportPrompt({
     [selectedBus, userCoords, speedKmh, isMoving, onReportSubmitted, submitting]
   );
 
-  // Manual simulation toggle for testing/desktop environments
-  const handleToggleSimulation = () => {
-    if (isMoving) {
-      setIsMoving(false);
-      setSpeedKmh(0);
-    } else {
-      setIsMoving(true);
-      setSpeedKmh(32);
-      setIsDismissed(false);
-      setHasReported(false);
-      if (!userCoords) {
-        setUserCoords({ lat: 12.9716, lng: 77.6412 });
-      }
-    }
-  };
-
-  // If user dismissed or not moving and not simulated, don't show prompt
+  // If user dismissed or not moving, don't show prompt
   const showPrompt = isMoving && !isDismissed;
 
   return (
     <div className="relative">
-      {/* Simulation / Diagnostic Trigger Pill (Useful for desktop testing) */}
-      {enableSimulation && (
-        <div className="flex justify-end mb-2">
-          <button
-            type="button"
-            onClick={handleToggleSimulation}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold border transition-all cursor-pointer ${
-              isMoving
-                ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-300 dark:border-amber-700/50 shadow-sm"
-                : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-emerald-500"
-            }`}
-            title="Click to simulate in-transit movement for testing"
-          >
-            <Activity size={12} className={isMoving ? "animate-spin" : ""} />
-            <span>
-              {isMoving ? `Simulating Movement (${speedKmh} km/h)` : "Test Movement Prompt"}
-            </span>
-          </button>
-        </div>
-      )}
-
       {/* 1-Tap Floating Bottom Sheet Prompt */}
       <AnimatePresence>
         {showPrompt && (

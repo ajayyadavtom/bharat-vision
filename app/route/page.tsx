@@ -303,8 +303,8 @@ export default function RoutePlannerScreen() {
           userLocation={userLoc}
           routeStops={routeStops}
           routePath={simulatedPath}
-          initialShowMetro={true}
-          initialShowStops={true}
+          initialShowMetro={false}
+          initialShowStops={false}
         />
         {/* Blending Gradient */}
         <div className="lg:hidden absolute bottom-0 left-0 right-0 h-14 bg-gradient-to-t from-slate-100 dark:from-[#09090b] to-transparent z-10 pointer-events-none" />
