@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Navigation, Clock, Map as MapIcon, Zap, MapPin, AlertTriangle, Search, ChevronRight, Bus, Layers, Crosshair } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import dynamic from "next/dynamic";
@@ -74,6 +74,15 @@ export default function TrackScreen() {
   const [selectedBusId, setSelectedBusId] = useState<string | null>(null);
   const [focusCoords, setFocusCoords] = useState<[number, number] | null>(null);
   const [isLoadingFleet, setIsLoadingFleet] = useState(false);
+  const [showAllBuses, setShowAllBuses] = useState(false);
+
+  // Human-readable clean Route Number (e.g. 500-D instead of 500DGKVKCSB)
+  const cleanRouteDisplay = useMemo(() => {
+    if (activeRouteDetails?.routeNumber) return activeRouteDetails.routeNumber;
+    const match = (busCode || "").match(/^(KIA[-\s]?\d+|\d+[-A-Za-z]+|[A-Za-z]+\d+[A-Za-z]*|\d+)/i);
+    if (match) return match[0].toUpperCase();
+    return busCode || "BMTC";
+  }, [activeRouteDetails, busCode]);
 
   const { userLocation, setUserLocation } = useAppStore();
   const [userLoc, setUserLoc] = useState<[number, number] | null>(
@@ -441,154 +450,178 @@ export default function TrackScreen() {
           </div>
         )}
 
-        {/* LIVE FLEET SELECTOR: Displays count of buses on track and lets user pick which bus to track */}
+        {/* LIVE FLEET SELECTOR (BMTC 2.0 Style: Compact Hero Card + Quick Switcher + View More/Less Toggle) */}
         {busCode && (
-          <div className="order-4 lg:order-none shrink-0 px-4 lg:px-0 flex flex-col gap-3">
-            {/* Live Buses Count & Status Header */}
-            <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-700 text-white rounded-3xl p-4 shadow-md flex items-center justify-between">
+          <div className="order-4 lg:order-none shrink-0 px-4 lg:px-0 flex flex-col gap-2.5">
+            {/* Live Buses Count & Route Header */}
+            <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-700 text-white rounded-3xl p-3.5 sm:p-4 shadow-md flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="relative flex items-center justify-center">
+                <div className="relative flex items-center justify-center shrink-0">
                   <div className="w-3.5 h-3.5 rounded-full bg-emerald-300 animate-ping absolute" />
                   <div className="w-3.5 h-3.5 rounded-full bg-emerald-200 relative" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <h3 className="text-sm font-black tracking-wide flex items-center gap-2">
                     <span>{liveVehicles.length} Live Buses Active</span>
                     <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-bold">
-                      Route {busCode}
+                      Route {cleanRouteDisplay}
                     </span>
                   </h3>
-                  <p className="text-[11px] text-emerald-100 font-medium">
-                    {activeRouteDetails?.origin || "Origin"} ➔ {activeRouteDetails?.destination || "Destination"}
+                  <p className="text-[11px] text-emerald-100 font-medium truncate max-w-[210px] sm:max-w-none">
+                    {activeRouteDetails?.origin || selectedBus?.origin || "Origin"} ➔ {activeRouteDetails?.destination || selectedBus?.destination || "Destination"}
                   </p>
                 </div>
               </div>
-              <div className="text-right text-[10px] font-bold text-emerald-100 bg-white/10 px-2.5 py-1 rounded-xl">
-                {isLoadingFleet ? "Updating..." : "5s Live Telemetry"}
+              <div className="text-right text-[10px] font-bold text-emerald-100 bg-white/10 px-2.5 py-1 rounded-xl shrink-0">
+                {isLoadingFleet ? "Updating..." : "5s Auto-refresh"}
               </div>
             </div>
 
-            {/* Live Buses Selection Grid */}
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center justify-between text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                <span>Select Bus on Track ({liveVehicles.length}):</span>
-                <span className="text-emerald-600 dark:text-emerald-400 font-bold lowercase">
-                  tap to center live GPS
+            {/* Quick Bus Switcher Carousel Pills (1-tap switch across all buses on this route) */}
+            {liveVehicles.length > 1 && (
+              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+                <span className="text-[10px] font-black uppercase text-slate-400 shrink-0 mr-1">
+                  Fleet ({liveVehicles.length}):
                 </span>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                {liveVehicles.map((vehicle) => {
-                  const isSelected = vehicle.busId === (selectedBusId || liveVehicles[0]?.busId);
+                {liveVehicles.map((v) => {
+                  const isSelected = v.busId === selectedBus?.busId;
                   return (
+                    <button
+                      key={v.busId}
+                      type="button"
+                      onClick={() => handleSelectBus(v.busId)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all border cursor-pointer active:scale-95 ${
+                        isSelected
+                          ? "bg-emerald-500 text-white border-emerald-400 shadow-sm ring-2 ring-emerald-500/30"
+                          : "bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-emerald-400"
+                      }`}
+                    >
+                      <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? "bg-white animate-pulse" : "bg-emerald-500"}`} />
+                      <span>{v.busId}</span>
+                      <span className={`text-[10px] font-extrabold ${isSelected ? "text-emerald-100" : "text-emerald-600 dark:text-emerald-400"}`}>
+                        {v.eta}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Currently Selected Bus Hero Card (Clean, focused view without screen bloat) */}
+            {selectedBus && (
+              <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-4 shadow-sm relative overflow-hidden">
+                {/* Top Row: Plate, Tracking Indicator & Speed */}
+                <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-100 dark:border-slate-800">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="font-mono font-black text-xs sm:text-sm px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700">
+                      {selectedBus.busId}
+                    </span>
+                    <span className="text-[9px] font-black uppercase tracking-wider bg-emerald-500 text-white px-2 py-0.5 rounded-md shadow-xs">
+                      Live GPS
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-extrabold text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg">
+                      ⚡ {selectedBus.speed} km/h
+                    </span>
+                    <span className="text-xs font-black text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/50 px-2 py-1 rounded-lg">
+                      ₹{selectedBus.fare}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Next Stop & Arrival ETA Hero Banner */}
+                <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 p-3 rounded-2xl mb-3 flex items-center justify-between">
+                  <div className="min-w-0 flex-1">
+                    <span className="text-[9px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400 block mb-0.5">
+                      Next Approaching Stop
+                    </span>
+                    <h4 className="text-sm font-black text-slate-900 dark:text-white truncate">
+                      🚏 {selectedBus.nextStop}
+                    </h4>
+                  </div>
+                  <div className="text-right shrink-0 pl-2">
+                    <span className="text-[9px] font-bold uppercase text-slate-400 block">Arrival ETA</span>
+                    <span className="text-base font-black text-emerald-600 dark:text-emerald-400 block animate-pulse">
+                      {selectedBus.eta}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Origin ➔ Destination Terminals */}
+                <div className="text-xs space-y-1 bg-slate-50 dark:bg-slate-800/40 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-300">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase">From (Departed):</span>
+                    <span className="font-extrabold text-slate-800 dark:text-slate-200 truncate max-w-[200px]">{selectedBus.origin}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase">To (Terminal):</span>
+                    <span className="font-extrabold text-slate-800 dark:text-slate-200 truncate max-w-[200px]">{selectedBus.destination}</span>
+                  </div>
+                  <div className="flex items-center justify-between pt-1 border-t border-slate-200/60 dark:border-slate-700/60 text-[10px]">
+                    <span className="text-slate-400">Crowd Occupancy:</span>
+                    <span className="font-bold text-amber-600 dark:text-amber-400">{selectedBus.crowdLevel || "Moderate"}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* View More / View Less Toggle Button (BMTC 2.0 Style) */}
+            {liveVehicles.length > 1 && (
+              <button
+                type="button"
+                onClick={() => setShowAllBuses(!showAllBuses)}
+                className="w-full py-2.5 px-3.5 rounded-2xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/80 text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center justify-between transition-all cursor-pointer border border-slate-200 dark:border-slate-800 shadow-xs active:scale-[0.99]"
+              >
+                <span className="flex items-center gap-2">
+                  <span>{showAllBuses ? "▲ Hide Other Buses" : `▼ View Other Buses on Route (${liveVehicles.length - 1} more)`}</span>
+                </span>
+                <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-1 rounded-lg border border-emerald-200 dark:border-emerald-800/60">
+                  {showAllBuses ? "View Less" : "View More"}
+                </span>
+              </button>
+            )}
+
+            {/* Expanded List of Other Buses on Track (Only rendered when View More is open) */}
+            {showAllBuses && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 animate-in fade-in slide-in-from-top-2 duration-150">
+                {liveVehicles
+                  .filter((v) => v.busId !== selectedBus?.busId)
+                  .map((vehicle) => (
                     <button
                       key={vehicle.busId}
                       type="button"
-                      onClick={() => handleSelectBus(vehicle.busId)}
-                      className={`text-left p-3 rounded-2xl border transition-all cursor-pointer relative ${
-                        isSelected
-                          ? "bg-emerald-500/10 dark:bg-emerald-950/40 border-emerald-500 ring-2 ring-emerald-500/40 shadow-md"
-                          : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-emerald-400 hover:shadow-sm"
-                      }`}
+                      onClick={() => {
+                        handleSelectBus(vehicle.busId);
+                        setShowAllBuses(false);
+                      }}
+                      className="text-left p-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-emerald-400 transition-all cursor-pointer shadow-xs hover:shadow-md"
                     >
-                      {/* Top Row: Reg Plate & Speed */}
-                      <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center justify-between mb-1.5">
                         <div className="flex items-center gap-1.5">
-                          <span className={`w-2 h-2 rounded-full ${isSelected ? "bg-emerald-500 animate-pulse" : "bg-slate-400"}`} />
-                          <span className="font-black text-xs font-mono px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700">
+                          <span className="w-2 h-2 rounded-full bg-slate-400" />
+                          <span className="font-mono font-bold text-xs text-slate-900 dark:text-white">
                             {vehicle.busId}
                           </span>
                         </div>
-                        <span className="text-[10px] font-extrabold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md">
+                        <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md">
                           ⚡ {vehicle.speed} km/h
                         </span>
                       </div>
-
-                      {/* Where it is coming from & heading */}
-                      <div className="text-[11px] mb-2 space-y-0.5">
-                        <p className="text-slate-600 dark:text-slate-400 font-medium truncate">
-                          <strong className="text-emerald-600 dark:text-emerald-400 font-bold">From:</strong> {vehicle.origin}
-                        </p>
-                        <p className="text-slate-600 dark:text-slate-400 font-medium truncate">
-                          <strong className="text-rose-500 font-bold">To:</strong> {vehicle.destination}
-                        </p>
+                      <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate mb-1.5">
+                        From {vehicle.origin} ➔ {vehicle.destination}
                       </div>
-
-                      {/* Next Stop & ETA */}
-                      <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800 text-[10px]">
-                        <span className="font-bold text-slate-700 dark:text-slate-300 truncate max-w-[140px]">
+                      <div className="flex items-center justify-between text-[10px] pt-1.5 border-t border-slate-100 dark:border-slate-800">
+                        <span className="truncate max-w-[130px] text-slate-700 dark:text-slate-300 font-medium">
                           🚏 {vehicle.nextStop}
                         </span>
                         <span className="font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-1.5 py-0.5 rounded">
                           ETA {vehicle.eta}
                         </span>
                       </div>
-
-                      {isSelected && (
-                        <div className="absolute top-2 right-2 text-[8px] font-black uppercase tracking-wider bg-emerald-500 text-white px-1.5 py-0.5 rounded-md shadow-xs">
-                          Tracking
-                        </div>
-                      )}
                     </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Currently Selected Bus Live Telemetry Card */}
-            {selectedBus && (
-              <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-4 shadow-sm">
-                <div className="flex items-center justify-between pb-2 mb-3 border-b border-slate-100 dark:border-slate-800">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xl">🚌</span>
-                    <div>
-                      <h4 className="text-xs font-black text-slate-900 dark:text-white">
-                        Live Tracking: {selectedBus.busId}
-                      </h4>
-                      <p className="text-[10px] text-slate-400 font-mono">
-                        GPS: {selectedBus.lat.toFixed(4)}° N, {selectedBus.lng.toFixed(4)}° E · Bearing {selectedBus.bearing}°
-                      </p>
-                    </div>
-                  </div>
-                  <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-lg">
-                    ● Active Telemetry
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-4 gap-2 text-center mb-3">
-                  <div className="p-2 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
-                    <span className="text-[9px] uppercase font-bold text-slate-400 block">Next ETA</span>
-                    <span className="text-xs font-black text-emerald-600 dark:text-emerald-400 block mt-0.5">{selectedBus.eta}</span>
-                  </div>
-                  <div className="p-2 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
-                    <span className="text-[9px] uppercase font-bold text-slate-400 block">Speed</span>
-                    <span className="text-xs font-black text-slate-900 dark:text-white block mt-0.5">{selectedBus.speed} km/h</span>
-                  </div>
-                  <div className="p-2 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
-                    <span className="text-[9px] uppercase font-bold text-slate-400 block">Fare</span>
-                    <span className="text-xs font-black text-indigo-600 dark:text-indigo-400 block mt-0.5">₹{selectedBus.fare}</span>
-                  </div>
-                  <div className="p-2 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
-                    <span className="text-[9px] uppercase font-bold text-slate-400 block">Crowd</span>
-                    <span className="text-xs font-black text-amber-600 dark:text-amber-400 block mt-0.5">{selectedBus.crowdLevel || "Moderate"}</span>
-                  </div>
-                </div>
-
-                {/* Where it came from & Next stop details */}
-                <div className="bg-slate-50 dark:bg-slate-800/40 p-3 rounded-2xl border border-slate-100 dark:border-slate-800 text-xs space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] text-slate-400 font-bold uppercase">Origin (Departed From):</span>
-                    <span className="font-extrabold text-slate-800 dark:text-slate-200">{selectedBus.origin}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase">Approaching Stop:</span>
-                    <span className="font-extrabold text-emerald-600 dark:text-emerald-400">{selectedBus.nextStop}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] text-slate-400 font-bold uppercase">Final Terminus:</span>
-                    <span className="font-extrabold text-slate-800 dark:text-slate-200">{selectedBus.destination}</span>
-                  </div>
-                </div>
+                  ))}
               </div>
             )}
           </div>

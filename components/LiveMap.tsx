@@ -150,6 +150,27 @@ function SmoothBusMarker({
     : "Low";
   const displayOcc = crowdStatus ? crowdStatus.occupancyPercent : bus.occ;
 
+  // Extract clean Bus Number (e.g. 500D, 285H, KIA-9) to display on the bus logo
+  const cleanBusNo = useMemo(() => {
+    const raw = routeId || bus.route_id || "";
+    const match = raw.match(/^(KIA[-\s]?\d+|\d+[-A-Za-z]+|[A-Za-z]+\d+[A-Za-z]*|\d+)/i);
+    if (match) {
+      return match[0].toUpperCase().replace(/\s+/g, "");
+    }
+    if (raw.length > 0 && raw.length <= 6) return raw.toUpperCase();
+    if (bus.v_id) {
+      const regMatch = bus.v_id.match(/\d{3,4}$/);
+      if (regMatch) return regMatch[0];
+    }
+    return "BMTC";
+  }, [routeId, bus.route_id, bus.v_id]);
+
+  const vehicleSuffix = useMemo(() => {
+    if (!bus.v_id) return "";
+    const regMatch = bus.v_id.match(/\d{3,4}$/);
+    return regMatch ? `#${regMatch[0]}` : "";
+  }, [bus.v_id]);
+
   const dynamicBusIcon = useMemo(() => {
     if (typeof window === "undefined" || !L.divIcon) return undefined as any;
     const ringStyle = isSelected
@@ -160,17 +181,17 @@ function SmoothBusMarker({
       className: "custom-bus-marker",
       html: `
         <div style="position: relative; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
-          ${isSelected ? '<div style="position: absolute; top: -18px; background-color: #10b981; color: #ffffff; font-size: 8px; font-weight: 900; padding: 1.5px 6px; border-radius: 9999px; box-shadow: 0 2px 8px rgba(0,0,0,0.4); border: 1px solid #ffffff; z-index: 10; white-space: nowrap; animation: bounce 1.5s infinite;">TRACKING</div>' : ""}
+          ${isSelected ? '<div style="position: absolute; top: -19px; background-color: #10b981; color: #ffffff; font-size: 8px; font-weight: 900; padding: 1.5px 6px; border-radius: 9999px; box-shadow: 0 2px 8px rgba(0,0,0,0.4); border: 1px solid #ffffff; z-index: 10; white-space: nowrap; animation: bounce 1.5s infinite;">TRACKING</div>' : ""}
           <div style="position: absolute; width: 100%; height: 100%; border-radius: 50%; background-color: ${isSelected ? "#10b981" : crowdColor}; opacity: ${isSelected ? 0.4 : 0.25}; transform: scale(1.4); animation: pulse 2s infinite;"></div>
           <div style="background-color: ${crowdColor}; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2.5px solid #ffffff; ${ringStyle} color: #ffffff; font-size: 15px; z-index: 2;">🚌</div>
-          <div style="position: absolute; top: -4px; right: -6px; background-color: #0f172a; color: #ffffff; font-size: 9px; font-weight: 800; padding: 1.5px 5px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.4); z-index: 3; box-shadow: 0 2px 6px rgba(0,0,0,0.4);">${bus.spd}kph</div>
-          <div style="position: absolute; bottom: -5px; background-color: ${crowdColor}; color: #ffffff; font-size: 8px; font-weight: 900; padding: 1px 4px; border-radius: 9999px; border: 1px solid #ffffff; z-index: 4; white-space: nowrap;">${crowdLabel}</div>
+          <div style="position: absolute; top: -5px; right: -7px; background-color: #0f172a; color: #38bdf8; font-size: 9px; font-weight: 900; padding: 1.5px 5.5px; border-radius: 6px; border: 1.5px solid ${isSelected ? "#10b981" : "rgba(255,255,255,0.6)"}; z-index: 4; box-shadow: 0 2px 6px rgba(0,0,0,0.5); white-space: nowrap;">${cleanBusNo}</div>
+          <div style="position: absolute; bottom: -5px; background-color: #0f172a; color: #ffffff; font-size: 8px; font-weight: 900; padding: 1px 4.5px; border-radius: 9999px; border: 1px solid rgba(255,255,255,0.4); z-index: 4; white-space: nowrap; font-family: monospace;">${vehicleSuffix || crowdLabel}</div>
         </div>
       `,
       iconSize: [48, 48],
       iconAnchor: [24, 24],
     });
-  }, [crowdColor, bus.spd, crowdLabel, isSelected]);
+  }, [crowdColor, cleanBusNo, vehicleSuffix, crowdLabel, isSelected]);
 
   return (
     <Marker

@@ -109,7 +109,7 @@ export default function DemandForecastingDashboard() {
   const availableYears = ["2019-20", "2018-19", "2017-18", "2016-17"];
 
   return (
-    <div className="flex flex-col min-h-[100dvh] md:h-full overflow-y-auto no-scrollbar pb-[120px] md:pb-8 bg-surface-black px-4 pt-8 md:max-w-[1500px] xl:max-w-[1640px] md:mx-auto md:w-full md:px-10 xl:px-14 [&>*]:shrink-0">
+    <div className="flex flex-col h-full overflow-y-auto no-scrollbar pb-36 md:pb-8 bg-surface-black px-4 pt-8 md:max-w-[1500px] xl:max-w-[1640px] md:mx-auto md:w-full md:px-10 xl:px-14 [&>*]:shrink-0">
       
       {/* Header */}
       <div className="mb-6 flex justify-between items-start">
