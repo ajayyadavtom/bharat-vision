@@ -102,6 +102,21 @@ export const loadDurableRideHistory = (accountKey?: string | null): TransitTicke
   return null;
 };
 
+export const clearDurableRideHistory = (accountKey?: string | null) => {
+  if (typeof window === "undefined") return;
+  try {
+    const raw = localStorage.getItem("bv_user_ride_history");
+    const cache = raw ? JSON.parse(raw) : {};
+    cache["last"] = [];
+    if (accountKey) {
+      cache[accountKey] = [];
+    }
+    localStorage.setItem("bv_user_ride_history", JSON.stringify(cache));
+  } catch (e) {
+    console.warn("Failed to clear durable ride history:", e);
+  }
+};
+
 // Durable custom avatar persistent storage (stores app-uploaded profile pictures distinctly from Google OAuth defaults)
 export const persistCustomAvatar = (avatarUrl: string | null, accountKey?: string | null) => {
   if (typeof window === "undefined") return;
@@ -195,6 +210,7 @@ interface AppState {
   bookedRide: any | null;
   rideHistory: TransitTicketRecord[];
   addRideHistory: (item: TransitTicketRecord) => void;
+  clearRideHistory: () => void;
   profilePictureUrl: string | null;
   isCustomAvatar: boolean;
   
@@ -595,6 +611,31 @@ export const useAppStore = create<AppState>()(
           persistDurableRideHistory(updated, state.userName);
           return { rideHistory: updated };
         });
+      },
+
+      clearRideHistory: () => {
+        set({ rideHistory: [] });
+        if (typeof window !== "undefined") {
+          try {
+            const currentName = get().userName;
+            clearDurableRideHistory(currentName);
+            clearDurableRideHistory("last");
+
+            const accRaw = localStorage.getItem("bv_user_accounts");
+            if (accRaw) {
+              const accCache = JSON.parse(accRaw);
+              if (currentName && accCache[currentName]) {
+                accCache[currentName].rideHistory = [];
+              }
+              if (accCache["last"]) {
+                accCache["last"].rideHistory = [];
+              }
+              localStorage.setItem("bv_user_accounts", JSON.stringify(accCache));
+            }
+          } catch (e) {
+            console.warn("Error clearing ride history:", e);
+          }
+        }
       },
 
       setProfilePictureUrl: async (url: string | null, isCustom?: boolean) => {

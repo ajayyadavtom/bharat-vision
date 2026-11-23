@@ -28,7 +28,8 @@ import {
   Sparkles,
   Info,
   Send,
-  Tag
+  Tag,
+  Trash2
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAppStore, persistCustomAvatar } from "@/lib/store";
@@ -54,7 +55,9 @@ export default function SettingsScreen() {
     notificationSettings,
     setNotificationSettings,
     appLang, 
-    setAppLang 
+    setAppLang,
+    rideHistory,
+    clearRideHistory 
   } = useAppStore();
   
   // Modals state
@@ -924,6 +927,34 @@ export default function SettingsScreen() {
                         className={`w-10 h-6 rounded-full flex items-center p-1 transition-colors ${privacyCamera ? 'bg-emerald-500 justify-end' : 'bg-slate-300 dark:bg-slate-600 justify-start'}`}
                       >
                          <div className="w-4 h-4 bg-white rounded-full shadow-md"></div>
+                      </button>
+                    </div>
+
+                    <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                      <div className="pr-2">
+                        <p className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-1.5">
+                          <Trash2 size={15} className="text-red-500" />
+                          <span>Clear Journey & Ride History</span>
+                        </p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                          Permanently delete all ticket receipts, transit passes, and ride records ({rideHistory?.length || 0} records).
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (window.confirm("Are you sure you want to permanently clear all your ride history and journey receipts? This action cannot be undone.")) {
+                            clearRideHistory();
+                          }
+                        }}
+                        disabled={!rideHistory || rideHistory.length === 0}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors shrink-0 ${
+                          rideHistory && rideHistory.length > 0
+                            ? "bg-red-50 hover:bg-red-100 dark:bg-red-950/40 text-red-600 dark:text-red-400 border-red-200 dark:border-red-900/60 cursor-pointer"
+                            : "opacity-40 cursor-not-allowed bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700"
+                        }`}
+                      >
+                        Clear All
                       </button>
                     </div>
                     

@@ -44,11 +44,29 @@ function calculateBearing(lat1: number, lon1: number, lat2: number, lon2: number
   return Math.round((toDeg(Math.atan2(y, x)) + 360) % 360);
 }
 
+function calculateBmtcFare(routeCode: string, distanceKm: number = 15): number {
+  const code = routeCode.toUpperCase();
+  if (code.startsWith("KIA") || code.includes("AIRPORT")) {
+    return distanceKm > 25 ? 280 : 180;
+  }
+  if (code.startsWith("V-") || code.endsWith("V") || code.includes("VAJRA")) {
+    return distanceKm > 20 ? 60 : distanceKm > 10 ? 45 : 30;
+  }
+  // Standard BMTC stage fare
+  if (distanceKm <= 3) return 5;
+  if (distanceKm <= 5) return 10;
+  if (distanceKm <= 10) return 15;
+  if (distanceKm <= 16) return 20;
+  if (distanceKm <= 24) return 25;
+  return 30;
+}
+
 export async function GET(req: Request) {
   loadRoutesData();
   const { searchParams } = new URL(req.url);
   const rawRoute = searchParams.get("route") || searchParams.get("routeId") || "500D";
   const requestedBusId = searchParams.get("busId");
+  const direction = (searchParams.get("direction") || "UP").toUpperCase();
   const cleanRoute = rawRoute.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
 
   // 1. Attempt to fetch from official BMTC Staging Endpoint
@@ -57,7 +75,7 @@ export async function GET(req: Request) {
     const stagingRes = await fetch(stagingUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ RouteName: rawRoute, Direction: "UP" }),
+      body: JSON.stringify({ RouteName: rawRoute, Direction: direction }),
       signal: AbortSignal.timeout(2500),
     });
 
@@ -74,13 +92,19 @@ export async function GET(req: Request) {
             const speed = Math.round(parseFloat(v.Speed || v.speed || v.spd || 30));
             const bearing = Math.round(parseFloat(v.Bearing || v.Heading || v.heading || v.hdg || 0));
             const busId = String(v.VehicleNo || v.Vehicle_No || v.busId || `KA-57-F-${5000 + idx}`);
+            const eta = v.ETA || v.eta || `${Math.max(2, Math.round(15 / Math.max(speed, 20) * 10))} mins`;
+            const fare = v.Fare || v.fare || calculateBmtcFare(cleanRoute);
 
             return {
               busId,
+              lat,
+              lng,
               latitude: lat,
               longitude: lng,
               speed,
               bearing,
+              eta,
+              fare,
               nextStop: v.NextStop || v.next_stop || "Next Bus Station",
               occupancy: v.Occupancy || v.occ || 60,
               crowdLevel: v.CrowdLevel || (v.occ > 80 ? "High" : v.occ > 50 ? "Moderate" : "Low"),
@@ -92,10 +116,14 @@ export async function GET(req: Request) {
           return NextResponse.json({
             success: true,
             busId: primary.busId,
+            lat: primary.lat,
+            lng: primary.lng,
             latitude: primary.latitude,
             longitude: primary.longitude,
             speed: primary.speed,
             bearing: primary.bearing,
+            eta: primary.eta,
+            fare: primary.fare,
             routeId: cleanRoute,
             nextStop: primary.nextStop,
             occupancy: primary.occupancy,
@@ -108,10 +136,10 @@ export async function GET(req: Request) {
       }
     }
   } catch (err) {
-    // Proceed seamlessly to road-aligned fallback telemetry
+    // Proceed seamlessly to road-aligned telemetry engine fallback
   }
 
-  // 2. Road-Aligned Telemetry Engine
+  // 2. Road-Aligned Telemetry Engine Fallback
   let routeEntry = routesByCodeCache?.[cleanRoute]?.[0];
   if (!routeEntry && routesByCodeCache) {
     const fallbackKey = Object.keys(routesByCodeCache).find(
@@ -183,12 +211,22 @@ export async function GET(req: Request) {
   const occupancy = Math.round(55 + Math.sin(nowSeconds / 60) * 20);
   const crowdLevel = occupancy > 75 ? "High" : occupancy > 45 ? "Moderate" : "Low";
 
+  // Calculate ETA to next stop in minutes
+  const remainingSegDistKm = segSpan * (1 - segProgress);
+  const etaMinutes = Math.max(1, Math.round((remainingSegDistKm / (speed / 60))));
+  const eta = `${etaMinutes} mins`;
+  const fare = calculateBmtcFare(cleanRoute, totalRouteDistKm);
+
   const primaryVehicle = {
     busId,
+    lat: currentLat,
+    lng: currentLng,
     latitude: currentLat,
     longitude: currentLng,
     speed,
     bearing,
+    eta,
+    fare,
     nextStop,
     occupancy,
     crowdLevel,
@@ -197,10 +235,14 @@ export async function GET(req: Request) {
   return NextResponse.json({
     success: true,
     busId: primaryVehicle.busId,
+    lat: primaryVehicle.lat,
+    lng: primaryVehicle.lng,
     latitude: primaryVehicle.latitude,
     longitude: primaryVehicle.longitude,
     speed: primaryVehicle.speed,
     bearing: primaryVehicle.bearing,
+    eta: primaryVehicle.eta,
+    fare: primaryVehicle.fare,
     routeId: cleanRoute,
     routeName: routeEntry?.full_name || routeEntry?.name || `${cleanRoute} Express`,
     origin: routeEntry?.origin || "Hebbal",

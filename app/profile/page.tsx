@@ -5,7 +5,7 @@ import {
   User, Terminal, Moon, Sun, Bell, Shield, Globe, LogOut, MapPin, 
   ShieldCheck, Leaf, Medal, Receipt, ChevronRight, ScanFace, Upload, 
   CheckCircle2, AlertTriangle, Loader2, X, Settings, Image as ImageIcon, 
-  Pencil, Check, Bus, Car, TrainFront, Ticket, Sparkles, RefreshCcw, Wallet 
+  Pencil, Check, Bus, Car, TrainFront, Ticket, Sparkles, RefreshCcw, Wallet, Trash2 
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
@@ -22,6 +22,7 @@ export default function ProfileScreen() {
     profilePictureUrl, 
     setProfilePictureUrl, 
     rideHistory,
+    clearRideHistory,
     isStudentVerified,
     studentDetails,
     setStudentVerification
@@ -32,6 +33,7 @@ export default function ProfileScreen() {
 
   const [showScanner, setShowScanner] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [showClearHistoryModal, setShowClearHistoryModal] = useState(false);
   const [historyFilter, setHistoryFilter] = useState<"all" | "bus" | "metro" | "auto" | "pass">("all");
   
   // Real-time OCR scanning states
@@ -571,14 +573,25 @@ export default function ProfileScreen() {
                 </h4>
               </div>
               {rideHistory && rideHistory.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => setShowHistory(true)}
-                  className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer"
-                >
-                  <span>View All ({rideHistory.length})</span>
-                  <ChevronRight size={13} />
-                </button>
+                <div className="flex items-center gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setShowClearHistoryModal(true)}
+                    className="text-xs font-bold text-red-500 hover:text-red-600 dark:text-red-400 hover:underline flex items-center gap-1 cursor-pointer transition-colors"
+                    title="Clear ride history"
+                  >
+                    <Trash2 size={12} />
+                    <span>Clear</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowHistory(true)}
+                    className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <span>View All ({rideHistory.length})</span>
+                    <ChevronRight size={13} />
+                  </button>
+                </div>
               )}
             </div>
 
@@ -681,14 +694,30 @@ export default function ProfileScreen() {
               className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl relative max-h-[80vh] flex flex-col"
             >
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-black text-slate-900 dark:text-white">Ride History</h3>
-                <button 
-                  onClick={() => setShowHistory(false)} 
-                  className="p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer"
-                  title="Close history"
-                >
-                  <X size={20} />
-                </button>
+                <div>
+                  <h3 className="text-xl font-black text-slate-900 dark:text-white">Ride History</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{rideHistory?.length || 0} journey records</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {rideHistory && rideHistory.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setShowClearHistoryModal(true)}
+                      className="px-2.5 py-1 text-xs font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 border border-red-200 dark:border-red-900/60 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer"
+                      title="Clear all ride history"
+                    >
+                      <Trash2 size={13} />
+                      <span>Clear All</span>
+                    </button>
+                  )}
+                  <button 
+                    onClick={() => setShowHistory(false)} 
+                    className="p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer"
+                    title="Close history"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
               </div>
 
               {/* Mode Filter Tabs */}
@@ -849,6 +878,51 @@ export default function ProfileScreen() {
                   </>
                 );
               })()}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Clear All History Confirmation Modal */}
+      <AnimatePresence>
+        {showClearHistoryModal && (
+          <div className="fixed inset-0 z-[250] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl relative text-center"
+            >
+              <div className="w-12 h-12 rounded-2xl bg-red-100 dark:bg-red-950/60 text-red-600 dark:text-red-400 flex items-center justify-center mx-auto mb-4 border border-red-200 dark:border-red-900/60 shadow-xs">
+                <Trash2 size={24} />
+              </div>
+              <h3 className="text-lg font-black text-slate-900 dark:text-white mb-2">
+                Clear All Ride History?
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
+                This will permanently erase all your travel records, ticket receipts, and past ride tokens ({rideHistory?.length || 0} records) from your account and device. This action cannot be undone.
+              </p>
+              <div className="flex items-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setShowClearHistoryModal(false)}
+                  className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-xl transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    clearRideHistory();
+                    setShowClearHistoryModal(false);
+                    setShowHistory(false);
+                  }}
+                  className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl transition-colors shadow-sm cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  <Trash2 size={14} />
+                  <span>Yes, Clear All</span>
+                </button>
+              </div>
             </motion.div>
           </div>
         )}
