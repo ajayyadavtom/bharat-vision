@@ -61,6 +61,11 @@ export default function VisionHome() {
   const [liveWeather, setLiveWeather] = useState<RealtimeWeatherData | null>(null);
   const [showClimateModal, setShowClimateModal] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
+  const [profileImgError, setProfileImgError] = useState(false);
+
+  useEffect(() => {
+    setProfileImgError(false);
+  }, [profilePictureUrl]);
 
   // Core Location & Weather Synchronizer
   const acquireLocation = async (manual: boolean = false) => {
@@ -275,14 +280,14 @@ export default function VisionHome() {
             {/* Mobile Profile & Badges */}
             <div className="flex md:hidden flex-col items-end gap-2">
               <Link href="/profile" className="w-10 h-10 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full flex items-center justify-center shadow-sm active:scale-95 transition-transform hover:bg-slate-50 dark:hover:bg-slate-800 overflow-hidden">
-                {profilePictureUrl ? (
+                {profilePictureUrl && !profileImgError ? (
                   <img 
                     src={profilePictureUrl} 
                     alt="Profile" 
+                    referrerPolicy="no-referrer"
+                    crossOrigin="anonymous"
                     className="w-full h-full object-cover" 
-                    onError={(e) => {
-                      (e.target as HTMLElement).style.display = "none";
-                    }}
+                    onError={() => setProfileImgError(true)}
                   />
                 ) : (
                   <User size={18} className="text-slate-600 dark:text-slate-300" />

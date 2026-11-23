@@ -72,6 +72,36 @@ export interface TransitTicketRecord {
   expiryTimestamp?: number;
 }
 
+// Durable multi-account persistent storage helpers
+export const persistDurableRideHistory = (history: TransitTicketRecord[], accountKey?: string | null) => {
+  if (typeof window === "undefined" || !Array.isArray(history)) return;
+  try {
+    const raw = localStorage.getItem("bv_user_ride_history");
+    const cache = raw ? JSON.parse(raw) : {};
+    cache["last"] = history;
+    if (accountKey) {
+      cache[accountKey] = history;
+    }
+    localStorage.setItem("bv_user_ride_history", JSON.stringify(cache));
+  } catch (e) {
+    console.warn("Failed to persist durable ride history:", e);
+  }
+};
+
+export const loadDurableRideHistory = (accountKey?: string | null): TransitTicketRecord[] | null => {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem("bv_user_ride_history");
+    if (!raw) return null;
+    const cache = JSON.parse(raw);
+    const candidate = (accountKey && cache[accountKey]) || cache["last"] || null;
+    if (Array.isArray(candidate) && candidate.length > 0) {
+      return candidate;
+    }
+  } catch {}
+  return null;
+};
+
 export interface StudentVerificationDetails {
   name: string;
   dob: string;
@@ -302,10 +332,13 @@ export const useAppStore = create<AppState>()(
           qrPayload: pass.qrPayload
         };
 
+        const updatedHistory = [historyRecord, ...(state.rideHistory || []).filter((r) => r.id !== historyRecord.id)];
+        persistDurableRideHistory(updatedHistory, state.userName);
+
         return {
           activePass: pass,
           activePasses: updatedPasses,
-          rideHistory: [historyRecord, ...(state.rideHistory || []).filter((r) => r.id !== historyRecord.id)]
+          rideHistory: updatedHistory
         };
       }),
       removeActivePass: (id: string) => set((state) => {
@@ -321,15 +354,21 @@ export const useAppStore = create<AppState>()(
         const existingTickets = state.activeTickets || [];
         const existingHistory = state.rideHistory || [];
         const newTicketIds = new Set(tickets.map((t) => t.id));
+        const updatedHistory = [...tickets, ...existingHistory.filter((h) => !newTicketIds.has(h.id))];
+        persistDurableRideHistory(updatedHistory, state.userName);
         return {
           activeTickets: [...tickets, ...existingTickets.filter((t) => !newTicketIds.has(t.id))],
-          rideHistory: [...tickets, ...existingHistory.filter((h) => !newTicketIds.has(h.id))]
+          rideHistory: updatedHistory
         };
       }),
-      markTicketValidated: (id: string) => set((state) => ({
-        activeTickets: (state.activeTickets || []).map((t) => t.id === id ? { ...t, status: "Validated" as const } : t),
-        rideHistory: (state.rideHistory || []).map((t) => t.id === id ? { ...t, status: "Validated" as const } : t)
-      })),
+      markTicketValidated: (id: string) => set((state) => {
+        const updatedHistory = (state.rideHistory || []).map((t) => t.id === id ? { ...t, status: "Validated" as const } : t);
+        persistDurableRideHistory(updatedHistory, state.userName);
+        return {
+          activeTickets: (state.activeTickets || []).map((t) => t.id === id ? { ...t, status: "Validated" as const } : t),
+          rideHistory: updatedHistory
+        };
+      }),
       removeActiveTicket: (id: string) => set((state) => ({
         activeTickets: (state.activeTickets || []).filter((t) => t.id !== id)
       })),
@@ -493,9 +532,11 @@ export const useAppStore = create<AppState>()(
               status: ride.status || "Active",
               vehicleNo: ride.vehicleNo
             };
+            const updatedHistory = [record, ...(state.rideHistory || []).filter((r) => r.id !== record.id)];
+            persistDurableRideHistory(updatedHistory, state.userName);
             return { 
               bookedRide: ride, 
-              rideHistory: [record, ...(state.rideHistory || []).filter((r) => r.id !== record.id)] 
+              rideHistory: updatedHistory
             };
           }
           return { bookedRide: null };
@@ -503,9 +544,11 @@ export const useAppStore = create<AppState>()(
       },
 
       addRideHistory: (item: TransitTicketRecord) => {
-        set((state) => ({
-          rideHistory: [item, ...(state.rideHistory || [])]
-        }));
+        set((state) => {
+          const updated = [item, ...(state.rideHistory || []).filter((r) => r.id !== item.id)];
+          persistDurableRideHistory(updated, state.userName);
+          return { rideHistory: updated };
+        });
       },
 
       setProfilePictureUrl: async (url: string | null) => {
@@ -515,12 +558,13 @@ export const useAppStore = create<AppState>()(
         if (typeof window !== 'undefined') {
           try {
             const cache = JSON.parse(localStorage.getItem('bv_user_avatars') || '{}');
-            if (url) {
+            if (url && !url.startsWith("blob:")) {
               cache['last'] = url;
               const currentName = get().userName;
               if (currentName) cache[currentName] = url;
-            } else {
-              delete cache['last'];
+            } else if (url === null) {
+              const currentName = get().userName;
+              if (currentName && currentName !== "Guest") delete cache[currentName];
             }
             localStorage.setItem('bv_user_avatars', JSON.stringify(cache));
           } catch (e) {
@@ -532,11 +576,12 @@ export const useAppStore = create<AppState>()(
         try {
           const { data: { user } } = await supabase.auth.getUser();
           if (user) {
-            if (typeof window !== 'undefined' && url) {
+            if (typeof window !== 'undefined' && url && !url.startsWith("blob:")) {
               try {
                 const cache = JSON.parse(localStorage.getItem('bv_user_avatars') || '{}');
                 cache[user.id] = url;
                 if (user.email) cache[user.email] = url;
+                cache['last'] = url;
                 localStorage.setItem('bv_user_avatars', JSON.stringify(cache));
               } catch (e) {}
             }
@@ -636,7 +681,8 @@ export const useAppStore = create<AppState>()(
             // Determine avatar from multiple tiers:
             // 1. commuter_profiles table
             // 2. user.user_metadata (OAuth or updateUser)
-            // 3. Local persistent bv_user_avatars cache
+            // 3. Supabase Auth identities (Google OAuth provider identity avatar)
+            // 4. Local persistent bv_user_avatars cache
             let resolvedAvatar: string | null = null;
             if (data?.avatar_url && !data.avatar_url.startsWith('blob:')) {
               resolvedAvatar = data.avatar_url;
@@ -646,10 +692,25 @@ export const useAppStore = create<AppState>()(
               resolvedAvatar = user.user_metadata.picture;
             }
 
+            // Check Google provider identities in Supabase Auth
+            if (!resolvedAvatar && Array.isArray((user as any).identities)) {
+              for (const identity of (user as any).identities) {
+                const idData = identity.identity_data;
+                if (idData?.avatar_url && typeof idData.avatar_url === 'string' && !idData.avatar_url.startsWith('blob:')) {
+                  resolvedAvatar = idData.avatar_url;
+                  break;
+                }
+                if (idData?.picture && typeof idData.picture === 'string' && !idData.picture.startsWith('blob:')) {
+                  resolvedAvatar = idData.picture;
+                  break;
+                }
+              }
+            }
+
             if (!resolvedAvatar && typeof window !== 'undefined') {
               try {
                 const cache = JSON.parse(localStorage.getItem('bv_user_avatars') || '{}');
-                const fromCache = cache[user.id] || (user.email ? cache[user.email] : null) || cache['last'] || null;
+                const fromCache = cache[user.id] || (user.email ? cache[user.email] : null) || (data?.full_name ? cache[data.full_name] : null) || cache['last'] || null;
                 if (fromCache && !fromCache.startsWith('blob:')) {
                   resolvedAvatar = fromCache;
                 }
@@ -662,12 +723,26 @@ export const useAppStore = create<AppState>()(
               resolvedAvatar = existingPic;
             }
 
+            // RESTORE RIDE HISTORY for this user
+            const userKey = user.email || user.id || data?.full_name || get().userName;
+            const recoveredHistory = loadDurableRideHistory(userKey);
+            const currentHistory = get().rideHistory || [];
+            let finalHistory = currentHistory;
+            if (recoveredHistory && recoveredHistory.length > 0) {
+              const currentIds = new Set(currentHistory.map((r) => r.id));
+              finalHistory = [
+                ...currentHistory,
+                ...recoveredHistory.filter((r) => !currentIds.has(r.id))
+              ];
+            }
+
             if (data) {
               set({
                 userName: data.full_name || user.email?.split('@')[0] || "Commuter",
                 walletBalance: Number(data.wallet_balance) || 0,
                 karmaPoints: data.karma_points || 0,
                 carbonSavedGrams: data.carbon_saved_grams || 0,
+                rideHistory: finalHistory,
                 ...(resolvedAvatar ? { profilePictureUrl: resolvedAvatar } : {}),
               });
             } else if (error && error.code === 'PGRST116') {
@@ -689,6 +764,7 @@ export const useAppStore = create<AppState>()(
                 walletBalance: 0,
                 karmaPoints: 0,
                 carbonSavedGrams: 0,
+                rideHistory: finalHistory,
                 ...(resolvedAvatar ? { profilePictureUrl: resolvedAvatar } : {}),
               });
             }
@@ -720,6 +796,17 @@ export const useAppStore = create<AppState>()(
                   }
                 } catch (e) {}
               }
+            }
+            // Recover ride history for guest/last session if available
+            const recoveredGuestHistory = loadDurableRideHistory("Guest") || loadDurableRideHistory("last");
+            if (recoveredGuestHistory && recoveredGuestHistory.length > 0) {
+              const currentHistory = currentState.rideHistory || [];
+              const currentIds = new Set(currentHistory.map((r) => r.id));
+              const merged = [
+                ...currentHistory,
+                ...recoveredGuestHistory.filter((r) => !currentIds.has(r.id))
+              ];
+              set({ rideHistory: merged.length > 0 ? merged : recoveredGuestHistory });
             }
           }
         } catch (error) {

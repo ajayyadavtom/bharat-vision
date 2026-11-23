@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -17,8 +17,11 @@ import {
   KeyRound, 
   CheckCircle2, 
   X,
-  MessageSquare
+  MessageSquare,
+  Sun,
+  Moon
 } from "lucide-react";
+import { useTheme } from "next-themes";
 import { supabase } from "@/lib/supabase";
 import { useAppStore } from "@/lib/store";
 
@@ -27,6 +30,12 @@ type LoginMode = "email" | "phone";
 export default function LoginScreen() {
   const router = useRouter();
   const { setUserName, setProfilePictureUrl } = useAppStore();
+  const { theme, setTheme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const [loginMode, setLoginMode] = useState<LoginMode>("email");
   const [fullName, setFullName] = useState("");
@@ -50,6 +59,17 @@ export default function LoginScreen() {
   // Google Account Picker Modal State (Fallback if OAuth domain redirect encounters restriction)
   const [showGoogleModal, setShowGoogleModal] = useState(false);
   const [customGoogleEmail, setCustomGoogleEmail] = useState("ajayyadavtom@gmail.com");
+
+  const cachedAjayAvatar = useMemo(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      const cache = JSON.parse(localStorage.getItem("bv_user_avatars") || "{}");
+      const url = cache["ajayyadavtom@gmail.com"] || cache["Ajay Yadav"] || cache["last"] || null;
+      return url && !url.startsWith("blob:") ? url : null;
+    } catch {
+      return null;
+    }
+  }, [showGoogleModal]);
 
   // Timer for OTP countdown
   useEffect(() => {
@@ -305,10 +325,32 @@ export default function LoginScreen() {
     setUserName(name);
     if (typeof window !== "undefined") {
       try {
+        // Restore Google account avatar
         const cache = JSON.parse(localStorage.getItem("bv_user_avatars") || "{}");
         const cached = cache[selectedEmail] || cache[name] || cache["last"];
         if (cached && !cached.startsWith("blob:")) {
           setProfilePictureUrl(cached);
+        }
+
+        // Restore user's ride history across sessions
+        const hCache = JSON.parse(localStorage.getItem("bv_user_ride_history") || "{}");
+        const savedHistory = hCache[selectedEmail] || hCache[name] || hCache["last"];
+        if (Array.isArray(savedHistory) && savedHistory.length > 0) {
+          useAppStore.setState({ rideHistory: savedHistory });
+        }
+
+        // Restore user account data snapshot
+        const accCache = JSON.parse(localStorage.getItem("bv_user_accounts") || "{}");
+        const acc = accCache[selectedEmail] || accCache[name] || accCache["last"];
+        if (acc) {
+          useAppStore.setState({
+            ...(acc.walletBalance !== undefined ? { walletBalance: acc.walletBalance } : {}),
+            ...(acc.karmaPoints !== undefined ? { karmaPoints: acc.karmaPoints } : {}),
+            ...(acc.carbonSavedGrams !== undefined ? { carbonSavedGrams: acc.carbonSavedGrams } : {}),
+            ...(Array.isArray(acc.activeTickets) ? { activeTickets: acc.activeTickets } : {}),
+            ...(Array.isArray(acc.activePasses) ? { activePasses: acc.activePasses } : {}),
+            ...(acc.activePass ? { activePass: acc.activePass } : {}),
+          });
         }
       } catch (e) {}
     }
@@ -326,9 +368,15 @@ export default function LoginScreen() {
     if (typeof window !== "undefined") {
       try {
         const cache = JSON.parse(localStorage.getItem("bv_user_avatars") || "{}");
-        const cached = cache["Guest Commuter"] || cache["last"];
+        const cached = cache["Guest Commuter"] || cache["Guest"] || cache["last"];
         if (cached && !cached.startsWith("blob:")) {
           setProfilePictureUrl(cached);
+        }
+
+        const hCache = JSON.parse(localStorage.getItem("bv_user_ride_history") || "{}");
+        const savedHistory = hCache["Guest Commuter"] || hCache["Guest"] || hCache["last"];
+        if (Array.isArray(savedHistory) && savedHistory.length > 0) {
+          useAppStore.setState({ rideHistory: savedHistory });
         }
       } catch (e) {}
     }
@@ -336,70 +384,86 @@ export default function LoginScreen() {
   };
 
   return (
-    <div className="flex flex-col min-h-[100dvh] bg-surface-black px-6 py-8 lg:py-12 justify-center relative overflow-hidden">
-      <div className="absolute top-10 left-1/4 -translate-x-1/2 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-10 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
+    <div className="flex flex-col min-h-[100dvh] bg-slate-50 dark:bg-slate-950 px-6 py-8 lg:py-12 justify-center relative overflow-hidden transition-colors duration-200">
+      <div className="absolute top-10 left-1/4 -translate-x-1/2 w-96 h-96 bg-emerald-500/10 dark:bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-10 right-1/4 w-96 h-96 bg-teal-500/10 dark:bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
+
+      {/* Top-Right Theme Toggle */}
+      <div className="absolute top-5 right-5 sm:top-6 sm:right-8 z-20">
+        <button
+          type="button"
+          onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+          className="w-10 h-10 rounded-2xl bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-700 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer"
+          title={`Switch to ${resolvedTheme === "dark" ? "Light" : "Dark"} Mode`}
+        >
+          {mounted && resolvedTheme === "dark" ? <Sun size={18} className="text-amber-400" /> : <Moon size={18} className="text-slate-700" />}
+        </button>
+      </div>
 
       <div className="w-full max-w-5xl mx-auto lg:grid lg:grid-cols-12 lg:gap-12 lg:items-center relative z-10">
         {/* Left Desktop Brand Showcase (Visible only on lg+) */}
         <div className="hidden lg:flex lg:flex-col lg:col-span-6 pr-4">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-14 h-14 bg-gradient-to-tr from-emerald-600 to-teal-500 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-emerald-500/30">
+            <div className="w-14 h-14 bg-gradient-to-tr from-emerald-600 to-teal-500 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-emerald-500/25">
               <Zap size={28} fill="currentColor" />
             </div>
             <div>
-              <span className="text-[10px] font-black uppercase tracking-[0.25em] text-emerald-400 block">
+              <span className="text-[10px] font-black uppercase tracking-[0.25em] text-emerald-600 dark:text-emerald-400 block">
                 Namma Bengaluru
               </span>
-              <h2 className="text-2xl font-black text-white tracking-tight">
-                BHARAT <span className="text-emerald-400">VISION</span>
+              <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                BHARAT <span className="text-emerald-600 dark:text-emerald-400">VISION</span>
               </h2>
             </div>
           </div>
 
-          <h1 className="text-3xl xl:text-4xl font-extrabold text-white leading-tight mb-4">
+          <h1 className="text-3xl xl:text-4xl font-extrabold text-slate-900 dark:text-white leading-tight mb-4">
             Next-Gen Intelligent Civic Transit for Bengaluru
           </h1>
-          <p className="text-slate-400 text-sm mb-8 leading-relaxed">
+          <p className="text-slate-600 dark:text-slate-400 text-sm mb-8 leading-relaxed font-medium">
             Real-time fleet tracking across 4,400+ BMTC bus routes, 121 Namma Metro stations, multimodal ONDC mobility, and instant commuter safety.
           </p>
 
           <div className="grid grid-cols-2 gap-3 mb-8">
-            <div className="bg-slate-900/80 border border-slate-800 p-3.5 rounded-2xl backdrop-blur-md">
-              <span className="text-emerald-400 font-black text-lg block">4,400+</span>
-              <span className="text-xs text-slate-300 font-bold block">BMTC Bus Routes</span>
-              <span className="text-[10px] text-slate-500 mt-0.5 block">GTFS live telemetry stream</span>
+            <div className="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 p-3.5 rounded-2xl shadow-sm dark:shadow-none backdrop-blur-md transition-colors">
+              <span className="text-emerald-600 dark:text-emerald-400 font-black text-lg block">4,400+</span>
+              <span className="text-xs text-slate-800 dark:text-slate-200 font-bold block">BMTC Bus Routes</span>
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 block">GTFS live telemetry stream</span>
             </div>
-            <div className="bg-slate-900/80 border border-slate-800 p-3.5 rounded-2xl backdrop-blur-md">
-              <span className="text-purple-400 font-black text-lg block">121</span>
-              <span className="text-xs text-slate-300 font-bold block">Metro Stations</span>
-              <span className="text-[10px] text-slate-500 mt-0.5 block">5 BMRCL lines + QR tickets</span>
+            <div className="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 p-3.5 rounded-2xl shadow-sm dark:shadow-none backdrop-blur-md transition-colors">
+              <span className="text-purple-600 dark:text-purple-400 font-black text-lg block">121</span>
+              <span className="text-xs text-slate-800 dark:text-slate-200 font-bold block">Metro Stations</span>
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 block">5 BMRCL lines + QR tickets</span>
             </div>
-            <div className="bg-slate-900/80 border border-slate-800 p-3.5 rounded-2xl backdrop-blur-md">
-              <span className="text-amber-400 font-black text-lg block">ONDC Auto</span>
-              <span className="text-xs text-slate-300 font-bold block">Open Multimodal</span>
-              <span className="text-[10px] text-slate-500 mt-0.5 block">Zero surge first-mile ride hail</span>
+            <div className="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 p-3.5 rounded-2xl shadow-sm dark:shadow-none backdrop-blur-md transition-colors">
+              <span className="text-amber-600 dark:text-amber-400 font-black text-lg block">ONDC Auto</span>
+              <span className="text-xs text-slate-800 dark:text-slate-200 font-bold block">Open Multimodal</span>
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 block">Zero surge first-mile ride hail</span>
             </div>
-            <div className="bg-slate-900/80 border border-slate-800 p-3.5 rounded-2xl backdrop-blur-md">
-              <span className="text-teal-400 font-black text-lg block">SafeKeep</span>
-              <span className="text-xs text-slate-300 font-bold block">Proximity Alarm</span>
-              <span className="text-[10px] text-slate-500 mt-0.5 block">300m vibrating deboard chime</span>
+            <div className="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 p-3.5 rounded-2xl shadow-sm dark:shadow-none backdrop-blur-md transition-colors">
+              <span className="text-teal-600 dark:text-teal-400 font-black text-lg block">SafeKeep</span>
+              <span className="text-xs text-slate-800 dark:text-slate-200 font-bold block">Proximity Alarm</span>
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 block">300m vibrating deboard chime</span>
             </div>
           </div>
         </div>
 
         {/* Right Form Container (Centered on Mobile, Col-span-6 on Desktop) */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-sm mx-auto lg:col-span-6 lg:max-w-md lg:bg-slate-900/60 lg:border lg:border-slate-800/80 lg:p-8 lg:rounded-3xl lg:backdrop-blur-xl lg:shadow-2xl relative z-10">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-sm mx-auto lg:col-span-6 lg:max-w-md bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/80 p-6 sm:p-8 rounded-3xl shadow-xl dark:shadow-2xl backdrop-blur-xl relative z-10 transition-colors"
+        >
         
         {/* Brand Header */}
         <div className="flex flex-col items-center mb-6 text-center">
-          <div className="w-16 h-16 bg-emerald-500 rounded-2xl shadow-[0_0_30px_rgba(16,185,129,0.3)] flex items-center justify-center mb-3 relative overflow-hidden">
-            <Zap size={32} className="text-slate-900 dark:text-white relative z-10" fill="currentColor" />
+          <div className="w-14 h-14 bg-gradient-to-tr from-emerald-600 to-teal-500 rounded-2xl shadow-md shadow-emerald-500/20 flex items-center justify-center mb-3 relative overflow-hidden">
+            <Zap size={28} className="text-white relative z-10" fill="currentColor" />
           </div>
-          <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-            Bharat <span className="text-emerald-500">Vision</span>
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+            Bharat <span className="text-emerald-600 dark:text-emerald-400">Vision</span>
           </h1>
-          <p className="text-xs text-slate-500 dark:text-gray-400 mt-1 font-bold uppercase tracking-widest flex items-center gap-1">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-bold uppercase tracking-widest flex items-center gap-1">
             <ShieldCheck size={14} className="text-emerald-500" /> Secure Commuter Portal
           </p>
         </div>
@@ -407,13 +471,13 @@ export default function LoginScreen() {
         {/* Feedback Alerts */}
         <AnimatePresence>
           {error && (
-            <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="bg-red-500/15 border border-red-500/40 text-red-400 text-xs p-3.5 rounded-2xl mb-4 text-center font-medium">
+            <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-500/40 text-red-600 dark:text-red-400 text-xs p-3.5 rounded-2xl mb-4 text-center font-semibold">
               {error}
             </motion.div>
           )}
 
           {successMsg && (
-            <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 text-xs p-3.5 rounded-2xl mb-4 text-center font-bold flex items-center justify-center gap-2">
+            <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-500/40 text-emerald-700 dark:text-emerald-400 text-xs p-3.5 rounded-2xl mb-4 text-center font-bold flex items-center justify-center gap-2">
               <CheckCircle2 size={16} />
               <span>{successMsg}</span>
             </motion.div>
@@ -427,28 +491,28 @@ export default function LoginScreen() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-indigo-950/70 border border-indigo-500/50 p-4 rounded-2xl mb-4 shadow-lg backdrop-blur-md"
+              className="bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-200 dark:border-indigo-500/50 p-4 rounded-2xl mb-4 shadow-sm dark:shadow-lg backdrop-blur-md"
             >
               <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2 text-indigo-400 text-xs font-bold">
+                <div className="flex items-center gap-2 text-indigo-700 dark:text-indigo-400 text-xs font-bold">
                   <MessageSquare size={16} />
                   <span>SMS One-Time Password</span>
                 </div>
-                <span className="text-[10px] bg-indigo-500/20 text-indigo-300 font-mono px-2 py-0.5 rounded-full font-bold">
+                <span className="text-[10px] bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 font-mono px-2 py-0.5 rounded-full font-bold">
                   Valid 10m
                 </span>
               </div>
-              <p className="text-xs text-slate-300 mb-3">
-                Your verification code for <span className="font-bold text-white">{phone}</span> is:
+              <p className="text-xs text-indigo-950 dark:text-slate-300 mb-3 font-medium">
+                Your verification code for <span className="font-bold text-slate-900 dark:text-white">{phone}</span> is:
               </p>
-              <div className="flex items-center justify-between bg-black/40 p-2.5 rounded-xl border border-indigo-500/30">
-                <span className="text-xl font-black tracking-[0.4em] text-emerald-400 font-mono pl-2">
+              <div className="flex items-center justify-between bg-white dark:bg-black/40 p-2.5 rounded-xl border border-indigo-200 dark:border-indigo-500/30">
+                <span className="text-xl font-black tracking-[0.4em] text-emerald-600 dark:text-emerald-400 font-mono pl-2">
                   {generatedOtp}
                 </span>
                 <button
                   type="button"
                   onClick={() => { setOtp(generatedOtp); setError(null); }}
-                  className="bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-black text-[11px] px-3 py-1.5 rounded-lg active:scale-95 transition-transform"
+                  className="bg-emerald-600 hover:bg-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-400 text-white dark:text-slate-900 font-black text-[11px] px-3 py-1.5 rounded-lg active:scale-95 transition-transform cursor-pointer"
                 >
                   Auto-Fill
                 </button>
@@ -458,18 +522,26 @@ export default function LoginScreen() {
         </AnimatePresence>
 
         {/* Auth Mode Toggle: Email vs Mobile */}
-        <div className="flex bg-surface-dark p-1 rounded-2xl mb-5 border border-slate-200 dark:border-brand-dark">
+        <div className="flex bg-slate-100 dark:bg-slate-800/90 p-1.5 rounded-2xl mb-5 border border-slate-200 dark:border-slate-700">
           <button
             type="button"
             onClick={() => { setLoginMode("email"); setError(null); setSuccessMsg(null); }}
-            className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 ${loginMode === "email" ? "bg-emerald-500 text-slate-900 shadow-md font-black" : "text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white"}`}
+            className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              loginMode === "email"
+                ? "bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 shadow-sm font-black border border-slate-200/80 dark:border-slate-700"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+            }`}
           >
             <Mail size={14} /> Email Account
           </button>
           <button
             type="button"
             onClick={() => { setLoginMode("phone"); setError(null); setSuccessMsg(null); }}
-            className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 ${loginMode === "phone" ? "bg-emerald-500 text-slate-900 shadow-md font-black" : "text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white"}`}
+            className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              loginMode === "phone"
+                ? "bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 shadow-sm font-black border border-slate-200/80 dark:border-slate-700"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+            }`}
           >
             <Phone size={14} /> Mobile OTP
           </button>
@@ -482,14 +554,14 @@ export default function LoginScreen() {
             {isSignUp && (
               <div className="relative group">
                 <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                  <User size={18} className="text-gray-500 group-focus-within:text-emerald-400 transition-colors" />
+                  <User size={18} className="text-slate-400 group-focus-within:text-emerald-600 dark:group-focus-within:text-emerald-400 transition-colors" />
                 </div>
                 <input
                   type="text"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   required
-                  className="w-full bg-surface-dark/80 backdrop-blur-md text-slate-900 dark:text-white rounded-2xl py-3.5 pl-12 pr-4 outline-none border border-slate-200 dark:border-surface-dark focus:border-emerald-500 transition-all shadow-md placeholder-gray-500 text-xs font-semibold"
+                  className="w-full bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white rounded-2xl py-3.5 pl-12 pr-4 outline-none border border-slate-200 dark:border-slate-700 focus:border-emerald-500 dark:focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-800 transition-all shadow-xs placeholder-slate-400 dark:placeholder-slate-500 text-xs font-semibold"
                   placeholder="Full Name (e.g. Ajay Yadav)"
                 />
               </div>
@@ -498,14 +570,14 @@ export default function LoginScreen() {
             {/* Email field */}
             <div className="relative group">
               <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                <Mail size={18} className="text-gray-500 group-focus-within:text-emerald-400 transition-colors" />
+                <Mail size={18} className="text-slate-400 group-focus-within:text-emerald-600 dark:group-focus-within:text-emerald-400 transition-colors" />
               </div>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full bg-surface-dark/80 backdrop-blur-md text-slate-900 dark:text-white rounded-2xl py-3.5 pl-12 pr-4 outline-none border border-slate-200 dark:border-surface-dark focus:border-emerald-500 transition-all shadow-md placeholder-gray-500 text-xs font-semibold"
+                className="w-full bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white rounded-2xl py-3.5 pl-12 pr-4 outline-none border border-slate-200 dark:border-slate-700 focus:border-emerald-500 dark:focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-800 transition-all shadow-xs placeholder-slate-400 dark:placeholder-slate-500 text-xs font-semibold"
                 placeholder="Commuter Email Address"
               />
             </div>
@@ -513,7 +585,7 @@ export default function LoginScreen() {
             {/* Password field */}
             <div className="relative group">
               <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                <Lock size={18} className="text-gray-500 group-focus-within:text-emerald-400 transition-colors" />
+                <Lock size={18} className="text-slate-400 group-focus-within:text-emerald-600 dark:group-focus-within:text-emerald-400 transition-colors" />
               </div>
               <input
                 type={showPassword ? "text" : "password"}
@@ -521,13 +593,13 @@ export default function LoginScreen() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
-                className="w-full bg-surface-dark/80 backdrop-blur-md text-slate-900 dark:text-white rounded-2xl py-3.5 pl-12 pr-12 outline-none border border-slate-200 dark:border-surface-dark focus:border-emerald-500 transition-all shadow-md placeholder-gray-500 text-xs font-semibold"
+                className="w-full bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white rounded-2xl py-3.5 pl-12 pr-12 outline-none border border-slate-200 dark:border-slate-700 focus:border-emerald-500 dark:focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-800 transition-all shadow-xs placeholder-slate-400 dark:placeholder-slate-500 text-xs font-semibold"
                 placeholder="Password (min 6 characters)"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-4 flex items-center text-gray-500 hover:text-emerald-400 transition-colors"
+                className="absolute inset-y-0 right-4 flex items-center text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer"
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -536,7 +608,7 @@ export default function LoginScreen() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-black py-4 rounded-2xl shadow-[0_5px_20px_rgba(16,185,129,0.3)] active:scale-95 transition-all mt-1 disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
+              className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-4 rounded-2xl shadow-md shadow-emerald-500/20 active:scale-95 transition-all mt-1 disabled:opacity-50 flex items-center justify-center gap-2 text-sm cursor-pointer"
             >
               {loading ? (
                 <Loader2 size={18} className="animate-spin" />
@@ -552,7 +624,7 @@ export default function LoginScreen() {
           <div className="flex flex-col gap-3.5">
             <div className="relative group">
               <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                <Phone size={18} className="text-gray-500 group-focus-within:text-emerald-400 transition-colors" />
+                <Phone size={18} className="text-slate-400 group-focus-within:text-emerald-600 dark:group-focus-within:text-emerald-400 transition-colors" />
               </div>
               <input
                 type="tel"
@@ -561,7 +633,7 @@ export default function LoginScreen() {
                 required
                 disabled={otpSent}
                 maxLength={14}
-                className="w-full bg-surface-dark/80 backdrop-blur-md text-slate-900 dark:text-white rounded-2xl py-3.5 pl-12 pr-4 outline-none border border-slate-200 dark:border-surface-dark focus:border-emerald-500 transition-all shadow-md placeholder-gray-500 text-xs font-semibold disabled:opacity-60"
+                className="w-full bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white rounded-2xl py-3.5 pl-12 pr-4 outline-none border border-slate-200 dark:border-slate-700 focus:border-emerald-500 dark:focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-800 transition-all shadow-xs placeholder-slate-400 dark:placeholder-slate-500 text-xs font-semibold disabled:opacity-60"
                 placeholder="10-digit Mobile Number (e.g. 7899698057)"
               />
             </div>
@@ -569,7 +641,7 @@ export default function LoginScreen() {
             {otpSent && (
               <div className="relative group">
                 <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                  <KeyRound size={18} className="text-gray-500 group-focus-within:text-emerald-400 transition-colors" />
+                  <KeyRound size={18} className="text-slate-400 group-focus-within:text-emerald-600 dark:group-focus-within:text-emerald-400 transition-colors" />
                 </div>
                 <input
                   type="text"
@@ -577,7 +649,7 @@ export default function LoginScreen() {
                   onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, ""))}
                   required
                   maxLength={6}
-                  className="w-full bg-surface-dark/80 backdrop-blur-md text-emerald-600 dark:text-emerald-400 rounded-2xl py-3.5 pl-12 pr-4 outline-none border border-slate-200 dark:border-surface-dark focus:border-emerald-500 transition-all shadow-md text-base text-center tracking-[0.5em] font-black font-mono placeholder-gray-400 dark:placeholder-gray-600"
+                  className="w-full bg-slate-50 dark:bg-slate-800/80 text-emerald-600 dark:text-emerald-400 rounded-2xl py-3.5 pl-12 pr-4 outline-none border border-slate-200 dark:border-slate-700 focus:border-emerald-500 dark:focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-800 transition-all shadow-xs text-base text-center tracking-[0.5em] font-black font-mono placeholder-slate-400 dark:placeholder-slate-600"
                   placeholder="• • • • • •"
                 />
               </div>
@@ -588,7 +660,7 @@ export default function LoginScreen() {
                 type="button"
                 onClick={handleSendOtp}
                 disabled={loading}
-                className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-black py-4 rounded-2xl shadow-[0_5px_20px_rgba(16,185,129,0.3)] active:scale-95 transition-all mt-1 disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
+                className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-4 rounded-2xl shadow-md shadow-emerald-500/20 active:scale-95 transition-all mt-1 disabled:opacity-50 flex items-center justify-center gap-2 text-sm cursor-pointer"
               >
                 {loading ? <Loader2 size={18} className="animate-spin" /> : <>Send OTP via SMS <ArrowRight size={18} /></>}
               </button>
@@ -598,7 +670,7 @@ export default function LoginScreen() {
                   type="button"
                   onClick={handleVerifyOtp}
                   disabled={loading}
-                  className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-black py-4 rounded-2xl shadow-[0_5px_20px_rgba(16,185,129,0.3)] active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
+                  className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-4 rounded-2xl shadow-md shadow-emerald-500/20 active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2 text-sm cursor-pointer"
                 >
                   {loading ? <Loader2 size={18} className="animate-spin" /> : <>Verify OTP & Login <ArrowRight size={18} /></>}
                 </button>
@@ -607,7 +679,7 @@ export default function LoginScreen() {
                   <button
                     type="button"
                     onClick={() => { setOtpSent(false); setOtp(""); setError(null); }}
-                    className="text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white"
+                    className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer"
                   >
                     Change Number
                   </button>
@@ -616,7 +688,7 @@ export default function LoginScreen() {
                     type="button"
                     disabled={otpCountdown > 0}
                     onClick={handleSendOtp}
-                    className="text-emerald-600 dark:text-emerald-400 hover:underline disabled:text-gray-400 dark:disabled:text-gray-600 disabled:no-underline font-semibold"
+                    className="text-emerald-600 dark:text-emerald-400 hover:underline disabled:text-slate-400 dark:disabled:text-slate-600 disabled:no-underline font-semibold cursor-pointer"
                   >
                     {otpCountdown > 0 ? `Resend in ${otpCountdown}s` : "Resend OTP"}
                   </button>
@@ -629,7 +701,7 @@ export default function LoginScreen() {
         {/* Divider */}
         <div className="flex items-center gap-4 my-5">
           <div className="h-px bg-slate-200 dark:bg-slate-800 flex-1"></div>
-          <span className="text-[10px] text-slate-500 dark:text-gray-500 font-bold uppercase tracking-widest">Or</span>
+          <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">Or</span>
           <div className="h-px bg-slate-200 dark:bg-slate-800 flex-1"></div>
         </div>
 
@@ -638,7 +710,7 @@ export default function LoginScreen() {
           type="button"
           onClick={handleGoogleLogin}
           disabled={googleLoading}
-          className="w-full bg-white text-slate-900 font-black py-3.5 rounded-2xl shadow-md active:scale-95 transition-transform flex justify-center items-center gap-3 mb-2.5 disabled:opacity-50 text-xs"
+          className="w-full bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 font-bold py-3.5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xs active:scale-95 transition-all flex justify-center items-center gap-3 mb-2.5 disabled:opacity-50 text-xs cursor-pointer"
         >
           {googleLoading ? (
             <Loader2 size={18} className="animate-spin" />
@@ -657,9 +729,9 @@ export default function LoginScreen() {
         <button
           type="button"
           onClick={handleGuestLogin}
-          className="w-full bg-surface-dark/80 backdrop-blur-md border border-slate-200 dark:border-brand-dark/50 hover:border-emerald-500 text-slate-900 dark:text-white font-bold py-3.5 rounded-2xl shadow-md active:scale-95 transition-all flex justify-center items-center gap-2 text-xs"
+          className="w-full bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/80 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold py-3.5 rounded-2xl shadow-xs active:scale-95 transition-all flex justify-center items-center gap-2 text-xs cursor-pointer"
         >
-          <User size={16} className="text-gray-400" />
+          <User size={16} className="text-slate-500 dark:text-slate-400" />
           Continue as Guest
         </button>
 
@@ -668,7 +740,7 @@ export default function LoginScreen() {
           <button
             type="button"
             onClick={() => { setIsSignUp(!isSignUp); setError(null); setSuccessMsg(null); }}
-            className="text-xs text-slate-400 hover:text-white transition-colors font-semibold"
+            className="text-xs text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors font-bold cursor-pointer"
           >
             {isSignUp ? "Already have a Commuter ID? Sign In" : "Need a Commuter ID? Register Account"}
           </button>
@@ -698,12 +770,12 @@ export default function LoginScreen() {
                   </div>
                   <h3 className="text-sm font-bold text-slate-900 dark:text-white">Choose Google Account</h3>
                 </div>
-                <button onClick={() => setShowGoogleModal(false)} className="text-slate-400 hover:text-white p-1">
+                <button onClick={() => setShowGoogleModal(false)} className="text-slate-400 hover:text-slate-900 dark:hover:text-white p-1 cursor-pointer">
                   <X size={18} />
                 </button>
               </div>
 
-              <p className="text-xs text-slate-500 dark:text-gray-400 mb-4">
+              <p className="text-xs text-slate-600 dark:text-slate-400 mb-4">
                 to continue to <strong className="text-slate-900 dark:text-white">Bharat Vision</strong>
               </p>
 
@@ -711,21 +783,31 @@ export default function LoginScreen() {
               <button
                 type="button"
                 onClick={() => handleSelectGoogleAccount("ajayyadavtom@gmail.com", "Ajay Yadav")}
-                className="w-full flex items-center gap-3.5 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 transition-all text-left mb-3 group"
+                className="w-full flex items-center gap-3.5 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 transition-all text-left mb-3 group cursor-pointer"
               >
-                <div className="w-10 h-10 rounded-full bg-emerald-500 text-slate-900 font-black text-sm flex items-center justify-center shrink-0">
-                  AY
+                <div className="w-10 h-10 rounded-full bg-emerald-600 dark:bg-emerald-500 text-white dark:text-slate-900 font-black text-sm flex items-center justify-center shrink-0 overflow-hidden shadow-xs">
+                  {cachedAjayAvatar ? (
+                    <img
+                      src={cachedAjayAvatar}
+                      alt="Ajay Yadav"
+                      referrerPolicy="no-referrer"
+                      crossOrigin="anonymous"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    "AY"
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-bold text-slate-900 dark:text-white truncate">Ajay Yadav</p>
-                  <p className="text-[11px] text-slate-500 dark:text-gray-400 truncate">ajayyadavtom@gmail.com</p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">ajayyadavtom@gmail.com</p>
                 </div>
                 <ArrowRight size={16} className="text-emerald-500 group-hover:translate-x-1 transition-transform shrink-0" />
               </button>
 
               {/* Custom Google Account Input */}
               <div className="border-t border-slate-200 dark:border-slate-800 pt-3">
-                <label className="text-[10px] text-slate-500 dark:text-gray-400 font-bold uppercase tracking-wider block mb-1">
+                <label className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider block mb-1">
                   Or enter another Google email:
                 </label>
                 <div className="flex gap-2">
@@ -744,7 +826,7 @@ export default function LoginScreen() {
                         handleSelectGoogleAccount(customGoogleEmail, name);
                       }
                     }}
-                    className="bg-emerald-500 hover:bg-emerald-400 text-slate-900 text-xs font-bold px-3 py-2 rounded-xl"
+                    className="bg-emerald-600 hover:bg-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-400 text-white dark:text-slate-900 text-xs font-bold px-3 py-2 rounded-xl cursor-pointer"
                   >
                     Select
                   </button>

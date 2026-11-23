@@ -42,6 +42,11 @@ export default function ProfileScreen() {
 
   const [isEditingName, setIsEditingName] = useState(false);
   const [editName, setEditName] = useState("");
+  const [imageLoadError, setImageLoadError] = useState(false);
+
+  useEffect(() => {
+    setImageLoadError(false);
+  }, [profilePictureUrl]);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const idCardInputRef = useRef<HTMLInputElement>(null);
@@ -255,12 +260,14 @@ export default function ProfileScreen() {
                 >
                   {isUploadingImage ? (
                     <Loader2 size={24} className="text-emerald-500 animate-spin" />
-                  ) : profilePictureUrl ? (
+                  ) : profilePictureUrl && !imageLoadError ? (
                     <img 
                       src={profilePictureUrl} 
                       alt="Profile" 
+                      referrerPolicy="no-referrer"
+                      crossOrigin="anonymous"
                       className="w-full h-full object-cover" 
-                      onError={() => setProfilePictureUrl(null)}
+                      onError={() => setImageLoadError(true)}
                     />
                   ) : (
                     <User size={32} className="text-slate-400" />

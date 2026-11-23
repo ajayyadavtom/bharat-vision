@@ -22,6 +22,58 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    const hydrateUserSession = (userObj: any, displayName: string) => {
+      setUserName(displayName);
+
+      let avatar = userObj.user_metadata?.avatar_url || userObj.user_metadata?.picture;
+      if (!avatar && Array.isArray(userObj.identities)) {
+        for (const identity of userObj.identities) {
+          const idData = identity.identity_data;
+          if (idData?.avatar_url && typeof idData.avatar_url === "string" && !idData.avatar_url.startsWith("blob:")) {
+            avatar = idData.avatar_url;
+            break;
+          }
+          if (idData?.picture && typeof idData.picture === "string" && !idData.picture.startsWith("blob:")) {
+            avatar = idData.picture;
+            break;
+          }
+        }
+      }
+
+      if (avatar && !avatar.startsWith("blob:")) {
+        setProfilePictureUrl(avatar);
+        if (typeof window !== "undefined") {
+          try {
+            const cache = JSON.parse(localStorage.getItem("bv_user_avatars") || "{}");
+            cache[userObj.id] = avatar;
+            if (userObj.email) cache[userObj.email] = avatar;
+            if (displayName) cache[displayName] = avatar;
+            cache["last"] = avatar;
+            localStorage.setItem("bv_user_avatars", JSON.stringify(cache));
+          } catch (e) {}
+        }
+      } else if (typeof window !== "undefined") {
+        try {
+          const cache = JSON.parse(localStorage.getItem("bv_user_avatars") || "{}");
+          const cached = cache[userObj.id] || (userObj.email ? cache[userObj.email] : null) || cache[displayName] || cache["last"];
+          if (cached && !cached.startsWith("blob:")) {
+            setProfilePictureUrl(cached);
+          }
+        } catch (e) {}
+      }
+
+      // Restore durable ride history if available
+      if (typeof window !== "undefined") {
+        try {
+          const hCache = JSON.parse(localStorage.getItem("bv_user_ride_history") || "{}");
+          const savedH = hCache[userObj.id] || (userObj.email ? hCache[userObj.email] : null) || hCache[displayName] || hCache["last"];
+          if (Array.isArray(savedH) && savedH.length > 0) {
+            useAppStore.setState({ rideHistory: savedH });
+          }
+        } catch (e) {}
+      }
+    };
+
     const checkAuth = async () => {
       // 1. Check if OAuth redirect tokens exist in URL hash or query params
       if (typeof window !== "undefined") {
@@ -38,19 +90,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
                 const displayName = userObj.user_metadata?.full_name || 
                                     userObj.user_metadata?.name || 
                                     (userObj.email ? userObj.email.split("@")[0] : "Commuter");
-                setUserName(displayName);
-                const avatar = userObj.user_metadata?.avatar_url || userObj.user_metadata?.picture;
-                if (avatar && !avatar.startsWith("blob:")) {
-                  setProfilePictureUrl(avatar);
-                } else if (typeof window !== "undefined") {
-                  try {
-                    const cache = JSON.parse(localStorage.getItem("bv_user_avatars") || "{}");
-                    const cached = cache[userObj.id] || (userObj.email ? cache[userObj.email] : null) || cache["last"];
-                    if (cached && !cached.startsWith("blob:")) {
-                      setProfilePictureUrl(cached);
-                    }
-                  } catch (e) {}
-                }
+                hydrateUserSession(userObj, displayName);
                 setIsAuthorized(true);
                 setShowSplash(false);
                 return;
@@ -72,19 +112,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
           const displayName = userObj.user_metadata?.full_name || 
                               userObj.user_metadata?.name || 
                               (userObj.email ? userObj.email.split("@")[0] : "Commuter");
-          setUserName(displayName);
-          const avatar = userObj.user_metadata?.avatar_url || userObj.user_metadata?.picture;
-          if (avatar && !avatar.startsWith("blob:")) {
-            setProfilePictureUrl(avatar);
-          } else if (typeof window !== "undefined") {
-            try {
-              const cache = JSON.parse(localStorage.getItem("bv_user_avatars") || "{}");
-              const cached = cache[userObj.id] || (userObj.email ? cache[userObj.email] : null) || cache["last"];
-              if (cached && !cached.startsWith("blob:")) {
-                setProfilePictureUrl(cached);
-              }
-            } catch (e) {}
-          }
+          hydrateUserSession(userObj, displayName);
           setIsAuthorized(true);
           setShowSplash(false);
           return;
@@ -129,19 +157,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
         const displayName = userObj.user_metadata?.full_name || 
                             userObj.user_metadata?.name || 
                             (userObj.email ? userObj.email.split("@")[0] : "Commuter");
-        setUserName(displayName);
-        const avatar = userObj.user_metadata?.avatar_url || userObj.user_metadata?.picture;
-        if (avatar && !avatar.startsWith("blob:")) {
-          setProfilePictureUrl(avatar);
-        } else if (typeof window !== "undefined") {
-          try {
-            const cache = JSON.parse(localStorage.getItem("bv_user_avatars") || "{}");
-            const cached = cache[userObj.id] || (userObj.email ? cache[userObj.email] : null) || cache["last"];
-            if (cached && !cached.startsWith("blob:")) {
-              setProfilePictureUrl(cached);
-            }
-          } catch (e) {}
-        }
+        hydrateUserSession(userObj, displayName);
         setIsAuthorized(true);
         setShowSplash(false);
       } else if (event === "SIGNED_OUT") {

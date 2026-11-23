@@ -46,6 +46,11 @@ export default function DesktopNav() {
   const [isTopUpOpen, setIsTopUpOpen] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
   const [gpsLocationName, setGpsLocationName] = useState<string | null>(null);
+  const [profileImgError, setProfileImgError] = useState(false);
+
+  useEffect(() => {
+    setProfileImgError(false);
+  }, [profilePictureUrl]);
 
   // Client-side hydration safeguard
   useEffect(() => {
@@ -258,14 +263,14 @@ export default function DesktopNav() {
               title="View Profile & Transit Pass"
             >
               <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 border-2 border-emerald-500/40 overflow-hidden flex items-center justify-center group-hover:border-emerald-500 transition-colors shrink-0 shadow-xs">
-                {profilePictureUrl ? (
+                {profilePictureUrl && !profileImgError ? (
                   <img
                     src={profilePictureUrl}
                     alt={userName || "User"}
+                    referrerPolicy="no-referrer"
+                    crossOrigin="anonymous"
                     className="w-full h-full object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLElement).style.display = "none";
-                    }}
+                    onError={() => setProfileImgError(true)}
                   />
                 ) : (
                   <User size={16} className="text-slate-600 dark:text-slate-300" />

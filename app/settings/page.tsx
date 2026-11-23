@@ -261,27 +261,79 @@ export default function SettingsScreen() {
   };
 
   const handleLogout = async () => {
-    // Preserve active profile picture in durable cache before session reset
+    // 1. Preserve active profile picture, ride history, and user account state in durable caches
     if (typeof window !== "undefined") {
       try {
         const state = useAppStore.getState();
+        const userIdentifier = state.userName || "last";
+
+        // Fetch session info if available to key by email/userId
+        let sessionUser: any = null;
+        try {
+          const { data } = await supabase.auth.getSession();
+          sessionUser = data.session?.user || null;
+        } catch {}
+
+        // Preserve profile picture
         if (state.profilePictureUrl && !state.profilePictureUrl.startsWith("blob:")) {
-          const cache = JSON.parse(localStorage.getItem("bv_user_avatars") || "{}");
-          cache["last"] = state.profilePictureUrl;
-          if (state.userName) cache[state.userName] = state.profilePictureUrl;
-          localStorage.setItem("bv_user_avatars", JSON.stringify(cache));
+          const avatarCache = JSON.parse(localStorage.getItem("bv_user_avatars") || "{}");
+          avatarCache["last"] = state.profilePictureUrl;
+          if (state.userName) avatarCache[state.userName] = state.profilePictureUrl;
+          if (sessionUser?.email) avatarCache[sessionUser.email] = state.profilePictureUrl;
+          if (sessionUser?.id) avatarCache[sessionUser.id] = state.profilePictureUrl;
+          localStorage.setItem("bv_user_avatars", JSON.stringify(avatarCache));
         }
-      } catch (e) {}
+
+        // Preserve ride history
+        if (state.rideHistory && state.rideHistory.length > 0) {
+          const historyCache = JSON.parse(localStorage.getItem("bv_user_ride_history") || "{}");
+          historyCache["last"] = state.rideHistory;
+          if (state.userName) historyCache[state.userName] = state.rideHistory;
+          if (sessionUser?.email) historyCache[sessionUser.email] = state.rideHistory;
+          if (sessionUser?.id) historyCache[sessionUser.id] = state.rideHistory;
+          localStorage.setItem("bv_user_ride_history", JSON.stringify(historyCache));
+        }
+
+        // Preserve account snapshot
+        const accountsCache = JSON.parse(localStorage.getItem("bv_user_accounts") || "{}");
+        const accountPayload = {
+          userName: state.userName,
+          profilePictureUrl: state.profilePictureUrl,
+          rideHistory: state.rideHistory,
+          walletBalance: state.walletBalance,
+          karmaPoints: state.karmaPoints,
+          carbonSavedGrams: state.carbonSavedGrams,
+          activeTickets: state.activeTickets,
+          activePasses: state.activePasses,
+        };
+        accountsCache[userIdentifier] = accountPayload;
+        accountsCache["last"] = accountPayload;
+        if (sessionUser?.email) accountsCache[sessionUser.email] = accountPayload;
+        localStorage.setItem("bv_user_accounts", JSON.stringify(accountsCache));
+      } catch (e) {
+        console.warn("Logout backup notice:", e);
+      }
     }
 
-    // Clear local storage and session storage
+    // 2. Clear session auth flags without wiping durable multi-account data
     sessionStorage.clear();
-    localStorage.removeItem("bharat-vision-storage");
+
+    // 3. Reset active session state in store
+    useAppStore.setState({
+      userName: "Guest",
+      profilePictureUrl: null,
+      bookedRide: null,
+      activeTickets: [],
+      activePasses: [],
+      activePass: null
+    });
     
-    // Sign out from Supabase securely
-    await supabase.auth.signOut();
+    // 4. Sign out from Supabase securely
+    try {
+      await supabase.auth.signOut();
+    } catch (e) {}
     
-    // Redirect to login
+    // 5. Redirect to login
     router.replace("/login");
   };
 
