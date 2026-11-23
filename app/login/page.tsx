@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { supabase } from "@/lib/supabase";
-import { useAppStore } from "@/lib/store";
+import { useAppStore, loadCustomAvatar } from "@/lib/store";
 
 type LoginMode = "email" | "phone";
 
@@ -63,6 +63,8 @@ export default function LoginScreen() {
   const cachedAjayAvatar = useMemo(() => {
     if (typeof window === "undefined") return null;
     try {
+      const custom = loadCustomAvatar("ajayyadavtom@gmail.com") || loadCustomAvatar("Ajay Yadav") || loadCustomAvatar("last");
+      if (custom && !custom.startsWith("blob:")) return custom;
       const cache = JSON.parse(localStorage.getItem("bv_user_avatars") || "{}");
       const url = cache["ajayyadavtom@gmail.com"] || cache["Ajay Yadav"] || cache["last"] || null;
       return url && !url.startsWith("blob:") ? url : null;
@@ -325,11 +327,17 @@ export default function LoginScreen() {
     setUserName(name);
     if (typeof window !== "undefined") {
       try {
-        // Restore Google account avatar
-        const cache = JSON.parse(localStorage.getItem("bv_user_avatars") || "{}");
-        const cached = cache[selectedEmail] || cache[name] || cache["last"];
-        if (cached && !cached.startsWith("blob:")) {
-          setProfilePictureUrl(cached);
+        // 1. Check if user set a custom avatar in the app
+        const customAvatar = loadCustomAvatar(selectedEmail) || loadCustomAvatar(name) || loadCustomAvatar("last");
+        if (customAvatar && !customAvatar.startsWith("blob:")) {
+          setProfilePictureUrl(customAvatar, true);
+        } else {
+          // Fallback to Google account avatar
+          const cache = JSON.parse(localStorage.getItem("bv_user_avatars") || "{}");
+          const cached = cache[selectedEmail] || cache[name] || cache["last"];
+          if (cached && !cached.startsWith("blob:")) {
+            setProfilePictureUrl(cached, false);
+          }
         }
 
         // Restore user's ride history across sessions

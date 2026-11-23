@@ -111,7 +111,7 @@ export default function ProfileScreen() {
       setIsUploadingImage(true);
       try {
         const dataUrl = await compressAndResizeImage(file, 320);
-        await setProfilePictureUrl(dataUrl);
+        await setProfilePictureUrl(dataUrl, true);
       } catch (err) {
         console.error("Error processing profile picture:", err);
       } finally {

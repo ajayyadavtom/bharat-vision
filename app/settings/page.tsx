@@ -31,7 +31,7 @@ import {
   Tag
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { useAppStore } from "@/lib/store";
+import { useAppStore, persistCustomAvatar } from "@/lib/store";
 import { 
   getNotificationPermission, 
   requestNotificationPermission, 
@@ -282,6 +282,13 @@ export default function SettingsScreen() {
           if (sessionUser?.email) avatarCache[sessionUser.email] = state.profilePictureUrl;
           if (sessionUser?.id) avatarCache[sessionUser.id] = state.profilePictureUrl;
           localStorage.setItem("bv_user_avatars", JSON.stringify(avatarCache));
+
+          // Also preserve custom avatar if this is an app-customized image
+          if (state.isCustomAvatar || state.profilePictureUrl.startsWith("data:image/")) {
+            persistCustomAvatar(state.profilePictureUrl, state.userName);
+            if (sessionUser?.email) persistCustomAvatar(state.profilePictureUrl, sessionUser.email);
+            if (sessionUser?.id) persistCustomAvatar(state.profilePictureUrl, sessionUser.id);
+          }
         }
 
         // Preserve ride history
@@ -322,6 +329,7 @@ export default function SettingsScreen() {
     useAppStore.setState({
       userName: "Guest",
       profilePictureUrl: null,
+      isCustomAvatar: false,
       bookedRide: null,
       activeTickets: [],
       activePasses: [],

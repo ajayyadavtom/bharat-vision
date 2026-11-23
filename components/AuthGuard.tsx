@@ -5,7 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { Zap } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/lib/supabase";
-import { useAppStore } from "@/lib/store";
+import { useAppStore, loadCustomAvatar } from "@/lib/store";
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -25,41 +25,53 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     const hydrateUserSession = (userObj: any, displayName: string) => {
       setUserName(displayName);
 
-      let avatar = userObj.user_metadata?.avatar_url || userObj.user_metadata?.picture;
-      if (!avatar && Array.isArray(userObj.identities)) {
-        for (const identity of userObj.identities) {
-          const idData = identity.identity_data;
-          if (idData?.avatar_url && typeof idData.avatar_url === "string" && !idData.avatar_url.startsWith("blob:")) {
-            avatar = idData.avatar_url;
-            break;
-          }
-          if (idData?.picture && typeof idData.picture === "string" && !idData.picture.startsWith("blob:")) {
-            avatar = idData.picture;
-            break;
+      // Check if user has an explicit custom avatar changed in the app
+      const userKey = userObj.email || userObj.id || displayName;
+      const customAvatar = loadCustomAvatar(userKey) || 
+                           (userObj.user_metadata?.custom_avatar_url && !userObj.user_metadata.custom_avatar_url.startsWith('blob:') ? userObj.user_metadata.custom_avatar_url : null) ||
+                           loadCustomAvatar("last");
+
+      if (customAvatar && !customAvatar.startsWith("blob:")) {
+        // User changed their avatar in the app -> PRESERVE IT! DO NOT OVERWRITE WITH GOOGLE DEFAULT!
+        setProfilePictureUrl(customAvatar, true);
+      } else {
+        // No custom avatar -> use Google OAuth provider avatar
+        let avatar = userObj.user_metadata?.avatar_url || userObj.user_metadata?.picture;
+        if (!avatar && Array.isArray(userObj.identities)) {
+          for (const identity of userObj.identities) {
+            const idData = identity.identity_data;
+            if (idData?.avatar_url && typeof idData.avatar_url === "string" && !idData.avatar_url.startsWith("blob:")) {
+              avatar = idData.avatar_url;
+              break;
+            }
+            if (idData?.picture && typeof idData.picture === "string" && !idData.picture.startsWith("blob:")) {
+              avatar = idData.picture;
+              break;
+            }
           }
         }
-      }
 
-      if (avatar && !avatar.startsWith("blob:")) {
-        setProfilePictureUrl(avatar);
-        if (typeof window !== "undefined") {
+        if (avatar && !avatar.startsWith("blob:")) {
+          setProfilePictureUrl(avatar, false);
+          if (typeof window !== "undefined") {
+            try {
+              const cache = JSON.parse(localStorage.getItem("bv_user_avatars") || "{}");
+              cache[userObj.id] = avatar;
+              if (userObj.email) cache[userObj.email] = avatar;
+              if (displayName) cache[displayName] = avatar;
+              cache["last"] = avatar;
+              localStorage.setItem("bv_user_avatars", JSON.stringify(cache));
+            } catch (e) {}
+          }
+        } else if (typeof window !== "undefined") {
           try {
             const cache = JSON.parse(localStorage.getItem("bv_user_avatars") || "{}");
-            cache[userObj.id] = avatar;
-            if (userObj.email) cache[userObj.email] = avatar;
-            if (displayName) cache[displayName] = avatar;
-            cache["last"] = avatar;
-            localStorage.setItem("bv_user_avatars", JSON.stringify(cache));
+            const cached = cache[userObj.id] || (userObj.email ? cache[userObj.email] : null) || cache[displayName] || cache["last"];
+            if (cached && !cached.startsWith("blob:")) {
+              setProfilePictureUrl(cached, false);
+            }
           } catch (e) {}
         }
-      } else if (typeof window !== "undefined") {
-        try {
-          const cache = JSON.parse(localStorage.getItem("bv_user_avatars") || "{}");
-          const cached = cache[userObj.id] || (userObj.email ? cache[userObj.email] : null) || cache[displayName] || cache["last"];
-          if (cached && !cached.startsWith("blob:")) {
-            setProfilePictureUrl(cached);
-          }
-        } catch (e) {}
       }
 
       // Restore durable ride history if available

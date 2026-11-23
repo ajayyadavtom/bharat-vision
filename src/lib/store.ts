@@ -102,6 +102,50 @@ export const loadDurableRideHistory = (accountKey?: string | null): TransitTicke
   return null;
 };
 
+// Durable custom avatar persistent storage (stores app-uploaded profile pictures distinctly from Google OAuth defaults)
+export const persistCustomAvatar = (avatarUrl: string | null, accountKey?: string | null) => {
+  if (typeof window === "undefined") return;
+  try {
+    const raw = localStorage.getItem("bv_custom_avatars");
+    const cache = raw ? JSON.parse(raw) : {};
+    if (avatarUrl && !avatarUrl.startsWith("blob:")) {
+      cache["last"] = avatarUrl;
+      if (accountKey) cache[accountKey] = avatarUrl;
+    } else if (avatarUrl === null) {
+      if (accountKey) delete cache[accountKey];
+      delete cache["last"];
+    }
+    localStorage.setItem("bv_custom_avatars", JSON.stringify(cache));
+  } catch (e) {
+    console.warn("Failed to persist custom avatar:", e);
+  }
+};
+
+export const loadCustomAvatar = (accountKey?: string | null): string | null => {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem("bv_custom_avatars");
+    if (raw) {
+      const cache = JSON.parse(raw);
+      const candidate = (accountKey && cache[accountKey]) || cache["last"] || null;
+      if (typeof candidate === "string" && candidate && !candidate.startsWith("blob:")) {
+        return candidate;
+      }
+    }
+    // Backward compatibility: Also check bv_user_avatars for custom data:image/ uploads
+    const rawAvatars = localStorage.getItem("bv_user_avatars");
+    if (rawAvatars) {
+      const aCache = JSON.parse(rawAvatars);
+      const candidate = (accountKey && aCache[accountKey]) || aCache["last"] || null;
+      if (typeof candidate === "string" && candidate.startsWith("data:image/")) {
+        persistCustomAvatar(candidate, accountKey);
+        return candidate;
+      }
+    }
+  } catch {}
+  return null;
+};
+
 export interface StudentVerificationDetails {
   name: string;
   dob: string;
@@ -152,6 +196,7 @@ interface AppState {
   rideHistory: TransitTicketRecord[];
   addRideHistory: (item: TransitTicketRecord) => void;
   profilePictureUrl: string | null;
+  isCustomAvatar: boolean;
   
   // Settings
   privacyLiveLocation: boolean;
@@ -171,7 +216,7 @@ interface AppState {
   loadChatSession: (sessionId: string) => void;
   deleteChatSession: (sessionId: string) => void;
   setBookedRide: (ride: any | null) => void;
-  setProfilePictureUrl: (url: string | null) => Promise<void> | void;
+  setProfilePictureUrl: (url: string | null, isCustom?: boolean) => Promise<void> | void;
   setPrivacyLiveLocation: (val: boolean) => void;
   setPrivacyCamera: (val: boolean) => void;
   activePass: UserPass | null;
@@ -277,6 +322,7 @@ export const useAppStore = create<AppState>()(
         }
       ],
       profilePictureUrl: null,
+      isCustomAvatar: false,
       
       privacyLiveLocation: true,
       privacyCamera: true,
@@ -551,8 +597,28 @@ export const useAppStore = create<AppState>()(
         });
       },
 
-      setProfilePictureUrl: async (url: string | null) => {
-        set({ profilePictureUrl: url });
+      setProfilePictureUrl: async (url: string | null, isCustom?: boolean) => {
+        const currentName = get().userName;
+        const isCustomUpload = isCustom === true || (typeof url === 'string' && url.startsWith('data:image/'));
+
+        // If user already has a custom image, and an automatic/OAuth sync (isCustom === false) tries to pass a generic/google url, PRESERVE the custom image!
+        const existingCustom = loadCustomAvatar(currentName);
+        if (isCustom === false && url !== null && existingCustom && !existingCustom.startsWith('blob:') && existingCustom !== url) {
+          set({ profilePictureUrl: existingCustom, isCustomAvatar: true });
+          return;
+        }
+
+        set({ 
+          profilePictureUrl: url,
+          isCustomAvatar: isCustomUpload ? true : (url === null ? false : get().isCustomAvatar)
+        });
+
+        // Manage custom avatar persistent storage
+        if (isCustomUpload && url) {
+          persistCustomAvatar(url, currentName);
+        } else if (url === null) {
+          persistCustomAvatar(null, currentName);
+        }
 
         // 1. Resilient local cache keyed by user/account/last (survives logout storage clears)
         if (typeof window !== 'undefined') {
@@ -560,10 +626,8 @@ export const useAppStore = create<AppState>()(
             const cache = JSON.parse(localStorage.getItem('bv_user_avatars') || '{}');
             if (url && !url.startsWith("blob:")) {
               cache['last'] = url;
-              const currentName = get().userName;
               if (currentName) cache[currentName] = url;
             } else if (url === null) {
-              const currentName = get().userName;
               if (currentName && currentName !== "Guest") delete cache[currentName];
             }
             localStorage.setItem('bv_user_avatars', JSON.stringify(cache));
@@ -583,12 +647,23 @@ export const useAppStore = create<AppState>()(
                 if (user.email) cache[user.email] = url;
                 cache['last'] = url;
                 localStorage.setItem('bv_user_avatars', JSON.stringify(cache));
+
+                if (isCustomUpload) {
+                  persistCustomAvatar(url, user.id);
+                  if (user.email) persistCustomAvatar(url, user.email);
+                }
               } catch (e) {}
             }
 
             // Sync with Supabase Auth user_metadata
+            const updatePayload: any = { avatar_url: url };
+            if (isCustomUpload) {
+              updatePayload.custom_avatar_url = url;
+            } else if (url === null) {
+              updatePayload.custom_avatar_url = null;
+            }
             await supabase.auth.updateUser({
-              data: { avatar_url: url }
+              data: updatePayload
             });
 
             // Sync with commuter_profiles table if column exists
@@ -678,13 +753,26 @@ export const useAppStore = create<AppState>()(
               .eq('id', user.id)
               .single();
 
-            // Determine avatar from multiple tiers:
-            // 1. commuter_profiles table
-            // 2. user.user_metadata (OAuth or updateUser)
-            // 3. Supabase Auth identities (Google OAuth provider identity avatar)
-            // 4. Local persistent bv_user_avatars cache
+            // Determine avatar priority (custom user upload has HIGHEST priority!):
+            // 1. User's custom app avatar (from local bv_custom_avatars or user_metadata.custom_avatar_url)
+            // 2. commuter_profiles table (avatar_url)
+            // 3. user.user_metadata (OAuth or updateUser)
+            // 4. Supabase Auth identities (Google OAuth provider identity avatar)
+            // 5. Local persistent bv_user_avatars cache
+            const userKey = user.email || user.id || data?.full_name || get().userName;
+            const customAvatar = loadCustomAvatar(userKey) || 
+                                 (user.user_metadata?.custom_avatar_url && !user.user_metadata.custom_avatar_url.startsWith('blob:') ? user.user_metadata.custom_avatar_url : null) ||
+                                 (data?.avatar_url && data.avatar_url.startsWith('data:image/') ? data.avatar_url : null);
+
             let resolvedAvatar: string | null = null;
-            if (data?.avatar_url && !data.avatar_url.startsWith('blob:')) {
+            let hasCustom = false;
+
+            if (customAvatar && !customAvatar.startsWith('blob:')) {
+              resolvedAvatar = customAvatar;
+              hasCustom = true;
+              persistCustomAvatar(customAvatar, user.id);
+              if (user.email) persistCustomAvatar(customAvatar, user.email);
+            } else if (data?.avatar_url && !data.avatar_url.startsWith('blob:')) {
               resolvedAvatar = data.avatar_url;
             } else if (user.user_metadata?.avatar_url && !user.user_metadata.avatar_url.startsWith('blob:')) {
               resolvedAvatar = user.user_metadata.avatar_url;
@@ -724,7 +812,6 @@ export const useAppStore = create<AppState>()(
             }
 
             // RESTORE RIDE HISTORY for this user
-            const userKey = user.email || user.id || data?.full_name || get().userName;
             const recoveredHistory = loadDurableRideHistory(userKey);
             const currentHistory = get().rideHistory || [];
             let finalHistory = currentHistory;
@@ -743,6 +830,7 @@ export const useAppStore = create<AppState>()(
                 karmaPoints: data.karma_points || 0,
                 carbonSavedGrams: data.carbon_saved_grams || 0,
                 rideHistory: finalHistory,
+                isCustomAvatar: hasCustom,
                 ...(resolvedAvatar ? { profilePictureUrl: resolvedAvatar } : {}),
               });
             } else if (error && error.code === 'PGRST116') {
@@ -765,6 +853,7 @@ export const useAppStore = create<AppState>()(
                 karmaPoints: 0,
                 carbonSavedGrams: 0,
                 rideHistory: finalHistory,
+                isCustomAvatar: hasCustom,
                 ...(resolvedAvatar ? { profilePictureUrl: resolvedAvatar } : {}),
               });
             }
@@ -787,12 +876,15 @@ export const useAppStore = create<AppState>()(
               set({ userName: "Guest" });
             }
             // Recover guest avatar if not currently set or if stale blob
-            if (!currentState.profilePictureUrl || currentState.profilePictureUrl.startsWith('blob:')) {
+            const guestCustom = loadCustomAvatar("Guest") || loadCustomAvatar("last");
+            if (guestCustom && !guestCustom.startsWith('blob:')) {
+              set({ profilePictureUrl: guestCustom, isCustomAvatar: true });
+            } else if (!currentState.profilePictureUrl || currentState.profilePictureUrl.startsWith('blob:')) {
               if (typeof window !== 'undefined') {
                 try {
                   const cache = JSON.parse(localStorage.getItem('bv_user_avatars') || '{}');
                   if (cache['last'] && !cache['last'].startsWith('blob:')) {
-                    set({ profilePictureUrl: cache['last'] });
+                    set({ profilePictureUrl: cache['last'], isCustomAvatar: false });
                   }
                 } catch (e) {}
               }
@@ -825,6 +917,7 @@ export const useAppStore = create<AppState>()(
         bookedRide: state.bookedRide,
         rideHistory: state.rideHistory,
         profilePictureUrl: state.profilePictureUrl,
+        isCustomAvatar: state.isCustomAvatar,
         privacyLiveLocation: state.privacyLiveLocation,
         privacyCamera: state.privacyCamera,
         currentCity: state.currentCity,
