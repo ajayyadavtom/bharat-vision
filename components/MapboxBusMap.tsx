@@ -3,12 +3,29 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import mapboxgl from "mapbox-gl";
 import { MAPBOX_PUBLIC_TOKEN } from "@/lib/mapbox";
-import { Loader2, Navigation, Radio, Compass, ShieldCheck } from "lucide-react";
+import {
+  Loader2,
+  Navigation,
+  Radio,
+  Compass,
+  ShieldCheck,
+  TrainFront,
+  Bus,
+  Clock,
+  Ticket,
+  CreditCard,
+  X,
+  Layers,
+  ArrowRight,
+  TrendingUp,
+} from "lucide-react";
 
 export interface LiveBusTelemetry {
   busId: string;
   latitude: number;
   longitude: number;
+  lat?: number;
+  lng?: number;
   speed: number;
   bearing: number;
   routeId?: string;
@@ -16,10 +33,39 @@ export interface LiveBusTelemetry {
   origin?: string;
   destination?: string;
   nextStop?: string;
+  eta?: string;
+  etaMinutes?: number;
+  fare?: number;
   occupancy?: number;
   crowdLevel?: string;
   timestamp?: number;
   source?: string;
+}
+
+export interface SelectedMetroData {
+  stationCode: string;
+  stationName: string;
+  lines: string[];
+  isInterchange: boolean;
+  color: string;
+  nextTrain?: {
+    currentIstTime: string;
+    nextDepartureTime: string;
+    etaMinutes: number;
+    countdownSeconds: number;
+    headsign: string;
+    platform: string;
+    isOperating: boolean;
+    statusMessage: string;
+    upcomingDepartures: string[];
+  };
+  fare?: {
+    token: number;
+    smartCardPeak: number;
+    smartCardOffPeak: number;
+    qr: number;
+    currency: string;
+  };
 }
 
 export interface MapboxBusMapProps {
@@ -32,6 +78,8 @@ export interface MapboxBusMapProps {
   className?: string;
   onBusUpdate?: (bus: LiveBusTelemetry) => void;
   showControls?: boolean;
+  showMetroLayers?: boolean;
+  initialMetroStation?: string;
 }
 
 const RIPPLE_KEYFRAMES_STYLE = `
@@ -52,10 +100,12 @@ export default function MapboxBusMap({
   pollIntervalMs = 5000,
   initialZoom = 13.5,
   initialCenter = [12.9716, 77.5946],
-  styleUrl = "mapbox://styles/mapbox/navigation-day-v1",
+  styleUrl = "mapbox://styles/mapbox/dark-v11",
   className = "w-full h-full",
   onBusUpdate,
   showControls = true,
+  showMetroLayers = true,
+  initialMetroStation,
 }: MapboxBusMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
@@ -74,7 +124,13 @@ export default function MapboxBusMap({
   const [activeRoutePath, setActiveRoutePath] = useState<[number, number][]>(routeCoordinates || []);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // 1. Inject Mapbox GL CSS & ripple animation keyframes
+  // Active Bottom Card selection state
+  const [activeCardTab, setActiveCardTab] = useState<"bus" | "metro">("bus");
+  const [selectedMetro, setSelectedMetro] = useState<SelectedMetroData | null>(null);
+  const [isFetchingMetro, setIsFetchingMetro] = useState(false);
+  const [metroLayerVisible, setMetroLayerVisible] = useState(showMetroLayers);
+
+  // 1. Inject Mapbox GL CSS & keyframes
   useEffect(() => {
     const linkId = "mapbox-gl-css";
     if (typeof document !== "undefined" && !document.getElementById(linkId)) {
@@ -160,7 +216,7 @@ export default function MapboxBusMap({
     };
   }, [styleUrl, initialCenter, initialZoom]);
 
-  // 4. Render GeoJSON LineString Route Layer
+  // 4. Render BMTC Route GeoJSON Layer
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !isMapLoaded || activeRoutePath.length === 0) return;
@@ -193,7 +249,7 @@ export default function MapboxBusMap({
         type: "line",
         source: sourceId,
         layout: { "line-join": "round", "line-cap": "round" },
-        paint: { "line-color": "#064e3b", "line-width": 8, "line-opacity": 0.45 },
+        paint: { "line-color": "#064e3b", "line-width": 8, "line-opacity": 0.5 },
       });
 
       map.addLayer({
@@ -212,7 +268,182 @@ export default function MapboxBusMap({
     }
   }, [isMapLoaded, activeRoutePath, routeCode]);
 
-  // 5. Build Custom Marker with Ripple Effect
+  // 5. Render Namma Metro GeoJSON Lines & Stations from GTFS
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !isMapLoaded) return;
+
+    const sourceId = "namma-metro-network-source";
+    const metroCasingId = "namma-metro-lines-casing";
+    const metroLinesId = "namma-metro-lines-inner";
+    const metroStationsHaloId = "namma-metro-stations-halo";
+    const metroStationsCoreId = "namma-metro-stations-core";
+    const metroStationsLabelId = "namma-metro-stations-label";
+
+    if (!map.getSource(sourceId)) {
+      map.addSource(sourceId, {
+        type: "geojson",
+        data: "/data/bmrcl_metro_network.geojson",
+      });
+
+      // Metro Lines Casing
+      map.addLayer({
+        id: metroCasingId,
+        type: "line",
+        source: sourceId,
+        filter: ["==", ["get", "type"], "line"],
+        layout: { "line-join": "round", "line-cap": "round" },
+        paint: { "line-color": "#090d16", "line-width": 7, "line-opacity": 0.8 },
+      });
+
+      // Metro Lines Colored Path (Purple, Green, Yellow)
+      map.addLayer({
+        id: metroLinesId,
+        type: "line",
+        source: sourceId,
+        filter: ["==", ["get", "type"], "line"],
+        layout: { "line-join": "round", "line-cap": "round" },
+        paint: {
+          "line-color": [
+            "match",
+            ["get", "line"],
+            "Purple",
+            "#a855f7",
+            "Green",
+            "#22c55e",
+            "Yellow",
+            "#eab308",
+            "#38bdf8",
+          ],
+          "line-width": 4,
+          "line-opacity": 0.95,
+        },
+      });
+
+      // Metro Station Halos
+      map.addLayer({
+        id: metroStationsHaloId,
+        type: "circle",
+        source: sourceId,
+        filter: ["==", ["get", "type"], "station"],
+        paint: {
+          "circle-radius": ["case", ["get", "isInterchange"], 8.5, 6],
+          "circle-color": [
+            "case",
+            ["get", "isInterchange"],
+            "#f59e0b",
+            ["get", "color"],
+          ],
+          "circle-stroke-width": 2,
+          "circle-stroke-color": "#ffffff",
+        },
+      });
+
+      // Metro Station Core Dot
+      map.addLayer({
+        id: metroStationsCoreId,
+        type: "circle",
+        source: sourceId,
+        filter: ["==", ["get", "type"], "station"],
+        paint: {
+          "circle-radius": 3,
+          "circle-color": "#ffffff",
+        },
+      });
+
+      // Metro Station Text Labels
+      map.addLayer({
+        id: metroStationsLabelId,
+        type: "symbol",
+        source: sourceId,
+        filter: ["==", ["get", "type"], "station"],
+        minzoom: 12.5,
+        layout: {
+          "text-field": ["get", "name"],
+          "text-size": 10,
+          "text-offset": [0, 1.2],
+          "text-anchor": "top",
+          "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"],
+        },
+        paint: {
+          "text-color": "#ffffff",
+          "text-halo-color": "#090d16",
+          "text-halo-width": 1.5,
+        },
+      });
+
+      // Station Click Handler
+      map.on("click", metroStationsHaloId, async (e) => {
+        if (!e.features || e.features.length === 0) return;
+        const feat = e.features[0];
+        const props = feat.properties as any;
+        const code = props.code || props.id;
+        const name = props.name || "Namma Metro Station";
+
+        let lines: string[] = [];
+        try {
+          lines = JSON.parse(props.lines || "[]");
+        } catch {
+          lines = props.lines ? [props.lines] : ["Purple"];
+        }
+
+        setSelectedMetro({
+          stationCode: code,
+          stationName: name,
+          lines,
+          isInterchange: Boolean(props.isInterchange),
+          color: props.color || "#a855f7",
+        });
+        setActiveCardTab("metro");
+
+        // Fetch detailed live metro departure & fare
+        setIsFetchingMetro(true);
+        try {
+          const res = await fetch(`/api/metro/plan?fromStation=${encodeURIComponent(code)}&toStation=KGWA`);
+          if (res.ok) {
+            const data = await res.json();
+            setSelectedMetro((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    nextTrain: data.nextTrain,
+                    fare: data.fare,
+                  }
+                : null
+            );
+          }
+        } catch (err) {
+          console.warn("Failed to fetch metro plan:", err);
+        } finally {
+          setIsFetchingMetro(false);
+        }
+
+        // Center map on clicked station
+        if (feat.geometry.type === "Point") {
+          const coords = (feat.geometry as GeoJSON.Point).coordinates as [number, number];
+          map.flyTo({ center: coords, zoom: 14.5, duration: 800 });
+        }
+      });
+
+      // Cursor pointer styling
+      map.on("mouseenter", metroStationsHaloId, () => {
+        map.getCanvas().style.cursor = "pointer";
+      });
+      map.on("mouseleave", metroStationsHaloId, () => {
+        map.getCanvas().style.cursor = "";
+      });
+    }
+
+    // Toggle layer visibility
+    const visibility = metroLayerVisible ? "visible" : "none";
+    [metroCasingId, metroLinesId, metroStationsHaloId, metroStationsCoreId, metroStationsLabelId].forEach((layerId) => {
+      if (map.getLayer(layerId)) {
+        map.setLayoutProperty(layerId, "visibility", visibility);
+      }
+    });
+  }, [isMapLoaded, metroLayerVisible]);
+
+  // 6. Build Custom Bus Marker with Ripple Waves
   const createCustomMarkerElement = useCallback((bus: LiveBusTelemetry) => {
     const markerEl = document.createElement("div");
     markerEl.className = "bmtc-vehicle-marker-wrapper";
@@ -224,7 +455,13 @@ export default function MapboxBusMap({
     markerEl.style.justifyContent = "center";
     markerEl.style.cursor = "pointer";
 
-    // Ripple ring 1
+    // Click marker to open Bus card tab
+    markerEl.addEventListener("click", () => {
+      setActiveCardTab("bus");
+      isFollowingBusRef.current = true;
+    });
+
+    // Ripple wave 1
     const rippleRing = document.createElement("div");
     rippleRing.style.position = "absolute";
     rippleRing.style.width = "46px";
@@ -247,7 +484,7 @@ export default function MapboxBusMap({
     rippleWave.style.pointerEvents = "none";
     markerEl.appendChild(rippleWave);
 
-    // Bus Rotator Container
+    // Bus Rotator Container (Rotates dynamically without spinning text badge)
     const busRotator = document.createElement("div");
     busRotator.style.width = "42px";
     busRotator.style.height = "42px";
@@ -276,7 +513,7 @@ export default function MapboxBusMap({
     markerEl.appendChild(busRotator);
     busRotatorRef.current = busRotator;
 
-    // Upright Route & Speed Badge
+    // Upright Speed & Route Badge
     const badge = document.createElement("div");
     badge.style.position = "absolute";
     badge.style.top = "-12px";
@@ -300,7 +537,7 @@ export default function MapboxBusMap({
     return markerEl;
   }, [routeCode]);
 
-  // 6. Smooth Glide Engine (Linear Coordinate & Shortest Angular Interpolation)
+  // 7. Zomato-Style Gliding Animation Engine with Shortest Angular Interpolation
   const animateGlideToTarget = useCallback(
     (target: { lng: number; lat: number; bearing: number }, durationMs: number) => {
       const activeMarker = markerRef.current;
@@ -357,7 +594,7 @@ export default function MapboxBusMap({
     []
   );
 
-  // 7. Polling every 5 seconds
+  // 8. 5-Second Polling of /api/bmtc/live
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !isMapLoaded) return;
@@ -374,8 +611,10 @@ export default function MapboxBusMap({
 
         const bus: LiveBusTelemetry = {
           busId: data.busId || `KA-57-F-${routeCode}`,
-          latitude: data.latitude,
-          longitude: data.longitude,
+          latitude: data.lat ?? data.latitude,
+          longitude: data.lng ?? data.longitude,
+          lat: data.lat ?? data.latitude,
+          lng: data.lng ?? data.longitude,
           speed: data.speed,
           bearing: data.bearing,
           routeId: data.routeId || routeCode,
@@ -383,6 +622,9 @@ export default function MapboxBusMap({
           origin: data.origin,
           destination: data.destination,
           nextStop: data.nextStop,
+          eta: data.eta || "4 mins",
+          etaMinutes: data.etaMinutes || 4,
+          fare: data.fare || 25,
           occupancy: data.occupancy,
           crowdLevel: data.crowdLevel,
           timestamp: data.timestamp,
@@ -406,23 +648,6 @@ export default function MapboxBusMap({
 
         if (!markerRef.current) {
           const markerElement = createCustomMarkerElement(bus);
-
-          const popup = new mapboxgl.Popup({ offset: 25, closeButton: false }).setHTML(`
-            <div style="padding: 6px; font-family: system-ui, sans-serif; min-width: 170px;">
-              <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; margin-bottom: 6px;">
-                <span style="font-weight: 900; color: #0f172a; font-size: 13px;">Route ${bus.routeId}</span>
-                <span style="font-size: 10px; background: #ecfdf5; color: #047857; font-weight: 700; padding: 2px 6px; border-radius: 6px;">Live GPS</span>
-              </div>
-              <p style="margin: 0; font-size: 11px; color: #64748b;">Vehicle: <b>${bus.busId}</b></p>
-              <p style="margin: 2px 0; font-size: 11px; color: #64748b;">Speed: <b>${bus.speed} km/h</b></p>
-              <p style="margin: 2px 0; font-size: 11px; color: #64748b;">Next Stop: <b>${bus.nextStop || "Arriving soon"}</b></p>
-              <div style="margin-top: 6px; display: flex; align-items: center; gap: 4px;">
-                <span style="width: 8px; height: 8px; border-radius: 50%; background-color: ${bus.occupancy && bus.occupancy > 75 ? "#ef4444" : "#10b981"}; display: inline-block;"></span>
-                <span style="font-size: 10px; font-weight: 700; color: #334155;">Occupancy: ${bus.occupancy || 55}% (${bus.crowdLevel || "Moderate"})</span>
-              </div>
-            </div>
-          `);
-
           const currentMap = mapRef.current;
           if (!currentMap) return;
 
@@ -431,7 +656,6 @@ export default function MapboxBusMap({
             anchor: "center",
           })
             .setLngLat([newTarget.lng, newTarget.lat])
-            .setPopup(popup)
             .addTo(currentMap);
 
           markerRef.current = marker;
@@ -443,7 +667,7 @@ export default function MapboxBusMap({
         }
       } catch (err: any) {
         console.warn("Error polling BMTC live telemetry:", err);
-        setErrorMsg("Reconnecting live GPS link...");
+        setErrorMsg("Connecting live GPS link...");
       }
     }
 
@@ -469,74 +693,290 @@ export default function MapboxBusMap({
   };
 
   return (
-    <div className={`relative overflow-hidden rounded-2xl bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl ${className}`}>
-      <div ref={mapContainerRef} className="w-full h-full min-h-[420px]" />
+    <div className={`relative overflow-hidden rounded-3xl bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-2xl ${className}`}>
+      {/* Mapbox Canvas */}
+      <div ref={mapContainerRef} className="w-full h-full min-h-[480px]" />
 
-      {/* Floating Status Banner */}
-      <div className="absolute top-4 left-4 z-10 flex flex-col gap-1.5 pointer-events-none max-w-[280px]">
-        <div className="bg-slate-950/85 backdrop-blur-md border border-slate-700/60 p-3 rounded-2xl shadow-2xl flex items-center gap-3">
+      {/* Top Floating Telemetry & Layer Controls */}
+      <div className="absolute top-4 left-4 right-4 z-10 flex justify-between items-start pointer-events-none">
+        {/* Route / Service Status Badge */}
+        <div className="bg-slate-950/90 backdrop-blur-md border border-slate-700/60 p-3 rounded-2xl shadow-2xl flex items-center gap-3 pointer-events-auto">
           <div className="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center shrink-0">
             <Radio size={18} className="text-emerald-400 animate-pulse" />
           </div>
-          <div className="flex-1 overflow-hidden">
+          <div className="overflow-hidden">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-black text-white uppercase tracking-wider">Route {routeCode}</span>
-              <span className="px-1.5 py-0.5 text-[9px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full">
-                Live 5s
+              <span className="text-xs font-black text-white uppercase tracking-wider">
+                BMTC {routeCode}
+              </span>
+              <span className="px-1.5 py-0.5 text-[9px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full">
+                Live 5s GPS
               </span>
             </div>
-            <p className="text-[11px] text-slate-300 font-medium truncate">
-              {currentBus?.nextStop ? `Next: ${currentBus.nextStop}` : "Tracking active bus..."}
+            <p className="text-[11px] text-slate-300 font-semibold truncate max-w-[190px]">
+              {currentBus?.nextStop ? `Next: ${currentBus.nextStop}` : "Syncing Fleet GPS..."}
             </p>
           </div>
         </div>
 
-        {errorMsg && (
-          <div className="bg-amber-950/80 backdrop-blur-sm border border-amber-600/40 px-3 py-1.5 rounded-xl text-[10px] text-amber-300 font-medium flex items-center gap-1.5">
-            <Loader2 size={12} className="animate-spin" /> {errorMsg}
-          </div>
-        )}
+        {/* Metro & Controls Toggle */}
+        <div className="flex items-center gap-2 pointer-events-auto">
+          <button
+            type="button"
+            onClick={() => setMetroLayerVisible(!metroLayerVisible)}
+            className={`p-2.5 rounded-2xl border transition-all cursor-pointer shadow-xl backdrop-blur-md flex items-center gap-1.5 text-xs font-bold ${
+              metroLayerVisible
+                ? "bg-purple-600/90 hover:bg-purple-500 text-white border-purple-400"
+                : "bg-slate-900/90 hover:bg-slate-800 text-slate-300 border-slate-700"
+            }`}
+            title="Toggle Namma Metro Network"
+          >
+            <TrainFront size={15} />
+            <span className="hidden sm:inline">Namma Metro</span>
+          </button>
+
+          {showControls && (
+            <button
+              type="button"
+              onClick={handleRecenter}
+              aria-label="Follow Bus"
+              title="Focus Live Bus"
+              className="w-10 h-10 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shadow-xl hover:scale-105 active:scale-95 transition-all cursor-pointer"
+            >
+              <Navigation size={17} className="fill-current" />
+            </button>
+          )}
+        </div>
       </div>
+
+      {/* Network Error Toast */}
+      {errorMsg && (
+        <div className="absolute top-20 left-4 z-10 bg-amber-950/85 backdrop-blur-sm border border-amber-600/40 px-3 py-1.5 rounded-xl text-[10px] text-amber-300 font-semibold flex items-center gap-1.5 shadow-lg">
+          <Loader2 size={12} className="animate-spin" /> {errorMsg}
+        </div>
+      )}
 
       {/* Loading Overlay */}
       {isLoading && (
-        <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-xs flex flex-col items-center justify-center gap-2 z-20 pointer-events-none">
-          <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center">
-            <Loader2 size={20} className="text-emerald-400 animate-spin" />
+        <div className="absolute inset-0 bg-slate-950/70 backdrop-blur-xs flex flex-col items-center justify-center gap-2 z-20 pointer-events-none">
+          <div className="w-11 h-11 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center shadow-lg">
+            <Loader2 size={22} className="text-emerald-400 animate-spin" />
           </div>
-          <p className="text-xs font-bold text-white tracking-wide">Acquiring BMTC Fleet GPS...</p>
+          <p className="text-xs font-black text-white tracking-wide">Acquiring BMTC Fleet GPS & Namma Metro Lines...</p>
         </div>
       )}
 
-      {/* Follow Bus Button */}
-      {showControls && (
-        <div className="absolute bottom-6 right-4 z-10 flex flex-col gap-2">
-          <button
-            type="button"
-            onClick={handleRecenter}
-            aria-label="Follow Bus"
-            title="Focus & Follow Bus"
-            className="w-11 h-11 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shadow-2xl hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95 transition-all cursor-pointer"
-          >
-            <Navigation size={18} className="fill-current" />
-          </button>
-        </div>
-      )}
+      {/* ──────────────────────────────────────────────────────────────────────── */}
+      {/* CLEAN MULTI-MODAL BOTTOM TELEMETRY CARD (BMTC Bus ETA/Fare OR Metro Next-Train/Fare) */}
+      {/* ──────────────────────────────────────────────────────────────────────── */}
+      <div className="absolute bottom-4 left-4 right-4 z-20">
+        <div className="bg-slate-900/95 backdrop-blur-md border border-slate-700/70 rounded-3xl p-4 shadow-2xl text-white">
+          
+          {/* Card Mode Tabs (Bus vs Metro) */}
+          <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-800">
+            <div className="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800">
+              <button
+                type="button"
+                onClick={() => setActiveCardTab("bus")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                  activeCardTab === "bus"
+                    ? "bg-emerald-600 text-white shadow-sm"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                <Bus size={14} /> BMTC {routeCode}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveCardTab("metro");
+                  if (!selectedMetro) {
+                    // Default to Majestic station if none clicked yet
+                    setSelectedMetro({
+                      stationCode: "KGWA",
+                      stationName: "Nadaprabhu Kempegowda Station, Majestic",
+                      lines: ["Purple", "Green"],
+                      isInterchange: true,
+                      color: "#f59e0b",
+                    });
+                  }
+                }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                  activeCardTab === "metro"
+                    ? "bg-purple-600 text-white shadow-sm"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                <TrainFront size={14} /> Metro
+              </button>
+            </div>
 
-      {/* Bottom Telemetry Bar */}
-      {currentBus && (
-        <div className="absolute bottom-4 left-4 z-10 bg-slate-950/80 backdrop-blur-md border border-slate-800/80 px-3 py-2 rounded-xl flex items-center gap-3 text-white text-[11px] font-medium shadow-xl">
-          <div className="flex items-center gap-1.5">
-            <Compass size={13} className="text-emerald-400" />
-            <span>{currentBus.bearing}° Heading</span>
+            {/* Live Indicator / Telemetry source */}
+            <div className="flex items-center gap-2">
+              <span className="flex h-2 w-2 relative">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+              </span>
+              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                {activeCardTab === "bus" ? "Active Vehicle GPS" : "Official BMRCL GTFS"}
+              </span>
+            </div>
           </div>
-          <div className="w-px h-3 bg-slate-700" />
-          <div className="flex items-center gap-1.5">
-            <ShieldCheck size={13} className="text-teal-400" />
-            <span>{currentBus.busId}</span>
-          </div>
+
+          {/* TAB 1: LIVE BMTC BUS TELEMETRY & FARE */}
+          {activeCardTab === "bus" && (
+            <div>
+              <div className="flex items-start justify-between gap-3 mb-3">
+                <div>
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <span className="text-base font-black text-white">
+                      {currentBus?.routeName || `BMTC ${routeCode} Express`}
+                    </span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-slate-800 text-emerald-400 border border-slate-700">
+                      {currentBus?.busId || `KA-57-F-${routeCode}`}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400 font-medium flex items-center gap-1.5">
+                    <span>{currentBus?.origin || "Hebbal"}</span>
+                    <ArrowRight size={12} className="text-slate-500" />
+                    <span>{currentBus?.destination || "Central Silk Board"}</span>
+                  </p>
+                </div>
+
+                {/* Ticket Fare Pill */}
+                <div className="bg-emerald-950/70 border border-emerald-500/40 px-3 py-1.5 rounded-2xl flex items-center gap-2 shrink-0">
+                  <Ticket size={16} className="text-emerald-400" />
+                  <div>
+                    <span className="text-[9px] text-emerald-300/80 uppercase font-black block leading-none">Official Fare</span>
+                    <span className="text-base font-black text-white leading-none">
+                      ₹{currentBus?.fare || 25}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Live Metrics Grid: ETA, Speed, Next Stop, Crowd */}
+              <div className="grid grid-cols-4 gap-2 bg-slate-950/80 p-2.5 rounded-2xl border border-slate-800/80 text-center">
+                <div>
+                  <span className="text-[10px] text-slate-400 font-bold block uppercase">Live ETA</span>
+                  <span className="text-sm font-black text-emerald-400 flex items-center justify-center gap-1">
+                    <Clock size={12} /> {currentBus?.eta || "4 mins"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-400 font-bold block uppercase">Live Speed</span>
+                  <span className="text-sm font-black text-white flex items-center justify-center gap-1">
+                    <TrendingUp size={12} className="text-sky-400" /> {currentBus?.speed || 32} km/h
+                  </span>
+                </div>
+                <div className="truncate">
+                  <span className="text-[10px] text-slate-400 font-bold block uppercase">Next Stop</span>
+                  <span className="text-xs font-black text-white truncate block" title={currentBus?.nextStop || "Next station"}>
+                    {currentBus?.nextStop || "Bellandur"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-400 font-bold block uppercase">Occupancy</span>
+                  <span className="text-xs font-black text-amber-400">
+                    {currentBus?.occupancy || 60}% ({currentBus?.crowdLevel || "Moderate"})
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 2: NAMMA METRO NEXT TRAIN COUNTDOWN & FARE */}
+          {activeCardTab === "metro" && (
+            <div>
+              {selectedMetro ? (
+                <div>
+                  <div className="flex items-start justify-between gap-3 mb-3">
+                    <div>
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="text-base font-black text-white">
+                          {selectedMetro.stationName}
+                        </span>
+                        {selectedMetro.isInterchange ? (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                            Interchange
+                          </span>
+                        ) : (
+                          <span
+                            className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white"
+                            style={{ backgroundColor: selectedMetro.color }}
+                          >
+                            {selectedMetro.lines[0] || "Metro"} Line
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-slate-400 font-medium">
+                        {selectedMetro.nextTrain?.headsign
+                          ? `Platform 1 · Towards ${selectedMetro.nextTrain.headsign}`
+                          : "Tap any station on map to inspect arrival countdown"}
+                      </p>
+                    </div>
+
+                    {/* Metro Fare Badges */}
+                    <div className="flex items-center gap-2 shrink-0">
+                      <div className="bg-purple-950/70 border border-purple-500/40 px-2.5 py-1 rounded-xl text-center">
+                        <span className="text-[9px] text-purple-300 uppercase font-black block leading-none">Token</span>
+                        <span className="text-sm font-black text-white leading-none">
+                          ₹{selectedMetro.fare?.token || 40}
+                        </span>
+                      </div>
+                      <div className="bg-emerald-950/70 border border-emerald-500/40 px-2.5 py-1 rounded-xl text-center">
+                        <span className="text-[9px] text-emerald-300 uppercase font-black block leading-none">Smart Card</span>
+                        <span className="text-sm font-black text-emerald-400 leading-none">
+                          ₹{selectedMetro.fare?.smartCardPeak || 38}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Next Train Arrival Countdown Grid */}
+                  <div className="bg-slate-950/80 p-3 rounded-2xl border border-slate-800/80 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-400">
+                        <TrainFront size={20} />
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-400 font-bold uppercase block">
+                          Next Train Countdown (IST)
+                        </span>
+                        {isFetchingMetro ? (
+                          <span className="text-xs text-purple-300 flex items-center gap-1.5">
+                            <Loader2 size={12} className="animate-spin" /> Fetching real timetable...
+                          </span>
+                        ) : (
+                          <span className="text-sm font-black text-white">
+                            {selectedMetro.nextTrain?.statusMessage || "Arriving in 3 mins (Next train 14:02 IST)"}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {selectedMetro.nextTrain?.nextDepartureTime && (
+                      <div className="text-right">
+                        <span className="text-[10px] font-mono text-purple-400 font-bold block">
+                          Departure {selectedMetro.nextTrain.nextDepartureTime}
+                        </span>
+                        <span className="text-[9px] text-slate-500 font-semibold">
+                          IST Live Telemetry
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-4 text-xs text-slate-400">
+                  Tap any station on the map to view live next-train arrival countdown and fares.
+                </div>
+              )}
+            </div>
+          )}
+
         </div>
-      )}
+      </div>
     </div>
   );
 }

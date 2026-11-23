@@ -1,0 +1,10 @@
+fare_id,price,currency_type,payment_method,transfers,transfer_duration,agency_id
+token10,10,INR,1,,0,BMRCL
+token20,20,INR,1,,0,BMRCL
+token30,30,INR,1,,0,BMRCL
+token40,40,INR,1,,0,BMRCL
+token50,50,INR,1,,0,BMRCL
+token60,60,INR,1,,0,BMRCL
+token70,70,INR,1,,0,BMRCL
+token80,80,INR,1,,0,BMRCL
+token90,90,INR,1,,0,BMRCL

@@ -1,0 +1,5 @@
+fare_media_id,fare_media_name,fare_media_type
+token,Token,1
+qr,QR Ticket,4
+smartcard,Smart Card,2
+touristcard,Tourist Card,2

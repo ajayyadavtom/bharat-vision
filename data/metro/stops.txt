@@ -1,0 +1,489 @@
+stop_name,parent_station,stop_code,zone_id,stop_id,stop_lat,stop_lon,location_type,wheelchair_boarding,level_id,platform_code
+Attiguppe,,AGPP,,AGPP,12.961893,77.53358,1,1,,
+Attiguppe,AGPP,AGPP,AGPP,AGPP_PF1,12.961875,77.533554,,1,AGPP_L_platform,1
+Attiguppe,AGPP,AGPP,AGPP,AGPP_PF2,12.961858,77.53359,,1,AGPP_L_platform,2
+Attiguppe – Entrance A,AGPP,,,AGPP_A,12.962461,77.53404,2,,AGPP_L_road,
+Attiguppe – Entrance B,AGPP,,,AGPP_B,12.962026,77.53391,2,1,AGPP_L_road,
+Attiguppe – Entrance C,AGPP,,,AGPP_C,12.961698,77.533424,2,2,AGPP_L_road,
+BTM Layout,,BTML,,BTML,12.916588,77.608116,1,1,,
+BTM Layout,BTML,BTML,BTML,BTML_PF1,12.916573,77.607635,,1,BTML_L_platform,1
+BTM Layout,BTML,BTML,BTML,BTML_PF2,12.916598,77.60862,,1,BTML_L_platform,2
+BTM Layout – Entrance A,BTML,,,BTML_A,12.916367,77.6082,2,1,BTML_L_road,
+BTM Layout – Entrance B,BTML,,,BTML_B,12.916792,77.608215,2,1,BTML_L_road,
+Baiyappanahalli,,BYPH,,BYPH,12.990759,77.65236,1,1,,
+Baiyappanahalli,BYPH,BYPH,BYPH,BYPH_PF1,12.990714,77.652374,,1,BYPH_L_platform,1
+Baiyappanahalli,BYPH,BYPH,BYPH,BYPH_PF2,12.990675,77.65239,,1,BYPH_L_platform,2
+Baiyappanahalli – Entrance,BYPH,,,BYPH_E,12.991778,77.65251,2,,BYPH_L_road,
+Baiyappanahalli – Entrance,BYPH,,,BYPH_E_2,12.992153,77.652084,2,,BYPH_L_road,
+Baiyappanahalli – Entrance A,BYPH,,,BYPH_A,12.989758,77.65353,2,1,BYPH_L_road,
+Banashankari,,BSNK,,BSNK,12.915221,77.5736,1,1,,
+Banashankari,BSNK,BSNK,BSNK,BSNK_PF1,12.915224,77.57358,,1,BSNK_L_platform,1
+Banashankari,BSNK,BSNK,BSNK,BSNK_PF2,12.915219,77.57362,,1,BSNK_L_platform,2
+Banashankari – Entrance A,BSNK,,,BSNK_A,12.91618,77.57397,2,2,BSNK_L_road,
+Banashankari – Entrance B,BSNK,,,BSNK_B,12.915609,77.573875,2,1,BSNK_L_road,
+Banashankari – Entrance D,BSNK,,,BSNK_D,12.91644,77.57343,2,2,BSNK_L_road,
+Benniganahalli,,JTPM,,JTPM,12.996516,77.668465,1,1,,
+Benniganahalli,JTPM,JTPM,JTPM,JTPM_PF1,12.996536,77.66846,,1,JTPM_L_platform,1
+Benniganahalli,JTPM,JTPM,JTPM,JTPM_PF2,12.996496,77.66848,,1,JTPM_L_platform,2
+Benniganahalli – Entrance A,JTPM,,,JTPM_A,12.997278,77.6689,2,1,JTPM_L_road,
+Benniganahalli – Entrance B,JTPM,,,JTPM_B,12.996125,77.66862,2,1,JTPM_L_road,
+Beratena Agrahara,,HOSR,,HOSR,12.863867,77.65786,1,1,,
+Beratena Agrahara,HOSR,HOSR,HOSR,HOSR_PF1,12.864229,77.657585,,1,HOSR_L_platform,1
+Beratena Agrahara,HOSR,HOSR,HOSR,HOSR_PF2,12.863566,77.658195,,1,HOSR_L_platform,2
+Beratena Agrahara – Entrance,HOSR,,,HOSR_E,12.863379,77.65831,2,,HOSR_L_road,
+Beratena Agrahara – Entrance,HOSR,,,HOSR_E_2,12.863764,77.65777,2,,HOSR_L_road,
+Biocon Hebbagodi,,HBGI,,HBGI,12.829033,77.68137,1,1,,
+Biocon Hebbagodi,HBGI,HBGI,HBGI,HBGI_PF1,12.829444,77.68123,,1,HBGI_L_platform,1
+Biocon Hebbagodi,HBGI,HBGI,HBGI,HBGI_PF2,12.828587,77.68155,,1,HBGI_L_platform,2
+Biocon Hebbagodi – Entrance,HBGI,,,HBGI_E,12.828918,77.681206,2,,HBGI_L_road,
+Bommanahalli,,HSRL,,HSRL,12.910616,77.62648,1,1,,
+Bommanahalli,HSRL,HSRL,HSRL,HSRL_PF1,12.911195,77.62613,,1,HSRL_L_platform,1
+Bommanahalli,HSRL,HSRL,HSRL,HSRL_PF2,12.910304,77.6267,,1,HSRL_L_platform,2
+Bommanahalli – Entrance A,HSRL,,,HSRL_A,12.910621,77.62627,2,,HSRL_L_road,
+Central Silk Board,,SBJT,,SBJT,12.916582,77.62057,1,1,,
+Central Silk Board,SBJT,SBJT,SBJT,SBJT_PF1,12.916403,77.62012,,1,SBJT_L_platform,1
+Central Silk Board,SBJT,SBJT,SBJT,SBJT_PF2,12.916734,77.621025,,1,SBJT_L_platform,2
+Central Silk Board – Entrance A,SBJT,,,SBJT_A,12.916218,77.61996,2,,SBJT_L_road,
+Central Silk Board – Entrance B,SBJT,,,SBJT_B,12.916578,77.62111,2,1,SBJT_L_road,
+Central Silk Board – Entrance C,SBJT,,,SBJT_C,12.916803,77.62107,2,,SBJT_L_road,
+Challaghatta,,CLGA,,CLGA,12.897354,77.46129,1,1,,
+Challaghatta,CLGA,CLGA,CLGA,CLGA_PF1,12.89733,77.46122,,1,CLGA_L_platform,1
+Challaghatta,CLGA,CLGA,CLGA,CLGA_PF2,12.897289,77.46125,,1,CLGA_L_platform,2
+Challaghatta – Entrance A,CLGA,,,CLGA_A,12.897326,77.46146,2,,CLGA_L_road,
+Challaghatta – Entrance B,CLGA,,,CLGA_B,12.897529,77.46129,2,,CLGA_L_road,
+Chickpete,,CKPE,,CKPE,12.966897,77.574554,1,1,,
+Chickpete,CKPE,CKPE,CKPE,CKPE_PF1,12.966925,77.57453,,1,CKPE_L_platform,1
+Chickpete,CKPE,CKPE,CKPE,CKPE_PF2,12.966924,77.57458,,1,CKPE_L_platform,2
+Chickpete – Entrance A,CKPE,,,CKPE_A,12.967666,77.574684,2,,CKPE_L_road,
+Chickpete – Entrance B,CKPE,,,CKPE_B,12.965938,77.574875,2,,CKPE_L_road,
+Chickpete – Entrance C,CKPE,,,CKPE_C,12.966619,77.57415,2,,CKPE_L_road,
+Chickpete – Entrance D,CKPE,,,CKPE_D,12.96746,77.57466,2,1,CKPE_L_road,
+Chikkabidarakallu,,JIDL,,JIDL,13.052362,77.487915,1,1,,
+Chikkabidarakallu,JIDL,JIDL,JIDL,JIDL_PF1,13.052341,77.48791,,1,,1
+Chikkabidarakallu,JIDL,JIDL,JIDL,JIDL_PF2,13.052385,77.48792,,1,,2
+Cubbon Park,,CBPK,,CBPK,12.980958,77.59757,1,1,,
+Cubbon Park,CBPK,CBPK,CBPK,CBPK_PF1,12.980979,77.59757,,1,CBPK_L_platform,1
+Cubbon Park,CBPK,CBPK,CBPK,CBPK_PF2,12.980895,77.597565,,1,CBPK_L_platform,2
+Cubbon Park – Entrance A,CBPK,,,CBPK_A,12.980761,77.598366,2,,CBPK_L_road,
+Cubbon Park – Entrance B,CBPK,,,CBPK_B,12.980257,77.59795,2,,CBPK_L_road,
+Cubbon Park – Entrance C,CBPK,,,CBPK_C,12.980964,77.59695,2,,CBPK_L_road,
+Cubbon Park – Entrance D,CBPK,,,CBPK_D,12.981082,77.596565,2,1,CBPK_L_road,
+Cubbon Park – Entrance E,CBPK,,,CBPK_E,12.981751,77.596436,2,,CBPK_L_road,
+Cubbon Park – Entrance F,CBPK,,,CBPK_F,12.981375,77.59632,2,,CBPK_L_road,
+Cubbon Park – Entrance G,CBPK,,,CBPK_G,12.981329,77.597244,2,,CBPK_L_road,
+Dasarahalli,,DSH,,DSH,13.043261,77.51255,1,1,,
+Dasarahalli,DSH,DSH,DSH,DSH_PF1,13.04322,77.512535,,1,DSH_L_platform,1
+Dasarahalli,DSH,DSH,DSH,DSH_PF2,13.043296,77.512566,,1,DSH_L_platform,2
+Dasarahalli – Entrance A,DSH,,,DSH_A,13.043594,77.51211,2,,DSH_L_road,
+Dasarahalli – Entrance B,DSH,,,DSH_B,13.043348,77.51288,2,,DSH_L_road,
+Deepanjali Nagar,,DJNR,,DJNR,12.952058,77.53701,1,1,,
+Deepanjali Nagar,DJNR,DJNR,DJNR,DJNR_PF1,12.952033,77.536995,,1,DJNR_L_platform,1
+Deepanjali Nagar,DJNR,DJNR,DJNR,DJNR_PF2,12.952047,77.53704,,1,DJNR_L_platform,2
+Deepanjali Nagar – Entrance A,DJNR,,,DJNR_A,12.952015,77.53729,2,,DJNR_L_road,
+Deepanjali Nagar – Entrance B,DJNR,,,DJNR_B,12.952194,77.53682,2,1,DJNR_L_road,
+Delta Electronics Bommasandra,,BMSD,,BMSD,12.819394,77.68835,1,1,,
+Delta Electronics Bommasandra,BMSD,BMSD,BMSD,BMSD_PF1,12.819755,77.687996,,1,BMSD_L_platform,1
+Delta Electronics Bommasandra,BMSD,BMSD,BMSD,BMSD_PF2,12.819088,77.68866,,1,BMSD_L_platform,2
+Delta Electronics Bommasandra – Entrance A,BMSD,,,BMSD_A,12.819263,77.68817,2,,BMSD_L_road,
+Delta Electronics Bommasandra – Entrance A,BMSD,,,BMSD_A_2,12.819427,77.68835,2,,BMSD_L_road,
+Doddakallasandra,,KLPK,,KLPK,12.884643,77.55276,1,1,,
+Doddakallasandra,KLPK,KLPK,KLPK,KLPK_PF1,12.884686,77.55275,,1,KLPK_L_platform,1
+Doddakallasandra,KLPK,KLPK,KLPK,KLPK_PF2,12.884624,77.55278,,1,KLPK_L_platform,2
+Doddakallasandra – Entrance A,KLPK,,,KLPK_A,12.884466,77.55283,2,1,KLPK_L_road,
+Doddakallasandra – Entrance B,KLPK,,,KLPK_B,12.884816,77.55269,2,1,KLPK_L_road,
+"Dr. B. R. Ambedkar Station, Vidhana Soudha",,VDSA,,VDSA,12.978742,77.59164,1,1,,
+"Dr. B. R. Ambedkar Station, Vidhana Soudha",VDSA,VDSA,VDSA,VDSA_PF1,12.978996,77.59183,,1,VDSA_L_platform,1
+"Dr. B. R. Ambedkar Station, Vidhana Soudha",VDSA,VDSA,VDSA,VDSA_PF2,12.977973,77.59111,,1,VDSA_L_platform,2
+"Dr. B. R. Ambedkar Station, Vidhana Soudha – Entrance A",VDSA,,,VDSA_A,12.980113,77.592636,2,2,VDSA_L_road,
+"Dr. B. R. Ambedkar Station, Vidhana Soudha – Entrance B",VDSA,,,VDSA_B,12.979424,77.592575,2,,VDSA_L_road,
+"Dr. B. R. Ambedkar Station, Vidhana Soudha – Entrance C",VDSA,,,VDSA_C,12.979185,77.59235,2,,VDSA_L_road,
+"Dr. B. R. Ambedkar Station, Vidhana Soudha – Entrance D",VDSA,,,VDSA_D,12.977627,77.591,2,,VDSA_L_road,
+"Dr. B. R. Ambedkar Station, Vidhana Soudha – Entrance E",VDSA,,,VDSA_E,12.97766,77.59028,2,,VDSA_L_road,
+Electronic City,,ETCT,,ETCT,12.856505,77.66352,1,1,,
+Electronic City,ETCT,ETCT,ETCT,ETCT_PF1,12.856798,77.66324,,1,ETCT_L_platform,1
+Electronic City,ETCT,ETCT,ETCT,ETCT_PF2,12.856279,77.663734,,1,ETCT_L_platform,2
+Electronic City – Entrance A,ETCT,,,ETCT_A,12.856402,77.66342,2,,ETCT_L_road,
+Electronic City – Entrance B,ETCT,,,ETCT_B,12.855714,77.66417,2,,ETCT_L_road,
+Electronic City – Entrance B,ETCT,,,ETCT_B_2,12.855999,77.6639,2,,ETCT_L_road,
+Garudacharpalya,,GDCP,,GDCP,12.99345,77.703674,1,1,,
+Garudacharpalya,GDCP,GDCP,GDCP,GDCP_PF1,12.99334,77.70411,,1,GDCP_L_platform,1
+Garudacharpalya,GDCP,GDCP,GDCP,GDCP_PF2,12.993517,77.7033,,1,GDCP_L_platform,2
+Garudacharpalya – Entrance A,GDCP,,,GDCP_A,12.99355,77.70389,2,1,GDCP_L_road,
+Garudacharpalya – Entrance B,GDCP,,,GDCP_B,12.993212,77.70376,2,1,GDCP_L_road,
+Goraguntepalya,,YPI,,YPI,13.028332,77.54085,1,1,,
+Goraguntepalya,YPI,YPI,YPI,YPI_PF1,13.028613,77.540436,,1,YPI_L_platform,1
+Goraguntepalya,YPI,YPI,YPI,YPI_PF2,13.028247,77.54119,,1,YPI_L_platform,2
+Goraguntepalya – Entrance A,YPI,,,YPI_A,13.027895,77.54115,2,,YPI_L_road,
+Goraguntepalya – Entrance B,YPI,,,YPI_B,13.02806,77.54089,2,1,YPI_L_road,
+Goraguntepalya – Entrance C,YPI,,,YPI_C,13.02839,77.540306,2,2,YPI_L_road,
+Goraguntepalya – Entrance E,YPI,,,YPI_E,13.028338,77.54144,2,2,YPI_L_road,
+Halasuru,,HLRU,,HLRU,12.976499,77.626686,1,1,,
+Halasuru,HLRU,HLRU,HLRU,HLRU_PF1,12.976517,77.62666,,1,HLRU_L_platform,1
+Halasuru,HLRU,HLRU,HLRU,HLRU_PF2,12.976491,77.6267,,1,HLRU_L_platform,2
+Halasuru – Entrance,HLRU,,,HLRU_E,12.976206,77.626335,2,1,HLRU_L_road,
+Hongasandra,,OFDC,,OFDC,12.901695,77.63199,1,1,,
+Hongasandra,OFDC,OFDC,OFDC,OFDC_PF1,12.902124,77.6317,,1,OFDC_L_platform,1
+Hongasandra,OFDC,OFDC,OFDC,OFDC_PF2,12.901332,77.63224,,1,OFDC_L_platform,2
+Hongasandra – Entrance,OFDC,,,OFDC_E,12.902143,77.63154,2,,OFDC_L_road,
+Hongasandra – Entrance,OFDC,,,OFDC_E_2,12.901599,77.63185,2,,OFDC_L_road,
+Hoodi,,DKIA,,DKIA,12.988803,77.71133,1,1,,
+Hoodi,DKIA,DKIA,DKIA,DKIA_PF1,12.988545,77.71092,,1,DKIA_L_platform,1
+Hoodi,DKIA,DKIA,DKIA,DKIA_PF2,12.989133,77.711845,,1,DKIA_L_platform,2
+Hoodi – Entrance A,DKIA,,,DKIA_A,12.988693,77.711494,2,1,DKIA_L_road,
+Hoodi – Entrance B,DKIA,,,DKIA_B,12.98894,77.71124,2,1,DKIA_L_road,
+Hopefarm Channasandra,,UWVL,,UWVL,12.987343,77.7538,1,1,,
+Hopefarm Channasandra,UWVL,UWVL,UWVL,UWVL_PF1,12.987534,77.75397,,1,UWVL_L_platform,1
+Hopefarm Channasandra,UWVL,UWVL,UWVL,UWVL_PF2,12.987207,77.75386,,1,UWVL_L_platform,2
+Hopefarm Channasandra – Entrance A,UWVL,,,UWVL_A,12.987327,77.7537,2,1,UWVL_L_road,
+Hopefarm Channasandra – Entrance B,UWVL,,,UWVL_B,12.987211,77.75405,2,1,UWVL_L_road,
+Hosa Road,,BSRD,,BSRD,12.870749,77.65245,1,1,,
+Hosa Road,BSRD,BSRD,BSRD,BSRD_PF1,12.871085,77.652145,,1,BSRD_L_platform,1
+Hosa Road,BSRD,BSRD,BSRD,BSRD_PF2,12.8704,77.65275,,1,BSRD_L_platform,2
+Hosa Road – Entrance,BSRD,,,BSRD_E,12.870232,77.65272,2,,BSRD_L_road,
+Hosa Road – Entrance,BSRD,,,BSRD_E_2,12.870684,77.65228,2,,BSRD_L_road,
+Huskur Road,,HSKR,,HSKR,12.839157,77.677376,1,1,,
+Huskur Road,HSKR,HSKR,HSKR,HSKR_PF1,12.839432,77.67714,,1,HSKR_L_platform,1
+Huskur Road,HSKR,HSKR,HSKR,HSKR_PF2,12.838717,77.677734,,1,HSKR_L_platform,2
+Huskur Road – Entrance A,HSKR,,,HSKR_A,12.838309,77.6778,2,,HSKR_L_road,
+Huskur Road – Entrance B,HSKR,,,HSKR_B,12.839149,77.67794,2,,HSKR_L_road,
+Indiranagar,,IDN,,IDN,12.978333,77.638664,1,1,,
+Indiranagar,IDN,IDN,IDN,IDN_PF1,12.978353,77.63866,,1,IDN_L_platform,1
+Indiranagar,IDN,IDN,IDN,IDN_PF2,12.978308,77.63866,,1,IDN_L_platform,2
+Indiranagar – Entrance A,IDN,,,IDN_A,12.978429,77.63845,2,2,IDN_L_road,
+Indiranagar – Entrance B,IDN,,,IDN_B,12.978203,77.63925,2,1,IDN_L_road,
+Indiranagar – Entrance C,IDN,,,IDN_C,12.978147,77.63894,2,1,IDN_L_road,
+Infosys Foundation Konappana Agrahara,,ECTN,,ECTN,12.846413,77.671165,1,1,,
+Infosys Foundation Konappana Agrahara,ECTN,ECTN,ECTN,ECTN_PF1,12.846799,77.67092,,1,ECTN_L_platform,1
+Infosys Foundation Konappana Agrahara,ECTN,ECTN,ECTN,ECTN_PF2,12.846089,77.671455,,1,ECTN_L_platform,2
+Infosys Foundation Konappana Agrahara – Entrance A,ECTN,,,ECTN_A,12.846708,77.670715,2,,ECTN_L_road,
+Infosys Foundation Konappana Agrahara – Entrance B,ECTN,,,ECTN_B,12.845883,77.67127,2,,ECTN_L_road,
+Infosys Foundation Konappana Agrahara – Entrance C,ECTN,,,ECTN_C,12.847013,77.6709,2,,ECTN_L_road,
+Jalahalli,,JLHL,,JLHL,13.03941,77.51974,1,1,,
+Jalahalli,JLHL,JLHL,JLHL,JLHL_PF1,13.039373,77.51972,,1,JLHL_L_platform,1
+Jalahalli,JLHL,JLHL,JLHL,JLHL_PF2,13.039444,77.51976,,1,JLHL_L_platform,2
+Jalahalli – Entrance A,JLHL,,,JLHL_A,13.039824,77.5194,2,,JLHL_L_road,
+Jalahalli – Entrance B,JLHL,,,JLHL_B,13.039297,77.52034,2,,JLHL_L_road,
+Jaya Prakash Nagar,,JPN,,JPN,12.907475,77.57313,1,1,,
+Jaya Prakash Nagar,JPN,JPN,JPN,JPN_PF1,12.907476,77.573105,,1,JPN_L_platform,1
+Jaya Prakash Nagar,JPN,JPN,JPN,JPN_PF2,12.907481,77.57315,,1,JPN_L_platform,2
+Jaya Prakash Nagar – Entrance B,JPN,,,JPN_B,12.907492,77.57337,2,,JPN_L_road,
+Jaya Prakash Nagar – Entrance C,JPN,,,JPN_C,12.907132,77.5734,2,1,JPN_L_road,
+Jaya Prakash Nagar – Entrance D,JPN,,,JPN_D,12.906668,77.57301,2,,JPN_L_road,
+Jayadeva Hospital,,JDHP,,JDHP,12.916731,77.59997,1,1,,
+Jayadeva Hospital,JDHP,JDHP,JDHP,JDHP_PF1,12.916728,77.59973,,1,JDHP_L_platform,1
+Jayadeva Hospital,JDHP,JDHP,JDHP,JDHP_PF2,12.916764,77.60044,,1,JDHP_L_platform,2
+Jayadeva Hospital – Entrance,JDHP,,,JDHP_E,12.916514,77.59968,2,1,JDHP_L_road,
+Jayadeva Hospital – Entrance,JDHP,,,JDHP_E_10,12.916571,77.600426,2,2,JDHP_L_road,
+Jayadeva Hospital – Entrance,JDHP,,,JDHP_E_11,12.916516,77.60017,2,1,JDHP_L_road,
+Jayadeva Hospital – Entrance,JDHP,,,JDHP_E_12,12.916227,77.6002,2,2,JDHP_L_road,
+Jayadeva Hospital – Entrance,JDHP,,,JDHP_E_2,12.916299,77.59968,2,2,JDHP_L_road,
+Jayadeva Hospital – Entrance,JDHP,,,JDHP_E_3,12.91657,77.59938,2,2,JDHP_L_road,
+Jayadeva Hospital – Entrance,JDHP,,,JDHP_E_4,12.916912,77.59945,2,2,JDHP_L_road,
+Jayadeva Hospital – Entrance,JDHP,,,JDHP_E_5,12.917003,77.59975,2,,JDHP_L_road,
+Jayadeva Hospital – Entrance,JDHP,,,JDHP_E_6,12.917217,77.59975,2,2,JDHP_L_road,
+Jayadeva Hospital – Entrance,JDHP,,,JDHP_E_7,12.916983,77.60019,2,1,JDHP_L_road,
+Jayadeva Hospital – Entrance,JDHP,,,JDHP_E_8,12.916865,77.6003,2,2,JDHP_L_road,
+Jayadeva Hospital – Entrance,JDHP,,,JDHP_E_9,12.917111,77.60018,2,2,JDHP_L_road,
+Jayanagar,,JYN,,JYN,12.929507,77.58015,1,1,,
+Jayanagar,JYN,JYN,JYN,JYN_PF1,12.929507,77.580124,,1,JYN_L_platform,1
+Jayanagar,JYN,JYN,JYN,JYN_PF2,12.929507,77.58016,,1,JYN_L_platform,2
+Jayanagar – Entrance A,JYN,,,JYN_A,12.929299,77.58038,2,1,JYN_L_road,
+Jayanagar – Entrance B,JYN,,,JYN_B,12.929009,77.58032,2,,JYN_L_road,
+Jayanagar – Entrance C,JYN,,,JYN_C,12.929977,77.58002,2,,JYN_L_road,
+Jnanabharathi,,BGUC,,BGUC,12.935436,77.512405,1,1,,
+Jnanabharathi,BGUC,BGUC,BGUC,BGUC_PF1,12.935448,77.512405,,1,BGUC_L_platform,1
+Jnanabharathi,BGUC,BGUC,BGUC,BGUC_PF2,12.935405,77.51242,,1,BGUC_L_platform,2
+Jnanabharathi – Entrance A,BGUC,,,BGUC_A,12.935097,77.51221,2,,BGUC_L_road,
+Jnanabharathi – Entrance B,BGUC,,,BGUC_B,12.935527,77.512146,2,1,BGUC_L_road,
+Jnanabharathi – Entrance C,BGUC,,,BGUC_C,12.934965,77.51183,2,1,BGUC_L_road,
+Kadugodi Tree Park,,KDGD,,KDGD,12.98565,77.74701,1,1,,
+Kadugodi Tree Park,KDGD,KDGD,KDGD,KDGD_PF1,12.985481,77.747536,,1,KDGD_L_platform,1
+Kadugodi Tree Park,KDGD,KDGD,KDGD,KDGD_PF2,12.985794,77.746574,,1,KDGD_L_platform,2
+Kadugodi Tree Park – Entrance A,KDGD,,,KDGD_A,12.985803,77.74714,2,1,KDGD_L_road,
+Kadugodi Tree Park – Entrance B,KDGD,,,KDGD_B,12.985465,77.747025,2,1,KDGD_L_road,
+Kengeri,,KGIT,,KGIT,12.90791,77.47658,1,1,,
+Kengeri,KGIT,KGIT,KGIT,KGIT_PF1,12.907928,77.47658,,1,KGIT_L_platform,1
+Kengeri,KGIT,KGIT,KGIT,KGIT_PF2,12.907897,77.476585,,1,KGIT_L_platform,2
+Kengeri Bus Terminal,,MLSD,,MLSD,12.914689,77.487854,1,1,,
+Kengeri Bus Terminal,MLSD,MLSD,MLSD,MLSD_PF1,12.914711,77.48785,,1,MLSD_L_platform,1
+Kengeri Bus Terminal,MLSD,MLSD,MLSD,MLSD_PF2,12.914665,77.48786,,1,MLSD_L_platform,2
+Kengeri Bus Terminal – Entrance A,MLSD,,,MLSD_A,12.91449,77.48725,2,1,MLSD_L_road,
+Kengeri Bus Terminal – Entrance B,MLSD,,,MLSD_B,12.915092,77.48807,2,1,MLSD_L_road,
+Kengeri – Entrance A,KGIT,,,KGIT_A,12.907781,77.476524,2,1,KGIT_L_road,
+Kengeri – Entrance B,KGIT,,,KGIT_B,12.907987,77.47639,2,1,KGIT_L_road,
+Konanakunte Cross,,APRC,,APRC,12.888967,77.56267,1,1,,
+Konanakunte Cross,APRC,APRC,APRC,APRC_PF1,12.888987,77.56266,,1,APRC_L_platform,1
+Konanakunte Cross,APRC,APRC,APRC,APRC_PF2,12.888943,77.5627,,1,APRC_L_platform,2
+Konanakunte Cross – Entrance A,APRC,,,APRC_A,12.888873,77.5629,2,1,APRC_L_road,
+Konanakunte Cross – Entrance B,APRC,,,APRC_B,12.889109,77.562584,2,1,APRC_L_road,
+Krantivira Sangolli Rayanna Railway Station,,BRCS,,BRCS,12.975877,77.56538,1,1,,
+Krantivira Sangolli Rayanna Railway Station,BRCS,BRCS,BRCS,BRCS_PF1,12.975903,77.56538,,1,BRCS_L_platform,1
+Krantivira Sangolli Rayanna Railway Station,BRCS,BRCS,BRCS,BRCS_PF2,12.975858,77.56538,,1,BRCS_L_platform,2
+Krantivira Sangolli Rayanna Railway Station – Entrance A,BRCS,,,BRCS_A,12.97632,77.56703,2,,BRCS_L_road,
+Krantivira Sangolli Rayanna Railway Station – Entrance C,BRCS,,,BRCS_C,12.975413,77.56531,2,,BRCS_L_road,
+Krantivira Sangolli Rayanna Railway Station – Entrance D,BRCS,,,BRCS_D,12.976082,77.56465,2,,BRCS_L_road,
+Krantivira Sangolli Rayanna Railway Station – Entrance E,BRCS,,,BRCS_E,12.976257,77.56447,2,,BRCS_L_road,
+Krishna Rajendra Market,,KRMT,,KRMT,12.960879,77.57466,1,1,,
+Krishna Rajendra Market,KRMT,KRMT,KRMT,KRMT_PF1,12.960896,77.57464,,1,KRMT_L_platform,1
+Krishna Rajendra Market,KRMT,KRMT,KRMT,KRMT_PF2,12.96089,77.574684,,1,KRMT_L_platform,2
+Krishna Rajendra Market – Entrance,KRMT,,,KRMT_E_2,12.960519,77.574486,2,1,KRMT_L_road,
+Krishna Rajendra Market – Entrance,KRMT,,,KRMT_E_3,12.961393,77.5751,2,1,KRMT_L_road,
+Krishna Rajendra Market – Entrance A,KRMT,,,KRMT_A,12.961864,77.575676,2,,KRMT_L_road,
+Krishna Rajendra Market – Entrance B,KRMT,,,KRMT_B,12.960671,77.57506,2,,KRMT_L_road,
+Krishna Rajendra Market – Entrance C,KRMT,,,KRMT_C,12.960003,77.57431,2,,KRMT_L_road,
+Krishna Rajendra Market – Entrance D,KRMT,,,KRMT_D,12.960753,77.57462,2,,KRMT_L_road,
+Krishna Rajendra Market – Entrance E,KRMT,,,KRMT_E,12.96186,77.57532,2,,KRMT_L_road,
+Krishnarajapura,,KRAM,,KRAM,12.999902,77.67767,1,1,,
+Krishnarajapura,KRAM,KRAM,KRAM,KRAM_PF1,12.99994,77.67791,,1,KRAM_L_platform,1
+Krishnarajapura,KRAM,KRAM,KRAM,KRAM_PF2,12.999884,77.67784,,1,KRAM_L_platform,2
+Krishnarajapura – Entrance,KRAM,,,KRAM_E,12.999998,77.67734,2,,KRAM_L_road,
+Krishnarajapura – Entrance A,KRAM,,,KRAM_A,12.999868,77.676895,2,,KRAM_L_road,
+Krishnarajapura – Entrance Blue,KRAM,,,KRAM_Blue,12.999911,77.6782,2,1,KRAM_L_road,
+Kudlu Gate,,MSRN,,MSRN,12.889926,77.63921,1,1,,
+Kudlu Gate,MSRN,MSRN,MSRN,MSRN_PF1,12.890318,77.63895,,1,MSRN_L_platform,1
+Kudlu Gate,MSRN,MSRN,MSRN,MSRN_PF2,12.889561,77.63947,,1,MSRN_L_platform,2
+Kudlu Gate – Entrance,MSRN,,,MSRN_E,12.889861,77.639046,2,,MSRN_L_road,
+Kudlu Gate – Entrance,MSRN,,,MSRN_E_2,12.889344,77.63943,2,,MSRN_L_road,
+Kundalahalli,,KDNH,,KDNH,12.977594,77.71556,1,1,,
+Kundalahalli,KDNH,KDNH,KDNH,KDNH_PF1,12.977526,77.71608,,1,KDNH_L_platform,1
+Kundalahalli,KDNH,KDNH,KDNH,KDNH_PF2,12.977629,77.71506,,1,KDNH_L_platform,2
+Kundalahalli – Entrance A,KDNH,,,KDNH_A,12.977745,77.71566,2,1,KDNH_L_road,
+Kundalahalli – Entrance B,KDNH,,,KDNH_B,12.977392,77.71567,2,1,KDNH_L_road,
+Lalbagh,,LBGH,,LBGH,12.946526,77.58002,1,1,,
+Lalbagh,LBGH,LBGH,LBGH,LBGH_PF1,12.946534,77.579994,,1,LBGH_L_platform,1
+Lalbagh,LBGH,LBGH,LBGH,LBGH_PF2,12.946535,77.58004,,1,LBGH_L_platform,2
+Lalbagh – Entrance A,LBGH,,,LBGH_A,12.94624,77.58019,2,2,LBGH_L_road,
+Lalbagh – Entrance B,LBGH,,,LBGH_B,12.94577,77.57983,2,2,LBGH_L_road,
+Lalbagh – Entrance C,LBGH,,,LBGH_C,12.94616,77.5799,2,1,LBGH_L_road,
+Madavara,,BIET,,BIET,13.057421,77.47281,1,1,,
+Madavara,BIET,BIET,BIET,BIET_PF1,13.0574,77.4728,,1,BIET_L_platform,1
+Madavara,BIET,BIET,BIET,BIET_PF2,13.057436,77.47281,,1,BIET_L_platform,2
+Madavara – Entrance,BIET,,,BIET_E,13.056693,77.47264,2,,BIET_L_road,
+Madavara – Entrance A,BIET,,,BIET_A,13.057609,77.47234,2,,BIET_L_road,
+Madavara – Entrance B,BIET,,,BIET_B,13.057318,77.47355,2,,BIET_L_road,
+Magadi Road,,MIRD,,MIRD,12.975632,77.55535,1,1,,
+Magadi Road,MIRD,MIRD,MIRD,MIRD_PF1,12.975653,77.55535,,1,MIRD_L_platform,1
+Magadi Road,MIRD,MIRD,MIRD,MIRD_PF2,12.975608,77.55536,,1,MIRD_L_platform,2
+Magadi Road – Entrance A,MIRD,,,MIRD_A,12.975716,77.55585,2,,MIRD_L_road,
+Magadi Road – Entrance B,MIRD,,,MIRD_B,12.975462,77.55584,2,,MIRD_L_road,
+Magadi Road – Entrance C,MIRD,,,MIRD_C,12.97568,77.55481,2,,MIRD_L_road,
+Mahakavi Kuvempu Road,,KVPR,,KVPR,12.99853,77.5569,1,1,,
+Mahakavi Kuvempu Road,KVPR,KVPR,KVPR,KVPR_PF1,12.99847,77.55688,,1,KVPR_L_platform,1
+Mahakavi Kuvempu Road,KVPR,KVPR,KVPR,KVPR_PF2,12.998524,77.55688,,1,KVPR_L_platform,2
+Mahakavi Kuvempu Road – Entrance A,KVPR,,,KVPR_A,12.99859,77.557236,2,,KVPR_L_road,
+Mahakavi Kuvempu Road – Entrance B,KVPR,,,KVPR_B,12.998234,77.557304,2,1,KVPR_L_road,
+Mahakavi Kuvempu Road – Entrance C,KVPR,,,KVPR_C,12.998388,77.55672,2,,KVPR_L_road,
+Mahalakshmi,,MHLI,,MHLI,13.008047,77.548805,1,1,,
+Mahalakshmi,MHLI,MHLI,MHLI,MHLI_PF1,13.008077,77.54878,,1,MHLI_L_platform,1
+Mahalakshmi,MHLI,MHLI,MHLI,MHLI_PF2,13.008071,77.54882,,1,MHLI_L_platform,2
+Mahalakshmi – Entrance A,MHLI,,,MHLI_A,13.007826,77.54858,2,1,MHLI_L_road,
+Mahalakshmi – Entrance A,MHLI,,,MHLI_A_2,13.008,77.5486,2,2,MHLI_L_road,
+Mahalakshmi – Entrance B,MHLI,,,MHLI_B,13.008209,77.54863,2,,MHLI_L_road,
+Mahalakshmi – Entrance C,MHLI,,,MHLI_C,13.007915,77.54894,2,1,MHLI_L_road,
+Mahatma Gandhi Road,,MAGR,,MAGR,12.975526,77.60679,1,1,,
+Mahatma Gandhi Road,MAGR,MAGR,MAGR,MAGR_PF1,12.975429,77.60726,,1,MAGR_L_platform,1
+Mahatma Gandhi Road,MAGR,MAGR,MAGR,MAGR_PF2,12.975628,77.6063,,1,MAGR_L_platform,2
+Mahatma Gandhi Road – Entrance A,MAGR,,,MAGR_A,12.975661,77.60647,2,1,MAGR_L_road,
+Mahatma Gandhi Road – Entrance B,MAGR,,,MAGR_B,12.975494,77.607185,2,1,MAGR_L_road,
+Mahatma Gandhi Road – Entrance C,MAGR,,,MAGR_C,12.975254,77.60668,2,1,MAGR_L_road,
+Mahatma Gandhi Road – Entrance D,MAGR,,,MAGR_D,12.974822,77.6066,2,1,MAGR_L_road,
+Manjunathanagara,,MNJN,,MNJN,13.05009,77.494446,1,1,,
+Manjunathanagara,MNJN,MNJN,MNJN,MNJN_PF1,13.050069,77.49444,,1,,1
+Manjunathanagara,MNJN,MNJN,MNJN,MNJN_PF2,13.050112,77.49445,,1,,2
+Mantri Square Sampige Road,,SPGD,,SPGD,12.990463,77.57073,1,1,,
+Mantri Square Sampige Road,SPGD,SPGD,SPGD,SPGD_PF1,12.990428,77.570694,,1,SPGD_L_platform,1
+Mantri Square Sampige Road,SPGD,SPGD,SPGD,SPGD_PF2,12.990475,77.57076,,1,SPGD_L_platform,2
+Mantri Square Sampige Road – Entrance A,SPGD,,,SPGD_A,12.990046,77.57125,2,,SPGD_L_road,
+Mantri Square Sampige Road – Entrance B,SPGD,,,SPGD_B,12.989874,77.57099,2,1,SPGD_L_road,
+Mantri Square Sampige Road – Entrance C,SPGD,,,SPGD_C,12.990951,77.57056,2,,SPGD_L_road,
+Mysore Road,,MYRD,,MYRD,12.946718,77.53016,1,1,,
+Mysore Road,MYRD,MYRD,MYRD,MYRD_PF1,12.946703,77.53007,,1,MYRD_L_platform,1
+Mysore Road,MYRD,MYRD,MYRD,MYRD_PF2,12.946662,77.53009,,1,MYRD_L_platform,2
+Mysore Road – Entrance A,MYRD,,,MYRD_A,12.94675,77.530045,2,1,MYRD_L_road,
+Mysore Road – Entrance B,MYRD,,,MYRD_B,12.946844,77.530266,2,,MYRD_L_road,
+Mysore Road – Entrance C,MYRD,,,MYRD_C,12.946244,77.53069,2,,MYRD_L_road,
+Mysore Road – Entrance D,MYRD,,,MYRD_D,12.946497,77.52949,2,1,MYRD_L_road,
+"Nadaprabhu Kempegowda Station, Majestic",,KGWA,,KGWA,12.975708,77.572876,1,1,,
+"Nadaprabhu Kempegowda Station, Majestic",KGWA,KGWA,KGWA,KGWA_PF1,12.975751,77.57309,,1,KGWA_L_platform,1
+"Nadaprabhu Kempegowda Station, Majestic",KGWA,KGWA,KGWA,KGWA_PF2,12.97567,77.57281,,1,KGWA_L_platform,2
+"Nadaprabhu Kempegowda Station, Majestic",KGWA,KGWA,KGWA,KGWA_PF3,12.975956,77.57287,,1,KGWA_L_platform,3
+"Nadaprabhu Kempegowda Station, Majestic",KGWA,KGWA,KGWA,KGWA_PF4,12.975065,77.57304,,1,KGWA_L_platform,4
+"Nadaprabhu Kempegowda Station, Majestic – Entrance",KGWA,,,KGWA_E,12.975853,77.571205,2,1,KGWA_L_road,
+"Nadaprabhu Kempegowda Station, Majestic – Entrance A",KGWA,,,KGWA_A,12.975733,77.5712,2,1,KGWA_L_road,
+"Nadaprabhu Kempegowda Station, Majestic – Entrance B",KGWA,,,KGWA_B,12.974186,77.57304,2,1,KGWA_L_road,
+"Nadaprabhu Kempegowda Station, Majestic – Entrance C",KGWA,,,KGWA_C,12.974628,77.572914,2,1,KGWA_L_road,
+"Nadaprabhu Kempegowda Station, Majestic – Entrance D",KGWA,,,KGWA_D,12.976098,77.57315,2,,KGWA_L_road,
+Nagasandra,,NGSA,,NGSA,13.047954,77.500145,1,1,,
+Nagasandra,NGSA,NGSA,NGSA,NGSA_PF1,13.047938,77.50014,,1,NGSA_L_platform,1
+Nagasandra,NGSA,NGSA,NGSA,NGSA_PF2,13.047978,77.500145,,1,NGSA_L_platform,2
+Nagasandra – Entrance,NGSA,,,NGSA_E,13.048193,77.5004,2,,NGSA_L_road,
+Nagasandra – Entrance,NGSA,,,NGSA_E_2,13.047824,77.500786,2,,NGSA_L_road,
+Nagasandra – Entrance,NGSA,,,NGSA_E_3,13.048333,77.49971,2,,NGSA_L_road,
+Nallurahalli,,VDHP,,VDHP,12.976641,77.724884,1,1,,
+Nallurahalli,VDHP,VDHP,VDHP,VDHP_PF1,12.976575,77.72535,,1,VDHP_L_platform,1
+Nallurahalli,VDHP,VDHP,VDHP,VDHP_PF2,12.976613,77.72435,,1,VDHP_L_platform,2
+Nallurahalli – Entrance A,VDHP,,,VDHP_A,12.976819,77.72485,2,1,VDHP_L_road,
+Nallurahalli – Entrance B,VDHP,,,VDHP_B,12.976495,77.725,2,,VDHP_L_road,
+Nallurahalli – Entrance C,VDHP,,,VDHP_C,12.976512,77.724655,2,1,VDHP_L_road,
+Nallurahalli – Entrance D,VDHP,,,VDHP_D,12.976464,77.7253,2,,VDHP_L_road,
+National College,,NLC,,NLC,12.950527,77.57369,1,1,,
+National College,NLC,NLC,NLC,NLC_PF1,12.950526,77.57367,,1,NLC_L_platform,1
+National College,NLC,NLC,NLC,NLC_PF2,12.950526,77.573715,,1,NLC_L_platform,2
+National College – Entrance A,NLC,,,NLC_A,12.95112,77.57388,2,,NLC_L_road,
+National College – Entrance B,NLC,,,NLC_B,12.950842,77.57388,2,1,NLC_L_road,
+National College – Entrance C,NLC,,,NLC_C,12.950123,77.57358,2,,NLC_L_road,
+Pantharapalya - Nayandahalli,,NYHM,,NYHM,12.941671,77.525116,1,1,,
+Pantharapalya - Nayandahalli,NYHM,NYHM,NYHM,NYHM_PF1,12.941683,77.5251,,1,NYHM_L_platform,1
+Pantharapalya - Nayandahalli,NYHM,NYHM,NYHM,NYHM_PF2,12.941661,77.52512,,1,NYHM_L_platform,2
+Pantharapalya - Nayandahalli – Entrance A,NYHM,,,NYHM_A,12.941667,77.52526,2,1,NYHM_L_road,
+Pantharapalya - Nayandahalli – Entrance B,NYHM,,,NYHM_B,12.941831,77.52498,2,1,NYHM_L_road,
+Pattanagere,,PATG,,PATG,12.92425,77.49835,1,1,,
+Pattanagere,PATG,PATG,PATG,PATG_PF1,12.924263,77.49834,,1,PATG_L_platform,1
+Pattanagere,PATG,PATG,PATG,PATG_PF2,12.92424,77.49837,,1,PATG_L_platform,2
+Pattanagere – Entrance A,PATG,,,PATG_A,12.924066,77.498245,2,1,PATG_L_road,
+Pattanagere – Entrance B,PATG,,,PATG_B,12.924374,77.49814,2,1,PATG_L_road,
+Pattandur Agrahara,,ITPL,,ITPL,12.987639,77.73777,1,1,,
+Pattandur Agrahara,ITPL,ITPL,ITPL,ITPL_PF1,12.987637,77.73836,,1,ITPL_L_platform,1
+Pattandur Agrahara,ITPL,ITPL,ITPL,ITPL_PF2,12.987593,77.73724,,1,ITPL_L_platform,2
+Pattandur Agrahara – Entrance,ITPL,,,ITPL_E,12.987485,77.73737,2,,ITPL_L_road,
+Pattandur Agrahara – Entrance A,ITPL,,,ITPL_A,12.987754,77.737915,2,1,ITPL_L_road,
+Pattandur Agrahara – Entrance B,ITPL,,,ITPL_B,12.987424,77.73789,2,1,ITPL_L_road,
+Peenya,,PEYA,,PEYA,13.033019,77.5332,1,1,,
+Peenya,PEYA,PEYA,PEYA,PEYA_PF1,13.032981,77.53318,,1,PEYA_L_platform,1
+Peenya,PEYA,PEYA,PEYA,PEYA_PF2,13.033051,77.533226,,1,PEYA_L_platform,2
+Peenya Industry,,PYID,,PYID,13.036318,77.52549,1,1,,
+Peenya Industry,PYID,PYID,PYID,PYID_PF1,13.036272,77.52549,,1,PYID_L_platform,1
+Peenya Industry,PYID,PYID,PYID,PYID_PF2,13.036343,77.52553,,1,PYID_L_platform,2
+Peenya Industry – Entrance A,PYID,,,PYID_A,13.036616,77.52509,2,,PYID_L_road,
+Peenya Industry – Entrance B,PYID,,,PYID_B,13.036061,77.52613,2,,PYID_L_road,
+Peenya – Entrance B,PEYA,,,PEYA_B,13.032905,77.53359,2,,PEYA_L_road,
+Ragigudda,,RGDT,,RGDT,12.917081,77.5883,1,1,,
+Ragigudda,RGDT,RGDT,RGDT,RGDT_PF1,12.917075,77.58778,,1,RGDT_L_platform,1
+Ragigudda,RGDT,RGDT,RGDT,RGDT_PF2,12.917089,77.5887,,1,RGDT_L_platform,2
+Ragigudda – Entrance A,RGDT,,,RGDT_A,12.916862,77.5882,2,,RGDT_L_road,
+Ragigudda – Entrance B,RGDT,,,RGDT_B,12.917312,77.58823,2,1,RGDT_L_road,
+Rajajinagar,,RJNR,,RJNR,13.000525,77.54966,1,1,,
+Rajajinagar,RJNR,RJNR,RJNR,RJNR_PF1,13.000523,77.549614,,1,RJNR_L_platform,1
+Rajajinagar,RJNR,RJNR,RJNR,RJNR_PF2,13.000536,77.5497,,1,RJNR_L_platform,2
+Rajajinagar – Entrance A,RJNR,,,RJNR_A,12.999462,77.54954,2,1,RJNR_L_road,
+Rajajinagar – Entrance A,RJNR,,,RJNR_A_2,12.999518,77.54962,2,1,RJNR_L_road,
+Rajajinagar – Entrance B,RJNR,,,RJNR_B,13.000191,77.55008,2,2,RJNR_L_road,
+Rajarajeshwari Nagar,,RRRN,,RRRN,12.9366,77.51968,1,1,,
+Rajarajeshwari Nagar,RRRN,RRRN,RRRN,RRRN_PF1,12.936674,77.51966,,1,RRRN_L_platform,1
+Rajarajeshwari Nagar,RRRN,RRRN,RRRN,RRRN_PF2,12.936636,77.51967,,1,RRRN_L_platform,2
+Rajarajeshwari Nagar – Entrance A,RRRN,,,RRRN_A,12.936465,77.519615,2,1,RRRN_L_road,
+Rajarajeshwari Nagar – Entrance B,RRRN,,,RRRN_B,12.936739,77.51952,2,1,RRRN_L_road,
+Rashtreeya Vidyalaya Road,,RVR,,RVR,12.921581,77.5802,1,1,,
+Rashtreeya Vidyalaya Road,RVR,RVR,RVR,RVR_PF1,12.921332,77.580246,,1,RVR_L_platform,1
+Rashtreeya Vidyalaya Road,RVR,RVR,RVR,RVR_PF2,12.921333,77.58029,,1,RVR_L_platform,2
+Rashtreeya Vidyalaya Road,RVR,RVR,RVR,RVR_PF3,12.92096,77.58009,,1,RVR_L_platform,3
+Rashtreeya Vidyalaya Road,RVR,RVR,RVR,RVR_PF4,12.92186,77.58005,,1,RVR_L_platform,4
+Rashtreeya Vidyalaya Road – Entrance A,RVR,,,RVR_A,12.920954,77.58041,2,2,RVR_L_road,
+Rashtreeya Vidyalaya Road – Entrance B,RVR,,,RVR_B,12.920807,77.58011,2,1,RVR_L_road,
+Rashtreeya Vidyalaya Road – Entrance C,RVR,,,RVR_C,12.922202,77.58002,2,2,RVR_L_road,
+Sandal Soap Factory,,SSFY,,SSFY,13.014654,77.553986,1,1,,
+Sandal Soap Factory,SSFY,SSFY,SSFY,SSFY_PF1,13.014718,77.55399,,1,SSFY_L_platform,1
+Sandal Soap Factory,SSFY,SSFY,SSFY,SSFY_PF2,13.014718,77.55403,,1,SSFY_L_platform,2
+Sandal Soap Factory – Entrance A,SSFY,,,SSFY_A,13.01336,77.554375,2,2,SSFY_L_road,
+Sandal Soap Factory – Entrance B,SSFY,,,SSFY_B,13.01402,77.55395,2,1,SSFY_L_road,
+Seetharampalya,,VWIA,,VWIA,12.980856,77.708786,1,1,,
+Seetharampalya,VWIA,VWIA,VWIA,VWIA_PF1,12.980531,77.70889,,1,VWIA_L_platform,1
+Seetharampalya,VWIA,VWIA,VWIA,VWIA_PF2,12.98137,77.70861,,1,VWIA_L_platform,2
+Seetharampalya – Entrance A,VWIA,,,VWIA_A,12.980889,77.708984,2,1,VWIA_L_road,
+Seetharampalya – Entrance B,VWIA,,,VWIA_B,12.98072,77.70866,2,1,VWIA_L_road,
+Silk Institute,,APTS,,APTS,12.86173,77.52995,1,1,,
+Silk Institute,APTS,APTS,APTS,APTS_PF1,12.861692,77.52991,,1,APTS_L_platform,1
+Silk Institute,APTS,APTS,APTS,APTS_PF2,12.861666,77.52995,,1,APTS_L_platform,2
+Silk Institute – Entrance A,APTS,,,APTS_A,12.861669,77.53016,2,1,APTS_L_road,
+Silk Institute – Entrance B,APTS,,,APTS_B,12.861564,77.52968,2,1,APTS_L_road,
+Singasandra,,CKBR,,CKBR,12.880818,77.644844,1,1,,
+Singasandra,CKBR,CKBR,CKBR,CKBR_PF1,12.881179,77.644615,,1,CKBR_L_platform,1
+Singasandra,CKBR,CKBR,CKBR,CKBR_PF2,12.880432,77.6451,,1,CKBR_L_platform,2
+Singasandra – Entrance,CKBR,,,CKBR_E,12.881215,77.64441,2,,CKBR_L_road,
+Singasandra – Entrance,CKBR,,,CKBR_E_2,12.880671,77.64473,2,,CKBR_L_road,
+Singayyanapalya,,MDVP,,MDVP,12.996545,77.69272,1,1,,
+Singayyanapalya,MDVP,MDVP,MDVP,MDVP_PF1,12.996454,77.69305,,1,MDVP_L_platform,1
+Singayyanapalya,MDVP,MDVP,MDVP,MDVP_PF2,12.996697,77.69215,,1,MDVP_L_platform,2
+Singayyanapalya – Entrance A,MDVP,,,MDVP_A,12.996749,77.69256,2,2,MDVP_L_road,
+"Sir M. Visvesvaraya Stn., Central College",,VSWA,,VSWA,12.97452,77.58422,1,1,,
+"Sir M. Visvesvaraya Stn., Central College",VSWA,VSWA,VSWA,VSWA_PF1,12.97454,77.584206,,1,VSWA_L_platform,1
+"Sir M. Visvesvaraya Stn., Central College",VSWA,VSWA,VSWA,VSWA_PF2,12.974501,77.584236,,1,VSWA_L_platform,2
+"Sir M. Visvesvaraya Stn., Central College – Entrance",VSWA,,,VSWA_E,12.974457,77.58476,2,,VSWA_L_road,
+"Sir M. Visvesvaraya Stn., Central College – Entrance A",VSWA,,,VSWA_A,12.974937,77.58466,2,,VSWA_L_road,
+"Sir M. Visvesvaraya Stn., Central College – Entrance C",VSWA,,,VSWA_C,12.973505,77.582954,2,,VSWA_L_road,
+"Sir M. Visvesvaraya Stn., Central College – Entrance D",VSWA,,,VSWA_D,12.973834,77.58276,2,,VSWA_L_road,
+"Sir M. Visvesvaraya Stn., Central College – Entrance E",VSWA,,,VSWA_E_2,12.974088,77.58323,2,1,VSWA_L_road,
+South End Circle,,SECE,,SECE,12.938257,77.580055,1,1,,
+South End Circle,SECE,SECE,SECE,SECE_PF1,12.938262,77.58003,,1,SECE_L_platform,1
+South End Circle,SECE,SECE,SECE,SECE_PF2,12.938262,77.58008,,1,SECE_L_platform,2
+South End Circle – Entrance A,SECE,,,SECE_A,12.937924,77.580215,2,2,SECE_L_road,
+South End Circle – Entrance B,SECE,,,SECE_B,12.937897,77.5799,2,2,SECE_L_road,
+South End Circle – Entrance C,SECE,,,SECE_C,12.938184,77.57984,2,1,SECE_L_road,
+"Sri Balagangadharanatha Swamiji Station, Hosahalli",,HSLI,,HSLI,12.974293,77.54562,1,1,,
+"Sri Balagangadharanatha Swamiji Station, Hosahalli",HSLI,HSLI,HSLI,HSLI_PF1,12.974218,77.545616,,1,HSLI_L_platform,1
+"Sri Balagangadharanatha Swamiji Station, Hosahalli",HSLI,HSLI,HSLI,HSLI_PF2,12.974174,77.545616,,1,HSLI_L_platform,2
+"Sri Balagangadharanatha Swamiji Station, Hosahalli – Entrance A",HSLI,,,HSLI_A,12.974376,77.54587,2,,HSLI_L_road,
+"Sri Balagangadharanatha Swamiji Station, Hosahalli – Entrance B",HSLI,,,HSLI_B,12.974066,77.5459,2,1,HSLI_L_road,
+"Sri Balagangadharanatha Swamiji Station, Hosahalli – Entrance C",HSLI,,,HSLI_C,12.974013,77.54493,2,,HSLI_L_road,
+Sri Sathya Sai Hospital,,SSHP,,SSHP,12.981195,77.72754,1,1,,
+Sri Sathya Sai Hospital,SSHP,SSHP,SSHP,SSHP_PF1,12.981715,77.72766,,1,SSHP_L_platform,1
+Sri Sathya Sai Hospital,SSHP,SSHP,SSHP,SSHP_PF2,12.980735,77.72749,,1,SSHP_L_platform,2
+Sri Sathya Sai Hospital – Entrance,SSHP,,,SSHP_E,12.981101,77.7277,2,1,SSHP_L_road,
+Sri Sathya Sai Hospital – Entrance,SSHP,,,SSHP_E_2,12.981165,77.72744,2,1,SSHP_L_road,
+Srirampura,,SPRU,,SPRU,12.996525,77.563194,1,1,,
+Srirampura,SPRU,SPRU,SPRU,SPRU_PF1,12.996495,77.5633,,1,SPRU_L_platform,1
+Srirampura,SPRU,SPRU,SPRU,SPRU_PF2,12.996541,77.56331,,1,SPRU_L_platform,2
+Srirampura – Entrance A,SPRU,,,SPRU_A,12.996685,77.56358,2,1,SPRU_L_road,
+Srirampura – Entrance B,SPRU,,,SPRU_B,12.996521,77.56393,2,,SPRU_L_road,
+Srirampura – Entrance C,SPRU,,,SPRU_C,12.996239,77.56369,2,,SPRU_L_road,
+Swami Vivekananda Road,,SVRD,,SVRD,12.985931,77.6449,1,1,,
+Swami Vivekananda Road,SVRD,SVRD,SVRD,SVRD_PF1,12.985954,77.64489,,1,SVRD_L_platform,1
+Swami Vivekananda Road,SVRD,SVRD,SVRD,SVRD_PF2,12.985913,77.644905,,1,SVRD_L_platform,2
+Swami Vivekananda Road – Entrance A,SVRD,,,SVRD_A,12.985871,77.64448,2,1,SVRD_L_road,
+Swami Vivekananda Road – Entrance B,SVRD,,,SVRD_B,12.986135,77.645096,2,2,SVRD_L_road,
+Swami Vivekananda Road – Entrance C,SVRD,,,SVRD_C,12.985497,77.64486,2,2,SVRD_L_road,
+Swami Vivekananda Road – Entrance D,SVRD,,,SVRD_D,12.985412,77.64456,2,1,SVRD_L_road,
+Swami Vivekananda Road – Entrance E,SVRD,,,SVRD_E,12.98526,77.64427,2,2,SVRD_L_road,
+Thalaghattapura,,TGTP,,TGTP,12.87141,77.5384,1,1,,
+Thalaghattapura,TGTP,TGTP,TGTP,TGTP_PF1,12.871424,77.53836,,1,TGTP_L_platform,1
+Thalaghattapura,TGTP,TGTP,TGTP,TGTP_PF2,12.871392,77.53842,,1,TGTP_L_platform,2
+Thalaghattapura – Entrance A,TGTP,,,TGTP_A,12.8713,77.53853,2,1,TGTP_L_road,
+Thalaghattapura – Entrance B,TGTP,,,TGTP_B,12.871519,77.53822,2,1,TGTP_L_road,
+Trinity,,TTY,,TTY,12.973022,77.61702,1,1,,
+Trinity,TTY,TTY,TTY,TTY_PF1,12.973039,77.61703,,1,TTY_L_platform,1
+Trinity,TTY,TTY,TTY,TTY_PF2,12.972995,77.61701,,1,TTY_L_platform,2
+Trinity – Entrance A,TTY,,,TTY_A,12.972833,77.617065,2,,TTY_L_road,
+Trinity – Entrance B,TTY,,,TTY_B,12.973106,77.617355,2,,TTY_L_road,
+Trinity – Entrance C,TTY,,,TTY_C,12.972604,77.617195,2,,TTY_L_road,
+Vajarahalli,,VJRH,,VJRH,12.877437,77.54474,1,1,,
+Vajarahalli,VJRH,VJRH,VJRH,VJRH_PF1,12.877539,77.54475,,1,VJRH_L_platform,1
+Vajarahalli,VJRH,VJRH,VJRH,VJRH_PF2,12.877522,77.54481,,1,VJRH_L_platform,2
+Vajarahalli – Entrance A,VJRH,,,VJRH_A,12.877441,77.54493,2,1,VJRH_L_road,
+Vajarahalli – Entrance B,VJRH,,,VJRH_B,12.877586,77.54458,2,1,VJRH_L_road,
+Vijayanagar,,VJN,,VJN,12.970956,77.53741,1,1,,
+Vijayanagar,VJN,VJN,VJN,VJN_PF1,12.970954,77.537384,,1,VJN_L_platform,1
+Vijayanagar,VJN,VJN,VJN,VJN_PF2,12.970939,77.53743,,1,VJN_L_platform,2
+Vijayanagar – Entrance A,VJN,,,VJN_A,12.971233,77.53734,2,,VJN_L_road,
+Vijayanagar – Entrance B,VJN,,,VJN_B,12.970405,77.53744,2,,VJN_L_road,
+Whitefield (Kadugodi),,WHTM,,WHTM,12.995743,77.75795,1,1,,
+Whitefield (Kadugodi),WHTM,WHTM,WHTM,WHTM_PF1,12.995964,77.75797,,1,WHTM_L_platform,1
+Whitefield (Kadugodi),WHTM,WHTM,WHTM,WHTM_PF2,12.99519,77.75782,,1,WHTM_L_platform,2
+Whitefield (Kadugodi) – Entrance A,WHTM,,,WHTM_A,12.995045,77.757835,2,1,WHTM_L_road,
+Whitefield (Kadugodi) – Entrance B,WHTM,,,WHTM_B,12.995927,77.75808,2,,WHTM_L_road,
+Yelachenahalli,,PUTH,,PUTH,12.89605,77.57012,1,1,,
+Yelachenahalli,PUTH,PUTH,PUTH,PUTH_PF1,12.896066,77.5701,,1,PUTH_L_platform,1
+Yelachenahalli,PUTH,PUTH,PUTH,PUTH_PF2,12.896036,77.57014,,1,PUTH_L_platform,2
+Yelachenahalli – Entrance A,PUTH,,,PUTH_A,12.896384,77.57081,2,,PUTH_L_road,
+Yelachenahalli – Entrance B,PUTH,,,PUTH_B,12.896084,77.57061,2,1,PUTH_L_road,
+Yelachenahalli – Entrance C,PUTH,,,PUTH_C,12.895772,77.570274,2,,PUTH_L_road,
+Yelachenahalli – Entrance D,PUTH,,,PUTH_D,12.895551,77.56953,2,,PUTH_L_road,
+Yelachenahalli – Entrance E,PUTH,,,PUTH_E,12.896212,77.57006,2,,PUTH_L_road,
+Yeshwantpur,,YPM,,YPM,13.023268,77.54987,1,1,,
+Yeshwantpur,YPM,YPM,YPM,YPM_PF1,13.023298,77.549706,,1,YPM_L_platform,1
+Yeshwantpur,YPM,YPM,YPM,YPM_PF2,13.023369,77.54975,,1,YPM_L_platform,2
+Yeshwantpur – Entrance A,YPM,,,YPM_A,13.022585,77.5505,2,2,YPM_L_road,
+Yeshwantpur – Entrance B,YPM,,,YPM_B,13.022975,77.54969,2,1,YPM_L_road,
+Yeshwantpur – Entrance C,YPM,,,YPM_C,13.023458,77.54899,2,2,YPM_L_road,
+Yeshwantpur – Entrance D,YPM,,,YPM_D,13.02329,77.55015,2,1,YPM_L_road,
+Yeshwantpur – Entrance E,YPM,,,YPM_E,13.023621,77.55034,2,2,YPM_L_road,
+Yeshwantpur – Entrance G,YPM,,,YPM_G,13.023149,77.55047,2,2,YPM_L_road,

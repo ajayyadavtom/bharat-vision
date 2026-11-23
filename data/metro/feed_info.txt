@@ -1,0 +1,2 @@
+feed_publisher_name,feed_publisher_url,feed_lang,feed_start_date,feed_end_date,feed_version,feed_contact_url
+Bengaluru Metro Rail Corporation Limited (BMRCL),https://www.bmrc.co.in,en,20260817,20270817,20260817,https://www.bmrc.co.in/

@@ -1,0 +1,4 @@
+route_long_name,route_short_name,agency_id,route_desc,route_type,route_id,route_color,route_text_color
+Madavara - Silk Institute,Green,BMRCL,"Green Line passes through Madavara, Majestic and Silk Institute",1,GREEN,009933,FFFFFF
+Rashtreeya Vidyalaya Road - Delta Electronics Bommasandra,Yellow,BMRCL,Yellow Line passes through Rashtreeya Vidyalaya Road and Delta Electronics Bommasandra,1,YELLOW,FFDF00,
+Whitefield (Kadugodi) - Challaghatta,Purple,BMRCL,"Purple Line passes through Whitefield (Kadugodi), Majestic and Challaghatta",1,PURPLE,8C2877,FFFFFF

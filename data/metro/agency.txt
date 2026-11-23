@@ -1,0 +1,2 @@
+agency_id,agency_name,agency_url,agency_timezone,agency_lang,agency_phone,agency_fare_url
+BMRCL,Bengaluru Metro Rail Corporation Limited (BMRCL),https://www.bmrc.co.in,Asia/Kolkata,en,1800-425-12345,https://www.bmrc.co.in/

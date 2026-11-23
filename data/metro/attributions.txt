@@ -1,0 +1,3 @@
+attribution_id,organization_name,is_producer,is_operator,is_authority,attribution_url
+bmrcl,Bengaluru Metro Rail Corporation Limited (BMRCL),,1,1,https://www.bmrc.co.in
+vonter,Vonter,1,,,https://www.github.com/Vonter/bmrcl-gtfs

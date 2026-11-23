@@ -1,0 +1,84 @@
+area_id,area_name
+AGPP,Attiguppe
+APRC,Konanakunte Cross
+APTS,Silk Institute
+BGUC,Jnanabharathi
+BIET,Madavara
+BMSD,Delta Electronics Bommasandra
+BRCS,Krantivira Sangolli Rayanna Railway Station
+BSNK,Banashankari
+BSRD,Hosa Road
+BTML,BTM Layout
+BYPH,Baiyappanahalli
+CBPK,Cubbon Park
+CKBR,Singasandra
+CKPE,Chickpete
+CLGA,Challaghatta
+DJNR,Deepanjali Nagar
+DKIA,Hoodi
+DSH,Dasarahalli
+ECTN,Infosys Foundation Konappana Agrahara
+ETCT,Electronic City
+GDCP,Garudacharpalya
+HBGI,Biocon Hebbagodi
+HLRU,Halasuru
+HOSR,Beratena Agrahara
+HSKR,Huskur Road
+HSLI,"Sri Balagangadharanatha Swamiji Station, Hosahalli"
+HSRL,Bommanahalli
+IDN,Indiranagar
+ITPL,Pattandur Agrahara
+JDHP,Jayadeva Hospital
+JIDL,Chikkabidarakallu
+JLHL,Jalahalli
+JPN,Jaya Prakash Nagar
+JTPM,Benniganahalli
+JYN,Jayanagar
+KDGD,Kadugodi Tree Park
+KDNH,Kundalahalli
+KGIT,Kengeri
+KGWA,"Nadaprabhu Kempegowda Station, Majestic"
+KLPK,Doddakallasandra
+KRAM,Krishnarajapura
+KRMT,Krishna Rajendra Market
+KVPR,Mahakavi Kuvempu Road
+LBGH,Lalbagh
+MAGR,Mahatma Gandhi Road
+MDVP,Singayyanapalya
+MHLI,Mahalakshmi
+MIRD,Magadi Road
+MLSD,Kengeri Bus Terminal
+MNJN,Manjunathanagara
+MSRN,Kudlu Gate
+MYRD,Mysore Road
+NGSA,Nagasandra
+NLC,National College
+NYHM,Pantharapalya - Nayandahalli
+OFDC,Hongasandra
+PATG,Pattanagere
+PEYA,Peenya
+PUTH,Yelachenahalli
+PYID,Peenya Industry
+RGDT,Ragigudda
+RJNR,Rajajinagar
+RRRN,Rajarajeshwari Nagar
+RVR,Rashtreeya Vidyalaya Road
+SBJT,Central Silk Board
+SECE,South End Circle
+SPGD,Mantri Square Sampige Road
+SPRU,Srirampura
+SSFY,Sandal Soap Factory
+SSHP,Sri Sathya Sai Hospital
+SVRD,Swami Vivekananda Road
+TGTP,Thalaghattapura
+TTY,Trinity
+UWVL,Hopefarm Channasandra
+VDHP,Nallurahalli
+VDSA,"Dr. B. R. Ambedkar Station, Vidhana Soudha"
+VJN,Vijayanagar
+VJRH,Vajarahalli
+VSWA,"Sir M. Visvesvaraya Stn., Central College"
+VWIA,Seetharampalya
+WHTM,Whitefield (Kadugodi)
+YPI,Goraguntepalya
+YPM,Yeshwantpur

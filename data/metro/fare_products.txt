@@ -1,0 +1,40 @@
+fare_product_id,fare_product_name,fare_media_id,amount,currency
+fare_10_token,Token,token,10.00,INR
+fare_10_qr,QR Ticket,qr,10.00,INR
+fare_10_smartcard_peak,Smart Card,smartcard,9.50,INR
+fare_10_smartcard_offpeak,Smart Card,smartcard,9.00,INR
+fare_20_token,Token,token,20.00,INR
+fare_20_qr,QR Ticket,qr,20.00,INR
+fare_20_smartcard_peak,Smart Card,smartcard,19.00,INR
+fare_20_smartcard_offpeak,Smart Card,smartcard,18.00,INR
+fare_30_token,Token,token,30.00,INR
+fare_30_qr,QR Ticket,qr,30.00,INR
+fare_30_smartcard_peak,Smart Card,smartcard,28.50,INR
+fare_30_smartcard_offpeak,Smart Card,smartcard,27.00,INR
+fare_40_token,Token,token,40.00,INR
+fare_40_qr,QR Ticket,qr,40.00,INR
+fare_40_smartcard_peak,Smart Card,smartcard,38.00,INR
+fare_40_smartcard_offpeak,Smart Card,smartcard,36.00,INR
+fare_50_token,Token,token,50.00,INR
+fare_50_qr,QR Ticket,qr,50.00,INR
+fare_50_smartcard_peak,Smart Card,smartcard,47.50,INR
+fare_50_smartcard_offpeak,Smart Card,smartcard,45.00,INR
+fare_60_token,Token,token,60.00,INR
+fare_60_qr,QR Ticket,qr,60.00,INR
+fare_60_smartcard_peak,Smart Card,smartcard,57.00,INR
+fare_60_smartcard_offpeak,Smart Card,smartcard,54.00,INR
+fare_70_token,Token,token,70.00,INR
+fare_70_qr,QR Ticket,qr,70.00,INR
+fare_70_smartcard_peak,Smart Card,smartcard,66.50,INR
+fare_70_smartcard_offpeak,Smart Card,smartcard,63.00,INR
+fare_80_token,Token,token,80.00,INR
+fare_80_qr,QR Ticket,qr,80.00,INR
+fare_80_smartcard_peak,Smart Card,smartcard,76.00,INR
+fare_80_smartcard_offpeak,Smart Card,smartcard,72.00,INR
+fare_90_token,Token,token,90.00,INR
+fare_90_qr,QR Ticket,qr,90.00,INR
+fare_90_smartcard_peak,Smart Card,smartcard,85.50,INR
+fare_90_smartcard_offpeak,Smart Card,smartcard,81.00,INR
+pass_1day,Tourist Card,touristcard,300.00,INR
+pass_3day,Tourist Card,touristcard,600.00,INR
+pass_5day,Tourist Card,touristcard,800.00,INR

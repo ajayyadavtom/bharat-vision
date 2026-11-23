@@ -1,0 +1,13 @@
+timeframe_group_id,start_time,end_time,service_id
+peak,08:00:00,12:00:00,weekday
+peak,16:00:00,21:00:00,weekday
+offpeak,00:00:00,08:00:00,weekday
+offpeak,12:00:00,16:00:00,weekday
+offpeak,21:00:00,24:00:00,weekday
+peak,08:00:00,12:00:00,monday
+peak,16:00:00,21:00:00,monday
+offpeak,00:00:00,08:00:00,monday
+offpeak,12:00:00,16:00:00,monday
+offpeak,21:00:00,24:00:00,monday
+offpeak,00:00:00,24:00:00,sunday
+offpeak,00:00:00,24:00:00,holiday
