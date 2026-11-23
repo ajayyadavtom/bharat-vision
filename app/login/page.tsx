@@ -340,11 +340,20 @@ export default function LoginScreen() {
           }
         }
 
-        // Restore user's ride history across sessions
-        const hCache = JSON.parse(localStorage.getItem("bv_user_ride_history") || "{}");
-        const savedHistory = hCache[selectedEmail] || hCache[name] || hCache["last"];
-        if (Array.isArray(savedHistory) && savedHistory.length > 0) {
-          useAppStore.setState({ rideHistory: savedHistory });
+        // Restore user's ride history across sessions if not explicitly cleared
+        const clearedMap = JSON.parse(localStorage.getItem("bv_history_cleared") || "{}");
+        const isCleared = clearedMap["all"] === true || 
+                          clearedMap[selectedEmail] === true || 
+                          clearedMap[name] === true ||
+                          clearedMap["last"] === true;
+        if (isCleared) {
+          useAppStore.setState({ rideHistory: [] });
+        } else {
+          const hCache = JSON.parse(localStorage.getItem("bv_user_ride_history") || "{}");
+          const savedHistory = hCache[selectedEmail] || hCache[name] || hCache["last"];
+          if (Array.isArray(savedHistory) && savedHistory.length > 0) {
+            useAppStore.setState({ rideHistory: savedHistory });
+          }
         }
 
         // Restore user account data snapshot
@@ -381,10 +390,19 @@ export default function LoginScreen() {
           setProfilePictureUrl(cached);
         }
 
-        const hCache = JSON.parse(localStorage.getItem("bv_user_ride_history") || "{}");
-        const savedHistory = hCache["Guest Commuter"] || hCache["Guest"] || hCache["last"];
-        if (Array.isArray(savedHistory) && savedHistory.length > 0) {
-          useAppStore.setState({ rideHistory: savedHistory });
+        const clearedMap = JSON.parse(localStorage.getItem("bv_history_cleared") || "{}");
+        const isGuestCleared = clearedMap["all"] === true || 
+                               clearedMap["Guest Commuter"] === true || 
+                               clearedMap["Guest"] === true || 
+                               clearedMap["last"] === true;
+        if (isGuestCleared) {
+          useAppStore.setState({ rideHistory: [] });
+        } else {
+          const hCache = JSON.parse(localStorage.getItem("bv_user_ride_history") || "{}");
+          const savedHistory = hCache["Guest Commuter"] || hCache["Guest"] || hCache["last"];
+          if (Array.isArray(savedHistory) && savedHistory.length > 0) {
+            useAppStore.setState({ rideHistory: savedHistory });
+          }
         }
       } catch (e) {}
     }

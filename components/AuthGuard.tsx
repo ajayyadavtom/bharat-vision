@@ -74,13 +74,23 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
         }
       }
 
-      // Restore durable ride history if available
+      // Restore durable ride history if available and not explicitly cleared
       if (typeof window !== "undefined") {
         try {
-          const hCache = JSON.parse(localStorage.getItem("bv_user_ride_history") || "{}");
-          const savedH = hCache[userObj.id] || (userObj.email ? hCache[userObj.email] : null) || hCache[displayName] || hCache["last"];
-          if (Array.isArray(savedH) && savedH.length > 0) {
-            useAppStore.setState({ rideHistory: savedH });
+          const clearedMap = JSON.parse(localStorage.getItem("bv_history_cleared") || "{}");
+          const isCleared = clearedMap["all"] === true || 
+                            clearedMap[userObj.id] === true || 
+                            (userObj.email && clearedMap[userObj.email] === true) || 
+                            clearedMap[displayName] === true ||
+                            clearedMap["last"] === true;
+          if (isCleared) {
+            useAppStore.setState({ rideHistory: [] });
+          } else {
+            const hCache = JSON.parse(localStorage.getItem("bv_user_ride_history") || "{}");
+            const savedH = hCache[userObj.id] || (userObj.email ? hCache[userObj.email] : null) || hCache[displayName] || hCache["last"];
+            if (Array.isArray(savedH) && savedH.length > 0) {
+              useAppStore.setState({ rideHistory: savedH });
+            }
           }
         } catch (e) {}
       }

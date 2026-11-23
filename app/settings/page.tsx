@@ -295,13 +295,26 @@ export default function SettingsScreen() {
           }
         }
 
-        // Preserve ride history
-        if (state.rideHistory && state.rideHistory.length > 0) {
+        // Preserve ride history only if not explicitly cleared
+        const clearedMap = JSON.parse(localStorage.getItem("bv_history_cleared") || "{}");
+        const isHistoryCleared = clearedMap["all"] === true ||
+                                 clearedMap[userIdentifier] === true ||
+                                 (sessionUser?.email ? clearedMap[sessionUser.email] === true : false) ||
+                                 (sessionUser?.id ? clearedMap[sessionUser.id] === true : false);
+
+        if (!isHistoryCleared && state.rideHistory && state.rideHistory.length > 0) {
           const historyCache = JSON.parse(localStorage.getItem("bv_user_ride_history") || "{}");
           historyCache["last"] = state.rideHistory;
           if (state.userName) historyCache[state.userName] = state.rideHistory;
           if (sessionUser?.email) historyCache[sessionUser.email] = state.rideHistory;
           if (sessionUser?.id) historyCache[sessionUser.id] = state.rideHistory;
+          localStorage.setItem("bv_user_ride_history", JSON.stringify(historyCache));
+        } else if (isHistoryCleared || !state.rideHistory || state.rideHistory.length === 0) {
+          const historyCache = JSON.parse(localStorage.getItem("bv_user_ride_history") || "{}");
+          historyCache["last"] = [];
+          if (state.userName) historyCache[state.userName] = [];
+          if (sessionUser?.email) historyCache[sessionUser.email] = [];
+          if (sessionUser?.id) historyCache[sessionUser.id] = [];
           localStorage.setItem("bv_user_ride_history", JSON.stringify(historyCache));
         }
 
@@ -335,6 +348,7 @@ export default function SettingsScreen() {
       profilePictureUrl: null,
       isCustomAvatar: false,
       bookedRide: null,
+      rideHistory: [],
       activeTickets: [],
       activePasses: [],
       activePass: null

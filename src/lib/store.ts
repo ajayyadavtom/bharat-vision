@@ -73,6 +73,46 @@ export interface TransitTicketRecord {
 }
 
 // Durable multi-account persistent storage helpers
+export const isHistoryCleared = (accountKey?: string | null): boolean => {
+  if (typeof window === "undefined") return false;
+  try {
+    const raw = localStorage.getItem("bv_history_cleared");
+    if (!raw) return false;
+    const map = JSON.parse(raw);
+    if (map["all"] === true) return true;
+    if (accountKey && map[accountKey] === true) return true;
+    return false;
+  } catch {
+    return false;
+  }
+};
+
+export const setHistoryClearedFlag = (accountKeys: (string | null | undefined)[], cleared: boolean) => {
+  if (typeof window === "undefined") return;
+  try {
+    const raw = localStorage.getItem("bv_history_cleared");
+    const map = raw ? JSON.parse(raw) : {};
+    for (const key of accountKeys) {
+      if (key) {
+        if (cleared) {
+          map[key] = true;
+        } else {
+          delete map[key];
+        }
+      }
+    }
+    if (cleared) {
+      map["last"] = true;
+    } else {
+      delete map["last"];
+      delete map["all"];
+    }
+    localStorage.setItem("bv_history_cleared", JSON.stringify(map));
+  } catch (e) {
+    console.warn("Failed to update history cleared flag:", e);
+  }
+};
+
 export const persistDurableRideHistory = (history: TransitTicketRecord[], accountKey?: string | null) => {
   if (typeof window === "undefined" || !Array.isArray(history)) return;
   try {
@@ -83,6 +123,9 @@ export const persistDurableRideHistory = (history: TransitTicketRecord[], accoun
       cache[accountKey] = history;
     }
     localStorage.setItem("bv_user_ride_history", JSON.stringify(cache));
+    if (history.length > 0) {
+      setHistoryClearedFlag([accountKey, "last"], false);
+    }
   } catch (e) {
     console.warn("Failed to persist durable ride history:", e);
   }
@@ -90,6 +133,9 @@ export const persistDurableRideHistory = (history: TransitTicketRecord[], accoun
 
 export const loadDurableRideHistory = (accountKey?: string | null): TransitTicketRecord[] | null => {
   if (typeof window === "undefined") return null;
+  if (isHistoryCleared(accountKey) || (accountKey === "last" && isHistoryCleared("last"))) {
+    return [];
+  }
   try {
     const raw = localStorage.getItem("bv_user_ride_history");
     if (!raw) return null;
@@ -102,16 +148,35 @@ export const loadDurableRideHistory = (accountKey?: string | null): TransitTicke
   return null;
 };
 
-export const clearDurableRideHistory = (accountKey?: string | null) => {
+export const clearDurableRideHistory = (accountKeys?: string | string[] | null) => {
   if (typeof window === "undefined") return;
   try {
+    const keys = Array.isArray(accountKeys) ? accountKeys : accountKeys ? [accountKeys] : [];
+    keys.push("last");
+    setHistoryClearedFlag(keys, true);
+
     const raw = localStorage.getItem("bv_user_ride_history");
     const cache = raw ? JSON.parse(raw) : {};
-    cache["last"] = [];
-    if (accountKey) {
-      cache[accountKey] = [];
+    for (const k of keys) {
+      cache[k] = [];
     }
+    cache["last"] = [];
     localStorage.setItem("bv_user_ride_history", JSON.stringify(cache));
+
+    // Also clear from accounts cache
+    const accRaw = localStorage.getItem("bv_user_accounts");
+    if (accRaw) {
+      const accCache = JSON.parse(accRaw);
+      for (const k of keys) {
+        if (accCache[k]) {
+          accCache[k].rideHistory = [];
+        }
+      }
+      if (accCache["last"]) {
+        accCache["last"].rideHistory = [];
+      }
+      localStorage.setItem("bv_user_accounts", JSON.stringify(accCache));
+    }
   } catch (e) {
     console.warn("Failed to clear durable ride history:", e);
   }
@@ -210,7 +275,7 @@ interface AppState {
   bookedRide: any | null;
   rideHistory: TransitTicketRecord[];
   addRideHistory: (item: TransitTicketRecord) => void;
-  clearRideHistory: () => void;
+  clearRideHistory: () => Promise<void> | void;
   profilePictureUrl: string | null;
   isCustomAvatar: boolean;
   
@@ -292,51 +357,7 @@ export const useAppStore = create<AppState>()(
       chatSessions: [],
       activeChatId: null,
       bookedRide: null,
-      rideHistory: [
-        {
-          id: "NMM-849201",
-          category: "metro",
-          type: "Namma Metro QR Token (Purple Line)",
-          network: "BMRCL Namma Metro",
-          origin: "Indiranagar",
-          destination: "Kempegowda Station (Majestic)",
-          route: "Indiranagar ➔ Majestic (9 Stations)",
-          ticketId: "NMM-849201",
-          fare: 30,
-          dateString: "Today, 09:15 AM",
-          timestamp: Date.now() - 7200000,
-          status: "Completed"
-        },
-        {
-          id: "BMTC-402B-89",
-          category: "bus",
-          type: "BMTC Express Ticket (Route 402-B)",
-          network: "BMTC Bengaluru",
-          origin: "Yelahanka Satellite Town",
-          destination: "Kempegowda Bus Station (Platform 22)",
-          route: "Route 402-B Express Corridor",
-          ticketId: "BMTC-402B-89",
-          fare: 25,
-          dateString: "Yesterday, 05:45 PM",
-          timestamp: Date.now() - 54000000,
-          status: "Completed"
-        },
-        {
-          id: "ONDC-194028",
-          category: "auto",
-          type: "Namma Yatri Auto (Zero Surge)",
-          network: "ONDC Beckn Open Network",
-          origin: "Yelahanka NES Office",
-          destination: "Yelahanka Junction Railway Station",
-          route: "NES Office ➔ Yelahanka Junction",
-          driver: "Manjunath S. (KA-04-AB-4819)",
-          ticketId: "PIN: 8492",
-          fare: 45,
-          dateString: "Yesterday, 02:20 PM",
-          timestamp: Date.now() - 68000000,
-          status: "Completed"
-        }
-      ],
+      rideHistory: [],
       profilePictureUrl: null,
       isCustomAvatar: false,
       
@@ -613,25 +634,25 @@ export const useAppStore = create<AppState>()(
         });
       },
 
-      clearRideHistory: () => {
+      clearRideHistory: async () => {
         set({ rideHistory: [] });
         if (typeof window !== "undefined") {
           try {
             const currentName = get().userName;
-            clearDurableRideHistory(currentName);
-            clearDurableRideHistory("last");
+            const keysToClear = new Set<string>(["last", "Guest", "Guest Commuter"]);
+            if (currentName) keysToClear.add(currentName);
 
-            const accRaw = localStorage.getItem("bv_user_accounts");
-            if (accRaw) {
-              const accCache = JSON.parse(accRaw);
-              if (currentName && accCache[currentName]) {
-                accCache[currentName].rideHistory = [];
+            try {
+              const { data: { user } } = await supabase.auth.getUser();
+              if (user) {
+                if (user.id) keysToClear.add(user.id);
+                if (user.email) keysToClear.add(user.email);
+                if (user.user_metadata?.full_name) keysToClear.add(user.user_metadata.full_name);
+                if (user.user_metadata?.name) keysToClear.add(user.user_metadata.name);
               }
-              if (accCache["last"]) {
-                accCache["last"].rideHistory = [];
-              }
-              localStorage.setItem("bv_user_accounts", JSON.stringify(accCache));
-            }
+            } catch {}
+
+            clearDurableRideHistory(Array.from(keysToClear));
           } catch (e) {
             console.warn("Error clearing ride history:", e);
           }
@@ -852,16 +873,22 @@ export const useAppStore = create<AppState>()(
               resolvedAvatar = existingPic;
             }
 
-            // RESTORE RIDE HISTORY for this user
-            const recoveredHistory = loadDurableRideHistory(userKey);
+            // RESTORE RIDE HISTORY for this user (only if not explicitly cleared)
+            const isUserCleared = isHistoryCleared(userKey) || 
+                                  isHistoryCleared(user.id) || 
+                                  (user.email ? isHistoryCleared(user.email) : false);
             const currentHistory = get().rideHistory || [];
-            let finalHistory = currentHistory;
-            if (recoveredHistory && recoveredHistory.length > 0) {
-              const currentIds = new Set(currentHistory.map((r) => r.id));
-              finalHistory = [
-                ...currentHistory,
-                ...recoveredHistory.filter((r) => !currentIds.has(r.id))
-              ];
+            let finalHistory: TransitTicketRecord[] = isUserCleared ? [] : currentHistory;
+
+            if (!isUserCleared) {
+              const recoveredHistory = loadDurableRideHistory(userKey) || (user.id ? loadDurableRideHistory(user.id) : null);
+              if (recoveredHistory && recoveredHistory.length > 0) {
+                const currentIds = new Set(currentHistory.map((r) => r.id));
+                finalHistory = [
+                  ...currentHistory,
+                  ...recoveredHistory.filter((r) => !currentIds.has(r.id))
+                ];
+              }
             }
 
             if (data) {
@@ -930,16 +957,21 @@ export const useAppStore = create<AppState>()(
                 } catch (e) {}
               }
             }
-            // Recover ride history for guest/last session if available
-            const recoveredGuestHistory = loadDurableRideHistory("Guest") || loadDurableRideHistory("last");
-            if (recoveredGuestHistory && recoveredGuestHistory.length > 0) {
-              const currentHistory = currentState.rideHistory || [];
-              const currentIds = new Set(currentHistory.map((r) => r.id));
-              const merged = [
-                ...currentHistory,
-                ...recoveredGuestHistory.filter((r) => !currentIds.has(r.id))
-              ];
-              set({ rideHistory: merged.length > 0 ? merged : recoveredGuestHistory });
+            // Recover ride history for guest/last session if available and not cleared
+            const isGuestCleared = isHistoryCleared("Guest") || isHistoryCleared("Guest Commuter") || isHistoryCleared("last");
+            if (!isGuestCleared) {
+              const recoveredGuestHistory = loadDurableRideHistory("Guest") || loadDurableRideHistory("last");
+              if (recoveredGuestHistory && recoveredGuestHistory.length > 0) {
+                const currentHistory = currentState.rideHistory || [];
+                const currentIds = new Set(currentHistory.map((r) => r.id));
+                const merged = [
+                  ...currentHistory,
+                  ...recoveredGuestHistory.filter((r) => !currentIds.has(r.id))
+                ];
+                set({ rideHistory: merged.length > 0 ? merged : recoveredGuestHistory });
+              }
+            } else {
+              set({ rideHistory: [] });
             }
           }
         } catch (error) {
