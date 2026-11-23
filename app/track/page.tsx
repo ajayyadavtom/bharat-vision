@@ -47,7 +47,12 @@ interface LiveFleetVehicle {
   bearing: number;
   origin: string;
   destination: string;
+  currentLocationName?: string;
   nextStop: string;
+  serviceType?: string;
+  tripStartTime?: string;
+  lastUpdated?: string;
+  direction?: string;
   eta: string;
   etaMinutes: number;
   fare: number;
@@ -75,6 +80,8 @@ export default function TrackScreen() {
   const [focusCoords, setFocusCoords] = useState<[number, number] | null>(null);
   const [isLoadingFleet, setIsLoadingFleet] = useState(false);
   const [showAllBuses, setShowAllBuses] = useState(false);
+  const [fleetMessage, setFleetMessage] = useState<string | null>(null);
+  const [fleetSource, setFleetSource] = useState<string | null>(null);
 
   // Human-readable clean Route Number (e.g. 500-D instead of 500DGKVKCSB)
   const cleanRouteDisplay = useMemo(() => {
@@ -161,6 +168,8 @@ export default function TrackScreen() {
       setLiveVehicles([]);
       setSelectedBusId(null);
       setFocusCoords(null);
+      setFleetMessage(null);
+      setFleetSource(null);
       return;
     }
 
@@ -171,14 +180,21 @@ export default function TrackScreen() {
         const res = await fetch(`/api/bmtc/live?route=${encodeURIComponent(busCode)}`);
         if (res.ok) {
           const data = await res.json();
-          if (isMounted && data.success && Array.isArray(data.vehicles)) {
-            setLiveVehicles(data.vehicles);
-            setSelectedBusId((current) => {
-              if (current && data.vehicles.some((v: any) => v.busId === current)) {
-                return current;
-              }
-              return data.vehicles[0]?.busId || null;
-            });
+          if (isMounted) {
+            setFleetMessage(data.message || null);
+            setFleetSource(data.source || null);
+            if (data.success && Array.isArray(data.vehicles)) {
+              setLiveVehicles(data.vehicles);
+              setSelectedBusId((current) => {
+                if (current && data.vehicles.some((v: any) => v.busId === current)) {
+                  return current;
+                }
+                return data.vehicles[0]?.busId || null;
+              });
+            } else {
+              setLiveVehicles([]);
+              setSelectedBusId(null);
+            }
           }
         }
       } catch (err) {
@@ -457,12 +473,16 @@ export default function TrackScreen() {
             <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-700 text-white rounded-3xl p-3.5 sm:p-4 shadow-md flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="relative flex items-center justify-center shrink-0">
-                  <div className="w-3.5 h-3.5 rounded-full bg-emerald-300 animate-ping absolute" />
-                  <div className="w-3.5 h-3.5 rounded-full bg-emerald-200 relative" />
+                  <div className={`w-3.5 h-3.5 rounded-full ${liveVehicles.length > 0 ? "bg-emerald-300 animate-ping" : "bg-white/40"} absolute`} />
+                  <div className={`w-3.5 h-3.5 rounded-full ${liveVehicles.length > 0 ? "bg-emerald-200" : "bg-white/60"} relative`} />
                 </div>
                 <div className="min-w-0">
                   <h3 className="text-sm font-black tracking-wide flex items-center gap-2">
-                    <span>{liveVehicles.length} Live Buses Active</span>
+                    <span>
+                      {liveVehicles.length > 0
+                        ? `${liveVehicles.length} ${liveVehicles.length === 1 ? "Live Bus Active" : "Live Buses Active"}`
+                        : "0 Live Buses Active"}
+                    </span>
                     <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-bold">
                       Route {cleanRouteDisplay}
                     </span>
@@ -473,9 +493,32 @@ export default function TrackScreen() {
                 </div>
               </div>
               <div className="text-right text-[10px] font-bold text-emerald-100 bg-white/10 px-2.5 py-1 rounded-xl shrink-0">
-                {isLoadingFleet ? "Updating..." : "5s Auto-refresh"}
+                {isLoadingFleet ? "Updating..." : fleetSource === "bmtc-live-api" ? "● Official BMTC GPS" : "5s Auto-refresh"}
               </div>
             </div>
+
+            {/* When No Buses Are Currently Running on this Route */}
+            {liveVehicles.length === 0 && !isLoadingFleet && (
+              <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-4 shadow-sm text-center">
+                <span className="text-2xl mb-1 block">🕒</span>
+                <h4 className="text-sm font-extrabold text-slate-800 dark:text-slate-200">
+                  No Active Buses on Route {cleanRouteDisplay} Right Now
+                </h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
+                  {fleetMessage || `This route operates ${activeRouteDetails?.tripCount || 2} scheduled trips daily. Next bus operates at scheduled timetable hours.`}
+                </p>
+                {activeRouteDetails?.timetable && activeRouteDetails.timetable.length > 0 && (
+                  <div className="flex flex-wrap items-center justify-center gap-1.5 mt-3">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase mr-1">Daily Timetable:</span>
+                    {activeRouteDetails.timetable.map((t, idx) => (
+                      <span key={idx} className="text-[11px] font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2.5 py-0.5 rounded-md">
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Quick Bus Switcher Carousel Pills (1-tap switch across all buses on this route) */}
             {liveVehicles.length > 1 && (
@@ -518,8 +561,13 @@ export default function TrackScreen() {
                       {selectedBus.busId}
                     </span>
                     <span className="text-[9px] font-black uppercase tracking-wider bg-emerald-500 text-white px-2 py-0.5 rounded-md shadow-xs">
-                      Live GPS
+                      {fleetSource === "bmtc-live-api" ? "Real BMTC GPS" : "Live GPS"}
                     </span>
+                    {selectedBus.serviceType && (
+                      <span className="text-[9px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-1.5 py-0.5 rounded">
+                        {selectedBus.serviceType}
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-center gap-1.5">
                     <span className="text-xs font-extrabold text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg">
@@ -540,6 +588,11 @@ export default function TrackScreen() {
                     <h4 className="text-sm font-black text-slate-900 dark:text-white truncate">
                       🚏 {selectedBus.nextStop}
                     </h4>
+                    {selectedBus.currentLocationName && selectedBus.currentLocationName !== selectedBus.nextStop && (
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-0.5">
+                        📍 Passed: {selectedBus.currentLocationName}
+                      </span>
+                    )}
                   </div>
                   <div className="text-right shrink-0 pl-2">
                     <span className="text-[9px] font-bold uppercase text-slate-400 block">Arrival ETA</span>
@@ -559,6 +612,12 @@ export default function TrackScreen() {
                     <span className="text-[10px] text-slate-400 font-bold uppercase">To (Terminal):</span>
                     <span className="font-extrabold text-slate-800 dark:text-slate-200 truncate max-w-[200px]">{selectedBus.destination}</span>
                   </div>
+                  {selectedBus.tripStartTime && (
+                    <div className="flex items-center justify-between text-[10px] text-slate-500">
+                      <span>Scheduled Departure:</span>
+                      <span className="font-mono font-bold text-slate-700 dark:text-slate-300">{selectedBus.tripStartTime}</span>
+                    </div>
+                  )}
                   <div className="flex items-center justify-between pt-1 border-t border-slate-200/60 dark:border-slate-700/60 text-[10px]">
                     <span className="text-slate-400">Crowd Occupancy:</span>
                     <span className="font-bold text-amber-600 dark:text-amber-400">{selectedBus.crowdLevel || "Moderate"}</span>

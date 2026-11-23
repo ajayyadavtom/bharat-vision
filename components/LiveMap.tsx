@@ -690,10 +690,15 @@ export default function LiveMap({
   );
 
   // REAL-TIME VEHICLE PROGRESSION ENGINE:
-  // Dynamically simulates and moves buses forward along WHATEVER bus route is chosen!
+  // If vehicles prop is explicitly supplied (e.g. from /api/bmtc/live), respect real API data and do not fabricate fake buses.
   const [liveMovingBuses, setLiveMovingBuses] = useState<LiveVehicle[]>([]);
 
   useEffect(() => {
+    if (vehicles !== undefined) {
+      setLiveMovingBuses([]);
+      return;
+    }
+
     if (!effectiveRoutePath || effectiveRoutePath.length < 2) return;
 
     // Calculate cumulative segment distances along route
@@ -835,7 +840,7 @@ export default function LiveMap({
 
   // Effective vehicles to display on map: priority to real API live vehicles
   const displayVehicles = useMemo(() => {
-    if (vehicles && vehicles.length > 0) {
+    if (vehicles !== undefined) {
       return vehicles.map((v) => ({
         v_id: v.busId,
         lat: v.lat || v.latitude || 12.9716,
@@ -1127,8 +1132,8 @@ export default function LiveMap({
               Route {busCode}
             </span>
             <span className="flex items-center gap-1 border-l border-slate-300 dark:border-slate-700 pl-2 text-slate-600 dark:text-slate-300">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>{displayVehicles.length} Active Buses</span>
+              <span className={`w-2 h-2 rounded-full ${displayVehicles.length > 0 ? "bg-emerald-500 animate-pulse" : "bg-slate-400"}`} />
+              <span>{displayVehicles.length} {displayVehicles.length === 1 ? "Live Bus" : "Live Buses"}</span>
             </span>
           </>
         ) : (
