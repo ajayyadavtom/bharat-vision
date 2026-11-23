@@ -440,36 +440,6 @@ export default function ProfileScreen() {
               </div>
             </div>
           )}
-
-          {/* Commuter Safety & AI Shortcuts Card (Fills desktop left space) */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-3xl shadow-sm flex flex-col gap-2.5 transition-colors">
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
-              Commuter Security & AI Services
-            </span>
-            <div className="grid grid-cols-2 gap-2">
-              <Link 
-                href="/safety"
-                className="p-3 bg-rose-50 dark:bg-rose-950/30 hover:bg-rose-100 dark:hover:bg-rose-950/50 border border-rose-200 dark:border-rose-900/40 rounded-2xl flex items-center gap-2.5 transition-colors group"
-              >
-                <Shield size={18} className="text-rose-600 dark:text-rose-400 group-hover:scale-110 transition-transform shrink-0" />
-                <div className="min-w-0">
-                  <span className="text-xs font-bold text-rose-900 dark:text-rose-200 block truncate">SafeKeep SOS</span>
-                  <span className="text-[9px] text-rose-600 dark:text-rose-400 block truncate">112 Dispatch</span>
-                </div>
-              </Link>
-
-              <Link 
-                href="/chat"
-                className="p-3 bg-emerald-50 dark:bg-emerald-950/30 hover:bg-emerald-100 dark:hover:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/40 rounded-2xl flex items-center gap-2.5 transition-colors group"
-              >
-                <Sparkles size={18} className="text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform shrink-0" />
-                <div className="min-w-0">
-                  <span className="text-xs font-bold text-emerald-900 dark:text-emerald-200 block truncate">Vanara AI</span>
-                  <span className="text-[9px] text-emerald-600 dark:text-emerald-400 block truncate">Route Copilot</span>
-                </div>
-              </Link>
-            </div>
-          </div>
         </div>
 
         {/* RIGHT COLUMN: Transit Impact Stats, Action Cards, and Live Activity Preview */}
@@ -521,47 +491,25 @@ export default function ProfileScreen() {
             </div>
           </div>
 
-          {/* Primary Action Cards (2 Columns Grid on Desktop) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {/* Smart Passes & Concessions Link */}
-            <Link
-              href="/pass"
-              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-teal-500 dark:hover:border-teal-500 p-4 rounded-2xl flex items-center justify-between transition-all shadow-sm cursor-pointer group hover:shadow-md"
-            >
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-950/50 flex items-center justify-center text-teal-600 dark:text-teal-400 shrink-0 group-hover:scale-105 transition-transform">
-                  <Ticket size={20} />
-                </div>
-                <div className="min-w-0">
-                  <span className="text-sm font-bold text-slate-900 dark:text-white block truncate">Smart Passes & Concessions</span>
-                  <span className="text-[11px] text-slate-500 dark:text-slate-400 block truncate">
-                    {isStudentVerified ? "75% Student Concession Active" : "NCMC RuPay & BMTC passes"}
-                  </span>
-                </div>
+          {/* Ride History Modal Trigger */}
+          <button 
+            type="button"
+            onClick={() => setShowHistory(true)}
+            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-emerald-500 dark:hover:border-emerald-500 p-4 rounded-2xl flex items-center justify-between transition-all shadow-sm cursor-pointer group hover:shadow-md text-left"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0 group-hover:scale-105 transition-transform">
+                <Receipt size={20} />
               </div>
-              <ChevronRight size={18} className="text-slate-400 group-hover:text-teal-500 group-hover:translate-x-1 transition-all shrink-0 ml-2" />
-            </Link>
-
-            {/* Ride History Modal Trigger */}
-            <button 
-              type="button"
-              onClick={() => setShowHistory(true)}
-              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-emerald-500 dark:hover:border-emerald-500 p-4 rounded-2xl flex items-center justify-between transition-all shadow-sm cursor-pointer group hover:shadow-md text-left"
-            >
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0 group-hover:scale-105 transition-transform">
-                  <Receipt size={20} />
-                </div>
-                <div className="min-w-0">
-                  <span className="text-sm font-bold text-slate-900 dark:text-white block truncate">Ride History & Receipts</span>
-                  <span className="text-[11px] text-slate-500 dark:text-slate-400 block truncate">
-                    {rideHistory?.length ? `${rideHistory.length} travel records` : "View past journey receipts"}
-                  </span>
-                </div>
+              <div className="min-w-0">
+                <span className="text-sm font-bold text-slate-900 dark:text-white block truncate">Ride History & Receipts</span>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 block truncate">
+                  {rideHistory?.length ? `${rideHistory.length} travel records` : "View past journey receipts"}
+                </span>
               </div>
-              <ChevronRight size={18} className="text-slate-400 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all shrink-0 ml-2" />
-            </button>
-          </div>
+            </div>
+            <ChevronRight size={18} className="text-slate-400 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all shrink-0 ml-2" />
+          </button>
 
           {/* Recent Transit Activity & Receipts Preview (Desktop Void Fix) */}
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-3xl shadow-sm flex flex-col transition-colors">
