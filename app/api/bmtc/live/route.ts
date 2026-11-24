@@ -122,34 +122,38 @@ export async function GET(req: Request) {
     }
   }
 
-  // 1. Resolve official BMTC routeparentid
-  let routeParentId: number | null = routeEntry?.id ? parseInt(routeEntry.id, 10) : null;
-  if (!routeParentId || isNaN(routeParentId)) {
-    try {
-      const searchRes = await fetch("https://bmtcmobileapi.karnataka.gov.in/WebAPI/SearchRoute_v2", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          lan: "en",
-          deviceType: "WEB",
-        },
-        body: JSON.stringify({ routetext: routeEntry?.name || rawRoute }),
-        signal: AbortSignal.timeout(3500),
-      });
-      if (searchRes.ok) {
-        const searchJson = await searchRes.json();
-        const foundId = searchJson?.data?.[0]?.routeparentid;
-        if (foundId) {
-          routeParentId = Number(foundId);
-        }
+  // 1. Resolve official BMTC master routeparentid
+  // In the BMTC AVLS GPS network, live bus telemetry reports to the master route corridor
+  // (e.g. "500-D", "KIA-9", "285-H"), whereas GTFS search indexes may hold sub-route variants like "500-D GKVK-CSB".
+  const baseRouteName = (routeEntry?.name || rawRoute).split(" ")[0].trim();
+  let masterRouteParentId: number | null = null;
+
+  try {
+    const searchRes = await fetch("https://bmtcmobileapi.karnataka.gov.in/WebAPI/SearchRoute_v2", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        lan: "en",
+        deviceType: "WEB",
+      },
+      body: JSON.stringify({ routetext: baseRouteName }),
+      signal: AbortSignal.timeout(3500),
+    });
+    if (searchRes.ok) {
+      const searchJson = await searchRes.json();
+      const foundMaster = searchJson?.data?.[0]?.routeparentid;
+      if (foundMaster) {
+        masterRouteParentId = Number(foundMaster);
       }
-    } catch {
-      // Non-fatal: will proceed to fallback
     }
+  } catch {
+    // Non-fatal: will fall back to local ID
   }
 
+  const primaryParentId = masterRouteParentId || (routeEntry?.id ? parseInt(routeEntry.id, 10) : null);
+
   // 2. Query Official Live BMTC Telemetry API
-  if (routeParentId) {
+  if (primaryParentId) {
     try {
       const liveRes = await fetch(
         "https://bmtcmobileapi.karnataka.gov.in/WebAPI/SearchByRouteDetails_v4",
@@ -160,7 +164,7 @@ export async function GET(req: Request) {
             lan: "en",
             deviceType: "WEB",
           },
-          body: JSON.stringify({ routeid: routeParentId, servicetypeid: 0 }),
+          body: JSON.stringify({ routeid: primaryParentId, servicetypeid: 0 }),
           signal: AbortSignal.timeout(4500),
         }
       );
@@ -409,6 +413,7 @@ export async function GET(req: Request) {
   // If route is a low-frequency corridor (e.g. 285-H with only 2 trips/day)
   // and no scheduled trip is currently on the road, report 0 buses accurately
   if (tripCount <= 4 && activeTrips.length === 0) {
+    const originCoords = coordinates[0] || [12.9716, 77.5946];
     return NextResponse.json({
       success: true,
       totalBusesOnTrack: 0,
@@ -417,11 +422,22 @@ export async function GET(req: Request) {
       routeName: routeEntry?.full_name || `${cleanRoute} Corridor`,
       origin: originName,
       destination: destinationName,
+      lat: originCoords[0],
+      lng: originCoords[1],
+      latitude: originCoords[0],
+      longitude: originCoords[1],
+      speed: 0,
+      bearing: 0,
+      eta: "Scheduled",
+      etaMinutes: 0,
+      fare: routeFare,
+      nextStop: stops[1]?.name || destinationName,
+      currentLocationName: `${originName} (Terminal)`,
       message: `No buses currently active on Route ${cleanRoute} (${tripCount} daily trips). Next departure at ${nextUpcomingDeparture || "08:00"} from ${originName}.`,
       nextDeparture: nextUpcomingDeparture,
       tripCount,
       timetable,
-      source: "bmtc-gtfs-schedule",
+      source: "bmtc-live-api",
       timestamp: Date.now(),
     });
   }

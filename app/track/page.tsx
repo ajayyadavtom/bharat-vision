@@ -268,11 +268,14 @@ export default function TrackScreen() {
   };
 
   const popularCorridors = [
+    { code: "500D", label: "500D (Silk Board ⇄ Hebbal ORR)" },
+    { code: "KIA9", label: "KIA-9 (Airport 24x7 Express)" },
+    { code: "365", label: "365 (Majestic ⇄ Bannerghatta)" },
+    { code: "V500D", label: "V-500D (Hebbal ⇄ Silk Board AC)" },
+    { code: "G2", label: "G-2 (Brigade Rd ⇄ Sarjapur)" },
     { code: "285H", label: "285H (Koluvarayanahalli ⇄ KR Market)" },
-    { code: "500D", label: "500D (Silk Board ⇄ Hebbal)" },
     { code: "335E", label: "335E (Majestic ⇄ Whitefield)" },
     { code: "250", label: "250 (Majestic ⇄ Yelahanka)" },
-    { code: "KIA9", label: "KIA-9 (Airport Express)" },
     { code: "KBS3C", label: "KBS-3C (Majestic ⇄ Chandapura)" },
     { code: "401K", label: "401K (Yelahanka ⇄ Kengeri)" },
   ];

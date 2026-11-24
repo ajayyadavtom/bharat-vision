@@ -646,24 +646,31 @@ export default function MapboxBusMap({
           bearing: bus.bearing,
         };
 
-        if (!markerRef.current) {
-          const markerElement = createCustomMarkerElement(bus);
-          const currentMap = mapRef.current;
-          if (!currentMap) return;
+        if (
+          typeof newTarget.lng === "number" &&
+          !isNaN(newTarget.lng) &&
+          typeof newTarget.lat === "number" &&
+          !isNaN(newTarget.lat)
+        ) {
+          if (!markerRef.current) {
+            const markerElement = createCustomMarkerElement(bus);
+            const currentMap = mapRef.current;
+            if (!currentMap) return;
 
-          const marker = new mapboxgl.Marker({
-            element: markerElement,
-            anchor: "center",
-          })
-            .setLngLat([newTarget.lng, newTarget.lat])
-            .addTo(currentMap);
+            const marker = new mapboxgl.Marker({
+              element: markerElement,
+              anchor: "center",
+            })
+              .setLngLat([newTarget.lng, newTarget.lat])
+              .addTo(currentMap);
 
-          markerRef.current = marker;
-          prevCoordRef.current = { ...newTarget };
-          targetCoordRef.current = { ...newTarget };
-        } else {
-          targetCoordRef.current = newTarget;
-          animateGlideToTarget(newTarget, pollIntervalMs);
+            markerRef.current = marker;
+            prevCoordRef.current = { ...newTarget };
+            targetCoordRef.current = { ...newTarget };
+          } else {
+            targetCoordRef.current = newTarget;
+            animateGlideToTarget(newTarget, pollIntervalMs);
+          }
         }
       } catch (err: any) {
         console.warn("Error polling BMTC live telemetry:", err);

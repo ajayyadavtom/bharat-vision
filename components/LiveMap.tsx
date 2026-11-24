@@ -522,7 +522,7 @@ export default function LiveMap({
   initialShowMetro = false,
   initialShowStops = false,
   onUserLocationChange,
-  vehicles = [],
+  vehicles: propVehicles,
   selectedVehicleId = null,
   onSelectVehicle,
   focusCoords = null,
@@ -689,159 +689,47 @@ export default function LiveMap({
     [onUserLocationChange]
   );
 
-  // REAL-TIME VEHICLE PROGRESSION ENGINE:
-  // If vehicles prop is explicitly supplied (e.g. from /api/bmtc/live), respect real API data and do not fabricate fake buses.
-  const [liveMovingBuses, setLiveMovingBuses] = useState<LiveVehicle[]>([]);
+  // REAL-TIME BMTC AVLS GPS FLEET:
+  // When vehicles prop is not passed externally (e.g. on homepage or route planner),
+  // automatically poll the official real BMTC live GPS telemetry endpoint every 5s.
+  const [internalVehicles, setInternalVehicles] = useState<LiveVehicleTelemetry[]>([]);
 
   useEffect(() => {
-    if (vehicles !== undefined) {
-      setLiveMovingBuses([]);
+    if (propVehicles !== undefined || !busCode) {
+      setInternalVehicles([]);
       return;
     }
 
-    if (!effectiveRoutePath || effectiveRoutePath.length < 2) return;
-
-    // Calculate cumulative segment distances along route
-    const segments: { p1: [number, number]; p2: [number, number]; dist: number; bearing: number }[] =
-      [];
-    let totalRouteMeters = 0;
-
-    for (let i = 0; i < effectiveRoutePath.length - 1; i++) {
-      const p1 = effectiveRoutePath[i];
-      const p2 = effectiveRoutePath[i + 1];
-      const dist = Math.max(1, haversineMeters(p1[0], p1[1], p2[0], p2[1]));
-      const bearing = calculateBearing(p1[0], p1[1], p2[0], p2[1]);
-      segments.push({ p1, p2, dist, bearing });
-      totalRouteMeters += dist;
+    let isMounted = true;
+    async function pollLiveFleet() {
+      try {
+        const clean = busCode.trim().toUpperCase();
+        const res = await fetch(`/api/bmtc/live?route=${encodeURIComponent(clean)}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted && data.success && Array.isArray(data.vehicles)) {
+            setInternalVehicles(data.vehicles);
+          }
+        }
+      } catch (err) {
+        console.warn("Could not poll live BMTC fleet in LiveMap:", err);
+      }
     }
 
-    if (totalRouteMeters <= 0) return;
-
-    // Deterministic vehicle seeds based on busCode
-    const cleanCode = (busCode || "500D").toUpperCase();
-    const seed = cleanCode.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
-
-    // Initial progress positions for 2 buses on this corridor
-    let bus1Progress = (totalRouteMeters * (0.22 + (seed % 20) / 100)) % totalRouteMeters;
-    let bus2Progress = (totalRouteMeters * (0.65 + (seed % 30) / 100)) % totalRouteMeters;
-
-    const vId1 = `KA57-F-${(2000 + (seed * 7) % 7000).toString()}`;
-    const vId2 = `KA57-F-${(4000 + (seed * 13) % 5000).toString()}`;
-
-    // Helper to calculate position on route polyline given progress in meters
-    const getPointAtMeters = (
-      meters: number
-    ): { lat: number; lng: number; bearing: number; nextStopName: string; etaSec: number } => {
-      let accumulated = 0;
-      for (let i = 0; i < segments.length; i++) {
-        const seg = segments[i];
-        if (accumulated + seg.dist >= meters || i === segments.length - 1) {
-          const remainder = Math.max(0, meters - accumulated);
-          const t = Math.min(1, remainder / seg.dist);
-          const lat = seg.p1[0] + (seg.p2[0] - seg.p1[0]) * t;
-          const lng = seg.p1[1] + (seg.p2[1] - seg.p1[1]) * t;
-
-          // Find upcoming stop
-          let nextStopName = "Next Transit Stop";
-          let etaSec = 180;
-          if (effectiveStops.length > 0) {
-            const nextStopIdx = Math.min(
-              effectiveStops.length - 1,
-              Math.floor((meters / totalRouteMeters) * effectiveStops.length) + 1
-            );
-            const targetStop = effectiveStops[nextStopIdx] || effectiveStops[0];
-            nextStopName = targetStop.name;
-            const distToStop = haversineMeters(lat, lng, targetStop.lat, targetStop.lon);
-            etaSec = Math.max(15, Math.round(distToStop / (35 / 3.6)));
-          }
-
-          return { lat, lng, bearing: seg.bearing, nextStopName, etaSec };
-        }
-        accumulated += seg.dist;
-      }
-      return {
-        lat: segments[0].p1[0],
-        lng: segments[0].p1[1],
-        bearing: segments[0].bearing,
-        nextStopName: effectiveStops[0]?.name || "Terminal",
-        etaSec: 120,
-      };
+    pollLiveFleet();
+    const interval = setInterval(pollLiveFleet, 5000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
     };
+  }, [propVehicles, busCode]);
 
-    // Initialize immediate vehicle state
-    const p1 = getPointAtMeters(bus1Progress);
-    const p2 = getPointAtMeters(bus2Progress);
-
-    setLiveMovingBuses([
-      {
-        v_id: vId1,
-        route_id: cleanCode,
-        lat: p1.lat,
-        lng: p1.lng,
-        spd: 34,
-        hdg: p1.bearing,
-        occ: 45,
-        nxt_stp: p1.nextStopName,
-        eta_sec: p1.etaSec,
-      },
-      {
-        v_id: vId2,
-        route_id: cleanCode,
-        lat: p2.lat,
-        lng: p2.lng,
-        spd: 38,
-        hdg: p2.bearing,
-        occ: 72,
-        nxt_stp: p2.nextStopName,
-        eta_sec: p2.etaSec,
-      },
-    ]);
-
-    // Live continuous vehicle motion interval (ticks every 1.2s)
-    const interval = setInterval(() => {
-      // Advance by transit speed (avg 35 km/h ≈ 9.7 m/s * 1.2s ≈ 11.6 meters)
-      const delta1 = (34 / 3.6) * 1.2;
-      const delta2 = (38 / 3.6) * 1.2;
-
-      bus1Progress = (bus1Progress + delta1) % totalRouteMeters;
-      bus2Progress = (bus2Progress + delta2) % totalRouteMeters;
-
-      const pos1 = getPointAtMeters(bus1Progress);
-      const pos2 = getPointAtMeters(bus2Progress);
-
-      setLiveMovingBuses([
-        {
-          v_id: vId1,
-          route_id: cleanCode,
-          lat: pos1.lat,
-          lng: pos1.lng,
-          spd: Math.round(33 + Math.sin(Date.now() / 2000) * 4),
-          hdg: pos1.bearing,
-          occ: 48,
-          nxt_stp: pos1.nextStopName,
-          eta_sec: pos1.etaSec,
-        },
-        {
-          v_id: vId2,
-          route_id: cleanCode,
-          lat: pos2.lat,
-          lng: pos2.lng,
-          spd: Math.round(37 + Math.cos(Date.now() / 2500) * 3),
-          hdg: pos2.bearing,
-          occ: 75,
-          nxt_stp: pos2.nextStopName,
-          eta_sec: pos2.etaSec,
-        },
-      ]);
-    }, 1200);
-
-    return () => clearInterval(interval);
-  }, [effectiveRoutePath, effectiveStops, busCode]);
+  const effectiveFleet = propVehicles !== undefined ? propVehicles : internalVehicles;
 
   // Effective vehicles to display on map: priority to real API live vehicles
   const displayVehicles = useMemo(() => {
-    if (vehicles !== undefined) {
-      return vehicles.map((v) => ({
+    if (effectiveFleet && effectiveFleet.length > 0) {
+      return effectiveFleet.map((v) => ({
         v_id: v.busId,
         lat: v.lat || v.latitude || 12.9716,
         lng: v.lng || v.longitude || 77.5946,
@@ -856,16 +744,8 @@ export default function LiveMap({
         fare: v.fare,
       }));
     }
-    if (busCode && liveMovingBuses.length > 0) {
-      return liveMovingBuses.map((v) => ({
-        ...v,
-        origin: bmtcRouteData?.origin || "Origin Terminal",
-        destination: bmtcRouteData?.destination || "Destination Terminal",
-        fare: 25,
-      }));
-    }
     return [];
-  }, [vehicles, liveMovingBuses, busCode, bmtcRouteData]);
+  }, [effectiveFleet, busCode]);
 
   // Recenter trigger
   const handleRecenter = useCallback(() => {
