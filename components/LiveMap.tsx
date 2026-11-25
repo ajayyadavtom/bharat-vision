@@ -881,7 +881,13 @@ export default function LiveMap({
           <div 
             onClick={(e) => e.stopPropagation()}
             onMouseDown={(e) => e.stopPropagation()}
-            className="flex items-center gap-1 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-1 rounded-full border border-slate-200 dark:border-slate-800 shadow-xl overflow-x-auto no-scrollbar max-w-[280px] sm:max-w-none"
+            onWheel={(e) => {
+              if (e.deltaY !== 0) {
+                e.currentTarget.scrollLeft += e.deltaY;
+              }
+            }}
+            style={{ touchAction: "pan-x pan-y", WebkitOverflowScrolling: "touch" }}
+            className="flex items-center gap-1 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-1 rounded-full border border-slate-200 dark:border-slate-800 shadow-xl overflow-x-auto no-scrollbar scroll-smooth max-w-[280px] sm:max-w-none"
           >
             {["All", "Purple", "Green", "Yellow", "Blue", "Pink"].map((line) => (
               <button

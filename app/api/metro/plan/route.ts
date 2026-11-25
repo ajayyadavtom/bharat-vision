@@ -5,8 +5,10 @@ import {
   resolveStation,
   getAllMetroStations,
   getNextTrainTimings,
-  calculateMetroFare,
+  getStationDepartureBoard,
 } from "@/lib/bmrclGtfsEngine";
+
+export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -14,7 +16,7 @@ export async function GET(req: Request) {
   const to = searchParams.get("to") || searchParams.get("toStation") || "";
   const listStations = searchParams.get("stations") === "true";
 
-  // If client wants list of all BMRCL stations
+  // 1. If client wants list of all BMRCL stations
   if (listStations || (!from && !to)) {
     const all = getAllMetroStations();
     return NextResponse.json({
@@ -24,7 +26,7 @@ export async function GET(req: Request) {
     });
   }
 
-  // If only a single station is passed, return its station details and next train timings
+  // 2. If only a single station is passed, return its station details, next train & live platform departure board
   if (from && !to) {
     const station = resolveStation(from);
     if (!station) {
@@ -33,14 +35,17 @@ export async function GET(req: Request) {
         { status: 404 }
       );
     }
-    const nextTrain = getNextTrainTimings(station.id, station.lines[0] === "Purple" ? "Whitefield / Challaghatta" : "Silk Institute / Madavara");
+    const departureBoard = getStationDepartureBoard(station.id);
+    const nextTrain = getNextTrainTimings(station.id);
     return NextResponse.json({
       success: true,
       station,
       nextTrain,
+      departureBoard,
     });
   }
 
+  // 3. Plan journey between from and to
   const plan = planMetroJourney(from, to);
   if (!plan) {
     return NextResponse.json(
@@ -51,6 +56,8 @@ export async function GET(req: Request) {
       { status: 400 }
     );
   }
+
+  const departureBoard = getStationDepartureBoard(plan.origin.id);
 
   return NextResponse.json({
     success: true,
@@ -67,6 +74,7 @@ export async function GET(req: Request) {
       path: plan.path,
     },
     nextTrain: plan.nextTrain,
+    departureBoard,
     fare: plan.fare,
   });
 }
@@ -95,6 +103,8 @@ export async function POST(req: Request) {
       );
     }
 
+    const departureBoard = getStationDepartureBoard(plan.origin.id);
+
     return NextResponse.json({
       success: true,
       origin: plan.origin,
@@ -110,6 +120,7 @@ export async function POST(req: Request) {
         path: plan.path,
       },
       nextTrain: plan.nextTrain,
+      departureBoard,
       fare: plan.fare,
     });
   } catch (err: any) {

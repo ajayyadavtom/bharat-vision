@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { 
   TrainFront, 
@@ -13,6 +13,8 @@ import {
   Wallet, 
   ChevronDown, 
   ChevronUp, 
+  ChevronLeft,
+  ChevronRight,
   Navigation, 
   Search, 
   X, 
@@ -79,12 +81,127 @@ export default function MetroScreen() {
   const [selectedPaxIndex, setSelectedPaxIndex] = useState<number>(0);
   const [showStationList, setShowStationList] = useState(false);
 
+  // Real-Time BMRCL GTFS Timetable & Live Departure State
+  const [liveGtfsPlan, setLiveGtfsPlan] = useState<any>(null);
+  const [isFetchingGtfsPlan, setIsFetchingGtfsPlan] = useState<boolean>(false);
+  const [countdownSecs, setCountdownSecs] = useState<number | null>(null);
+
+  // Line filter pill horizontal scroll, touch-pan, and drag compatibility
+  const lineTabsRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+  const isDraggingRef = useRef(false);
+  const startXRef = useRef(0);
+  const scrollLeftRef = useRef(0);
+
+  const checkLineTabsScroll = useCallback(() => {
+    const el = lineTabsRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 6);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 6);
+  }, []);
+
+  useEffect(() => {
+    const el = lineTabsRef.current;
+    if (!el) return;
+    checkLineTabsScroll();
+    el.addEventListener("scroll", checkLineTabsScroll, { passive: true });
+    window.addEventListener("resize", checkLineTabsScroll);
+    return () => {
+      el.removeEventListener("scroll", checkLineTabsScroll);
+      window.removeEventListener("resize", checkLineTabsScroll);
+    };
+  }, [checkLineTabsScroll]);
+
+  // Automatically scroll selected line filter into view (e.g. Pink Line)
+  useEffect(() => {
+    const el = lineTabsRef.current;
+    if (!el) return;
+    const selectedBtn = el.querySelector(`[data-line-filter="${activeLineFilter}"]`) as HTMLElement;
+    if (selectedBtn) {
+      selectedBtn.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+    }
+  }, [activeLineFilter]);
+
+  const scrollLineTabs = (direction: "left" | "right") => {
+    const el = lineTabsRef.current;
+    if (!el) return;
+    const amount = direction === "left" ? -160 : 160;
+    el.scrollBy({ left: amount, behavior: "smooth" });
+  };
+
+  const handleTabsMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    const el = lineTabsRef.current;
+    if (!el) return;
+    isDraggingRef.current = true;
+    startXRef.current = e.pageX - el.offsetLeft;
+    scrollLeftRef.current = el.scrollLeft;
+  };
+
+  const handleTabsMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isDraggingRef.current) return;
+    const el = lineTabsRef.current;
+    if (!el) return;
+    e.preventDefault();
+    const x = e.pageX - el.offsetLeft;
+    const walk = (x - startXRef.current) * 1.5;
+    el.scrollLeft = scrollLeftRef.current - walk;
+  };
+
+  const handleTabsMouseUp = () => {
+    isDraggingRef.current = false;
+  };
+
   useEffect(() => {
     fetchUserData();
   }, [fetchUserData]);
 
   const originStation = ALL_STATIONS.find((s) => s.id === origin) || ALL_STATIONS[0];
   const destStation = ALL_STATIONS.find((s) => s.id === destination) || ALL_STATIONS[1];
+
+  // Fetch real-time BMRCL GTFS timetable whenever origin or destination changes
+  useEffect(() => {
+    let isCurrent = true;
+    async function fetchPlan() {
+      if (!originStation || !destStation || originStation.id === destStation.id) {
+        setLiveGtfsPlan(null);
+        setCountdownSecs(null);
+        return;
+      }
+      setIsFetchingGtfsPlan(true);
+      try {
+        const res = await fetch(
+          `/api/metro/plan?fromStation=${encodeURIComponent(originStation.id)}&toStation=${encodeURIComponent(destStation.id)}`
+        );
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.success && isCurrent) {
+          setLiveGtfsPlan(data);
+          if (data.nextTrain?.countdownSeconds !== undefined) {
+            setCountdownSecs(data.nextTrain.countdownSeconds);
+          }
+        }
+      } catch (err) {
+        console.warn("Failed to fetch GTFS metro plan:", err);
+      } finally {
+        if (isCurrent) setIsFetchingGtfsPlan(false);
+      }
+    }
+
+    fetchPlan();
+    return () => {
+      isCurrent = false;
+    };
+  }, [originStation, destStation]);
+
+  // Real-time ticking countdown timer (ticks every second down to 0)
+  useEffect(() => {
+    if (countdownSecs === null || countdownSecs <= 0) return;
+    const interval = setInterval(() => {
+      setCountdownSecs((prev) => (prev !== null && prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [countdownSecs]);
 
   // Filter stations based on active tab and optional search query
   const displayStations = useMemo(() => {
@@ -281,10 +398,10 @@ export default function MetroScreen() {
   ];
 
   return (
-    <div className="flex flex-col lg:grid lg:grid-cols-12 h-[100dvh] lg:h-full overflow-y-auto lg:overflow-hidden no-scrollbar pb-[120px] lg:pb-0 bg-slate-50 dark:bg-surface-black relative max-w-[1720px] mx-auto w-full lg:px-8 xl:px-12 lg:py-4 lg:gap-6 text-slate-900 dark:text-slate-100">
+    <div className="flex flex-col lg:grid lg:grid-cols-12 min-h-screen lg:h-full overflow-y-auto lg:overflow-hidden no-scrollbar pb-[120px] lg:pb-0 bg-slate-50 dark:bg-surface-black relative max-w-[1720px] mx-auto w-full px-4 lg:px-8 xl:px-12 py-3 lg:py-4 gap-4 lg:gap-6 text-slate-900 dark:text-slate-100">
       
       {/* LEFT COLUMN: Controls, Line Filters, Journey Planner, Trip Details & Summary */}
-      <div className="contents lg:flex lg:flex-col lg:col-span-5 xl:col-span-5 lg:h-full lg:overflow-y-auto no-scrollbar lg:gap-3.5 lg:pr-2">
+      <div className="flex flex-col lg:col-span-5 xl:col-span-5 lg:h-full lg:overflow-y-auto no-scrollbar gap-3.5 lg:pr-2">
 
         {/* Header & Live Wallet Display */}
         <div className="order-1 lg:order-none mb-2 p-4 pt-6 lg:p-0 flex justify-between items-start gap-2 shrink-0">
@@ -315,27 +432,68 @@ export default function MetroScreen() {
           </div>
         </div>
 
-        {/* Official Line Toggle Tabs */}
-        <div className="order-2 lg:order-none px-4 lg:px-0 shrink-0">
-          <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900/90 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-x-auto no-scrollbar shrink-0 min-h-[46px] shadow-xs">
-            {lineFilters.map((filter) => {
-              const isSelected = activeLineFilter === filter.key;
-              return (
-                <button
-                  key={filter.key}
-                  type="button"
-                  onClick={() => setActiveLineFilter(filter.key)}
-                  className={`py-2 px-3.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer ${
-                    isSelected
-                      ? filter.activeClass
-                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
-                  }`}
-                >
-                  {filter.dotColor && <span className={`w-2 h-2 rounded-full ${filter.dotColor}`} />}
-                  <span>{filter.label} ({filter.count})</span>
-                </button>
-              );
-            })}
+        {/* Official Line Toggle Tabs (Horizontal Touch Pan, Mouse Wheel & Drag, Chevron Controls) */}
+        <div className="order-2 lg:order-none px-4 lg:px-0 shrink-0 relative">
+          <div className="relative flex items-center bg-white dark:bg-slate-900/90 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs group">
+            {/* Left Scroll Chevron Button */}
+            {canScrollLeft && (
+              <button
+                type="button"
+                onClick={() => scrollLineTabs("left")}
+                aria-label="Scroll left to see earlier metro lines"
+                className="absolute left-1 z-20 w-7 h-7 rounded-xl bg-white/95 dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-center text-slate-700 dark:text-slate-200 hover:text-purple-600 transition-all cursor-pointer backdrop-blur-md shrink-0"
+              >
+                <ChevronLeft size={16} />
+              </button>
+            )}
+
+            <div
+              ref={lineTabsRef}
+              onWheel={(e) => {
+                if (e.deltaY !== 0) {
+                  e.currentTarget.scrollLeft += e.deltaY;
+                }
+              }}
+              onMouseDown={handleTabsMouseDown}
+              onMouseMove={handleTabsMouseMove}
+              onMouseUp={handleTabsMouseUp}
+              onMouseLeave={handleTabsMouseUp}
+              style={{ touchAction: "pan-x pan-y", WebkitOverflowScrolling: "touch" }}
+              className="flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth w-full p-0.5 select-none cursor-grab active:cursor-grabbing"
+            >
+              {lineFilters.map((filter) => {
+                const isSelected = activeLineFilter === filter.key;
+                return (
+                  <button
+                    key={filter.key}
+                    data-line-filter={filter.key}
+                    type="button"
+                    onClick={() => setActiveLineFilter(filter.key)}
+                    className={`py-2 px-3.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer ${
+                      isSelected
+                        ? filter.activeClass
+                        : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
+                    }`}
+                  >
+                    {filter.dotColor && <span className={`w-2 h-2 rounded-full ${filter.dotColor}`} />}
+                    <span>{filter.label} ({filter.count})</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Right Scroll Chevron Button - Gently pulses pink to indicate Pink Line is available */}
+            {canScrollRight && (
+              <button
+                type="button"
+                onClick={() => scrollLineTabs("right")}
+                aria-label="Scroll right to see Pink line"
+                className="absolute right-1 z-20 w-7 h-7 rounded-xl bg-pink-500 hover:bg-pink-600 text-white shadow-md flex items-center justify-center transition-all cursor-pointer shadow-pink-500/30 animate-pulse shrink-0"
+                title="Scroll right to see Pink Line (13)"
+              >
+                <ChevronRight size={16} />
+              </button>
+            )}
           </div>
         </div>
 
@@ -453,21 +611,96 @@ export default function MetroScreen() {
           className="order-5 lg:order-none px-4 lg:px-0 shrink-0"
         >
           <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
+
+            {/* Real-Time GTFS Departure Countdown Board */}
+            <div className="bg-slate-950 p-4 rounded-2xl border border-purple-500/40 shadow-sm mb-4 text-white">
+              <div className="flex items-center justify-between pb-2 mb-2.5 border-b border-slate-800">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-2.5 w-2.5 relative">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+                  </span>
+                  <span className="text-[10px] font-black tracking-wider uppercase text-emerald-400">
+                    Live Next Metro Countdown
+                  </span>
+                </div>
+                <span className="text-[10px] text-purple-300 font-mono font-bold bg-purple-950/80 px-2 py-0.5 rounded-md border border-purple-800/60">
+                  {liveGtfsPlan?.nextTrain?.platform || "Platform 1"}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <span className="text-[10px] text-slate-400 font-bold uppercase block">
+                    Boarding at {originStation.name}
+                  </span>
+                  <div className="flex items-baseline gap-2 mt-0.5">
+                    <span className="text-2xl sm:text-3xl font-black text-white font-mono tracking-tight">
+                      {countdownSecs !== null
+                        ? countdownSecs > 60
+                          ? `${Math.floor(countdownSecs / 60)}m ${String(countdownSecs % 60).padStart(2, "0")}s`
+                          : `${countdownSecs}s`
+                        : isFetchingGtfsPlan
+                        ? "Syncing..."
+                        : "Arriving soon"}
+                    </span>
+                    {liveGtfsPlan?.nextTrain?.nextDepartureTime && (
+                      <span className="text-xs text-purple-300 font-bold">
+                        ({liveGtfsPlan.nextTrain.nextDepartureTime} IST)
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-slate-300 mt-0.5">
+                    Towards <strong className="text-white">{liveGtfsPlan?.nextTrain?.headsign || destStation.name}</strong>
+                  </p>
+                </div>
+
+                <div className="text-right shrink-0">
+                  <span className="text-[9px] text-slate-400 uppercase font-black block">GTFS Schedule</span>
+                  <span className="text-xs font-black text-emerald-400 bg-emerald-950/80 border border-emerald-500/40 px-2.5 py-1 rounded-xl inline-block mt-0.5">
+                    {liveGtfsPlan?.nextTrain?.isOperating ? "● Revenue Service" : "Closed"}
+                  </span>
+                </div>
+              </div>
+
+              {/* Upcoming Trains Timetable */}
+              {liveGtfsPlan?.nextTrain?.upcomingDepartures && liveGtfsPlan.nextTrain.upcomingDepartures.length > 0 && (
+                <div className="mt-3 pt-2.5 border-t border-slate-800/80">
+                  <span className="text-[9px] text-slate-400 uppercase font-black block mb-1.5">
+                    Upcoming Timetable Trains:
+                  </span>
+                  <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+                    {liveGtfsPlan.nextTrain.upcomingDepartures.slice(0, 4).map((dep: any, idx: number) => {
+                      const time = typeof dep === "string" ? dep : dep.time;
+                      const countdown = typeof dep === "object" && dep.countdownSec ? `(+${Math.round(dep.countdownSec / 60)}m)` : "";
+                      return (
+                        <div key={`gtfs-dep-${idx}`} className="bg-slate-900 border border-slate-800 px-2.5 py-1 rounded-xl text-[10px] font-mono shrink-0 flex items-center gap-1">
+                          <Clock size={11} className="text-purple-400" />
+                          <span className="text-white font-bold">{time}</span>
+                          <span className="text-purple-300 text-[9px]">{countdown}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+
           {/* Fare & Metrics Grid */}
           <div className="grid grid-cols-3 gap-2 text-center border-b border-slate-100 dark:border-slate-800 pb-4 mb-4">
             <div>
               <span className="text-[10px] text-slate-500 dark:text-slate-400 block uppercase font-black">Official Fare</span>
-              <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400">₹{trip.fare}</span>
+              <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400">₹{liveGtfsPlan?.fare?.token || trip.fare}</span>
             </div>
             <div>
               <span className="text-[10px] text-slate-500 dark:text-slate-400 block uppercase font-black">Est. Travel</span>
               <span className="text-2xl font-black text-slate-900 dark:text-white flex items-center justify-center gap-1">
-                <Clock size={16} className="text-slate-400" /> {trip.duration}m
+                <Clock size={16} className="text-slate-400" /> {liveGtfsPlan?.route?.estimatedDurationMinutes || trip.duration}m
               </span>
             </div>
             <div>
               <span className="text-[10px] text-slate-500 dark:text-slate-400 block uppercase font-black">Total Stops</span>
-              <span className="text-2xl font-black text-indigo-600 dark:text-indigo-400">{trip.stops}</span>
+              <span className="text-2xl font-black text-indigo-600 dark:text-indigo-400">{liveGtfsPlan?.route?.stopsCount || trip.stops}</span>
             </div>
           </div>
 
@@ -920,17 +1153,17 @@ export default function MetroScreen() {
 
       </div>
 
-      {/* RIGHT COLUMN: Interactive Namma Metro Network Map */}
-      <div className="order-3 lg:order-none lg:col-span-7 xl:col-span-7 lg:h-full lg:min-h-0 px-4 lg:px-0 my-2 lg:my-0 flex flex-col">
+      {/* RIGHT COLUMN: Interactive Namma Metro Network Map with Live Moving Trains */}
+      <div className="flex flex-col lg:col-span-7 xl:col-span-7 h-[420px] sm:h-[500px] lg:h-full min-h-[380px] my-2 lg:my-0">
         <div className="flex items-center justify-between mb-1.5 px-1 shrink-0">
           <span className="text-[11px] font-black uppercase text-purple-700 dark:text-purple-300 tracking-wider flex items-center gap-1.5">
             <MapPin size={13} className="text-purple-600 dark:text-purple-400" /> Interactive Metro Map
           </span>
           <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">
-            Tap stations to set From/To
+            Live Moving Trains · Tap stations to set From/To
           </span>
         </div>
-        <div id="interactive-metro-map" className="w-full h-80 sm:h-96 lg:h-auto lg:flex-1 lg:min-h-0 bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-lg relative flex-1">
+        <div id="interactive-metro-map" className="w-full h-full bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-lg relative flex-1">
           <MetroMap
             originStationId={origin}
             destStationId={destination}

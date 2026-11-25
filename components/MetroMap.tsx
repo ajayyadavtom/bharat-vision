@@ -1,3 +1,4 @@
+// components/MetroMap.tsx
 "use client";
 
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
@@ -7,6 +8,7 @@ import L from "leaflet";
 import metroData from "@/data/namma_metro.json";
 import { MAPBOX_PUBLIC_TOKEN, MAPBOX_STYLES, MapboxStyleOption } from "@/lib/mapbox";
 import { getMetroRouteGeometry, findMetroRoute } from "@/lib/metroRouter";
+import { LiveMetroTrain } from "@/lib/bmrclGtfsEngine";
 
 interface MetroMapProps {
   originStationId?: string;
@@ -44,7 +46,6 @@ function MapController({
 
     // Only auto-fit bounds on filter change, initial load, or explicit recenter click
     if (filterChanged || recenterClicked) {
-      // If a specific line is filtered (e.g. Purple, Green, Yellow, Blue, Pink), fit to that line's stations
       if (filterKey && filterKey !== "All") {
         const lower = filterKey.toLowerCase();
         const lineStations = metroData.stations.filter((s) =>
@@ -70,7 +71,17 @@ function MapController({
   return null;
 }
 
-function MetroFloatingControls({ onRecenter }: { onRecenter: () => void }) {
+function MetroFloatingControls({
+  onRecenter,
+  showTrains,
+  onToggleTrains,
+  trainCount,
+}: {
+  onRecenter: () => void;
+  showTrains: boolean;
+  onToggleTrains: () => void;
+  trainCount: number;
+}) {
   const map = useMap();
   return (
     <div className="absolute bottom-6 right-3 z-[400] flex flex-col gap-1.5 shadow-xl">
@@ -99,7 +110,179 @@ function MetroFloatingControls({ onRecenter }: { onRecenter: () => void }) {
       >
         🎯
       </button>
+      <button
+        type="button"
+        onClick={onToggleTrains}
+        aria-label="Toggle Live Trains"
+        className={`w-8 h-8 rounded-full border flex items-center justify-center text-xs active:scale-95 transition-all shadow-md cursor-pointer ${
+          showTrains
+            ? "bg-purple-600 border-purple-400 text-white shadow-purple-600/30"
+            : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-400"
+        }`}
+        title={showTrains ? `Hide Live Trains (${trainCount} active)` : "Show Live Trains"}
+      >
+        🚆
+      </button>
     </div>
+  );
+}
+
+// 60 FPS Smooth Moving Metro Train Marker with RequestAnimationFrame Lerp
+function SmoothMetroTrainMarker({ train }: { train: LiveMetroTrain }) {
+  const [pos, setPos] = useState<[number, number]>([train.lat, train.lng]);
+  const prevPos = useRef<[number, number]>([train.lat, train.lng]);
+  const targetPos = useRef<[number, number]>([train.lat, train.lng]);
+
+  useEffect(() => {
+    targetPos.current = [train.lat, train.lng];
+    let animationFrame: number;
+    const smoothFactor = 0.08;
+
+    const animate = () => {
+      const [currentLat, currentLng] = prevPos.current;
+      const [targetLat, targetLng] = targetPos.current;
+
+      const dist = Math.sqrt(
+        Math.pow(targetLat - currentLat, 2) + Math.pow(targetLng - currentLng, 2)
+      );
+
+      if (dist < 0.000003) {
+        setPos([targetLat, targetLng]);
+        prevPos.current = [targetLat, targetLng];
+        return;
+      }
+
+      const nextLat = currentLat + (targetLat - currentLat) * smoothFactor;
+      const nextLng = currentLng + (targetLng - currentLng) * smoothFactor;
+
+      prevPos.current = [nextLat, nextLng];
+      setPos([nextLat, nextLng]);
+
+      animationFrame = requestAnimationFrame(animate);
+    };
+
+    animationFrame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationFrame);
+  }, [train.lat, train.lng]);
+
+  const trainIcon = useMemo(() => {
+    const isPurple = train.line === "Purple";
+    const isGreen = train.line === "Green";
+    const glowShadow = isPurple
+      ? "0 0 14px rgba(140,40,119,0.8)"
+      : isGreen
+      ? "0 0 14px rgba(0,153,51,0.8)"
+      : "0 0 14px rgba(234,179,8,0.8)";
+
+    const html = `
+      <div style="position: relative; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+        <div style="
+          position: absolute;
+          width: 34px;
+          height: 34px;
+          border-radius: 9999px;
+          background: ${train.lineColor};
+          opacity: 0.25;
+          animation: ping 2.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+        "></div>
+        <div style="
+          background: #090d16;
+          border: 2px solid ${train.lineColor};
+          box-shadow: ${glowShadow};
+          border-radius: 12px;
+          padding: 2.5px 7px;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          white-space: nowrap;
+          transform: translate(-50%, -50%);
+          font-family: ui-sans-serif, system-ui, sans-serif;
+          user-select: none;
+        ">
+          <span style="font-size: 11px;">🚆</span>
+          <span style="font-size: 9px; font-weight: 900; color: #ffffff; letter-spacing: 0.5px;">${train.trainId}</span>
+          <span style="
+            width: 6px;
+            height: 6px;
+            border-radius: 9999px;
+            background: ${train.isDwelling ? "#f59e0b" : "#10b981"};
+            display: inline-block;
+          "></span>
+        </div>
+      </div>
+    `;
+
+    return L.divIcon({
+      className: "live-metro-train-marker-div",
+      html,
+      iconSize: [0, 0],
+      iconAnchor: [0, 0],
+    });
+  }, [train.line, train.lineColor, train.trainId, train.isDwelling]);
+
+  return (
+    <Marker position={pos} icon={trainIcon} zIndexOffset={500}>
+      <Popup>
+        <div className="p-1 font-sans text-xs min-w-[210px] text-slate-900">
+          <div className="flex items-center justify-between pb-1.5 mb-1.5 border-b border-slate-200">
+            <div className="flex items-center gap-1.5">
+              <span className="text-base">🚆</span>
+              <span className="font-black text-sm text-slate-900">{train.trainId}</span>
+            </div>
+            <span
+              className="text-[9px] font-black px-2 py-0.5 rounded-full text-white"
+              style={{ backgroundColor: train.lineColor }}
+            >
+              {train.line} Line
+            </span>
+          </div>
+
+          <div className="space-y-1 text-[11px]">
+            <div className="flex justify-between items-center">
+              <span className="text-slate-500 font-bold">Destination:</span>
+              <span className="font-extrabold text-slate-900 truncate max-w-[130px]" title={train.headsign}>
+                {train.headsign}
+              </span>
+            </div>
+
+            <div className="flex justify-between items-center">
+              <span className="text-slate-500 font-bold">Speed:</span>
+              <span className="font-black text-emerald-600">
+                {train.isDwelling ? "0 km/h (Platform Stop)" : `${train.speed} km/h`}
+              </span>
+            </div>
+
+            <div className="flex justify-between items-center">
+              <span className="text-slate-500 font-bold">Next Station:</span>
+              <span className="font-black text-indigo-600 truncate max-w-[130px]">
+                {train.nextStationName}
+              </span>
+            </div>
+
+            <div className="flex justify-between items-center">
+              <span className="text-slate-500 font-bold">Arrival In:</span>
+              <span className="font-mono font-bold text-amber-600">
+                {train.etaNextStationSeconds > 60
+                  ? `${Math.floor(train.etaNextStationSeconds / 60)}m ${train.etaNextStationSeconds % 60}s`
+                  : `${train.etaNextStationSeconds}s`}
+              </span>
+            </div>
+
+            <div className="flex justify-between items-center">
+              <span className="text-slate-500 font-bold">Crowd:</span>
+              <span className="font-bold text-slate-800">
+                {train.occupancyPercent}% ({train.crowdLevel})
+              </span>
+            </div>
+
+            <div className="pt-1.5 mt-1 border-t border-slate-100 flex items-center justify-between text-[9px] text-slate-400">
+              <span>IST Telemetry</span>
+              <span>Trip {train.tripId}</span>
+            </div>
+          </div>
+        </div>
+      </Popup>
+    </Marker>
   );
 }
 
@@ -120,11 +303,43 @@ export default function MetroMap({
   const [tileError, setTileError] = useState(false);
   const [recenterTrigger, setRecenterTrigger] = useState(0);
 
+  // Live Metro Trains State
+  const [liveTrains, setLiveTrains] = useState<LiveMetroTrain[]>([]);
+  const [showLiveTrains, setShowLiveTrains] = useState(true);
+  const [lastUpdatedTime, setLastUpdatedTime] = useState<string>("");
+
   const activeStyle: MapboxStyleOption = MAPBOX_STYLES[styleKey] || MAPBOX_STYLES.navigation;
 
   useEffect(() => {
     setSelectedFilter(activeLineFilter);
   }, [activeLineFilter]);
+
+  // Poll live metro trains from /api/metro/live every 4 seconds
+  useEffect(() => {
+    let isMounted = true;
+
+    async function fetchLiveTrains() {
+      try {
+        const lineParam = selectedFilter !== "All" ? `?line=${encodeURIComponent(selectedFilter)}` : "";
+        const res = await fetch(`/api/metro/live${lineParam}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.success && isMounted) {
+          setLiveTrains(data.trains || []);
+          setLastUpdatedTime(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }));
+        }
+      } catch (err) {
+        console.warn("Failed to poll live metro trains:", err);
+      }
+    }
+
+    fetchLiveTrains();
+    const interval = setInterval(fetchLiveTrains, 4000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [selectedFilter]);
 
   // Filter lines
   const visibleLines = useMemo(() => {
@@ -150,7 +365,7 @@ export default function MetroMap({
     [destStationId]
   );
 
-  // Real Metro Track Polyline Geometry (follows track curves, not a straight chord!)
+  // Real Metro Track Polyline Geometry
   const selectedRouteCoordinates: [number, number][] = useMemo(() => {
     if (routePath && routePath.length > 1) {
       return routePath;
@@ -236,12 +451,27 @@ export default function MetroMap({
           </div>
         )}
 
+        {/* Live Active Trains Badge */}
+        <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-800 shadow-xl flex items-center gap-2 text-[10px] font-bold text-slate-800 dark:text-slate-100">
+          <span className="flex h-2 w-2 relative">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+          </span>
+          <span>{liveTrains.length} Live Trains</span>
+        </div>
+
         {/* Expanded Line Filter Pills */}
         {isExpanded && (
           <div 
             onClick={(e) => e.stopPropagation()}
             onMouseDown={(e) => e.stopPropagation()}
-            className="flex items-center gap-1 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-1 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-x-auto no-scrollbar"
+            onWheel={(e) => {
+              if (e.deltaY !== 0) {
+                e.currentTarget.scrollLeft += e.deltaY;
+              }
+            }}
+            style={{ touchAction: "pan-x pan-y", WebkitOverflowScrolling: "touch" }}
+            className="flex items-center gap-1 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-1 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-x-auto no-scrollbar scroll-smooth"
           >
             {["All", "Purple", "Green", "Yellow", "Blue", "Pink"].map((line) => (
               <button
@@ -298,13 +528,12 @@ export default function MetroMap({
         <span className="flex items-center gap-1">
           <span className="w-2 h-2 rounded-full bg-amber-400" /> Yellow
         </span>
-        <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-full bg-blue-500" /> Blue
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-full bg-pink-500" /> Pink
-        </span>
         <span className="text-slate-400 font-bold">· 121 Stations</span>
+        {lastUpdatedTime && (
+          <span className="text-emerald-600 dark:text-emerald-400 font-bold">
+            · {liveTrains.length} active trains
+          </span>
+        )}
       </div>
 
       <MapContainer
@@ -322,7 +551,12 @@ export default function MetroMap({
           filterKey={selectedFilter}
           recenterTrigger={recenterTrigger}
         />
-        <MetroFloatingControls onRecenter={handleRecenter} />
+        <MetroFloatingControls
+          onRecenter={handleRecenter}
+          showTrains={showLiveTrains}
+          onToggleTrains={() => setShowLiveTrains((prev) => !prev)}
+          trainCount={liveTrains.length}
+        />
 
         {/* Mapbox High-Definition Retina Tile Layer */}
         {!tileError ? (
@@ -358,10 +592,9 @@ export default function MetroMap({
           />
         ))}
 
-        {/* Highlight Path between Origin & Destination along Metro Tracks (Not a straight line!) */}
+        {/* Highlight Path between Origin & Destination along Metro Tracks */}
         {selectedRouteCoordinates && selectedRouteCoordinates.length > 1 && (
           <>
-            {/* Dark casing/shadow line for sharp contrast against light/dark tiles */}
             <Polyline
               key="selected-trip-casing"
               positions={selectedRouteCoordinates}
@@ -369,7 +602,6 @@ export default function MetroMap({
               weight={9}
               opacity={0.8}
             />
-            {/* Vivid cyan/blue glow line */}
             <Polyline
               key="selected-trip-glow"
               positions={selectedRouteCoordinates}
@@ -377,7 +609,6 @@ export default function MetroMap({
               weight={6}
               opacity={0.85}
             />
-            {/* Vivid cyan dashed foreground path */}
             <Polyline
               key="selected-trip-line"
               positions={selectedRouteCoordinates}
@@ -491,6 +722,12 @@ export default function MetroMap({
             </CircleMarker>
           );
         })}
+
+        {/* Live Moving Metro Train Markers Layer */}
+        {showLiveTrains &&
+          liveTrains.map((train) => (
+            <SmoothMetroTrainMarker key={`live-metro-train-${train.tripId}`} train={train} />
+          ))}
       </MapContainer>
     </div>
   );

@@ -57,7 +57,7 @@ export interface SelectedMetroData {
     platform: string;
     isOperating: boolean;
     statusMessage: string;
-    upcomingDepartures: string[];
+    upcomingDepartures?: any[];
   };
   fare?: {
     token: number;
@@ -399,7 +399,7 @@ export default function MapboxBusMap({
         // Fetch detailed live metro departure & fare
         setIsFetchingMetro(true);
         try {
-          const res = await fetch(`/api/metro/plan?fromStation=${encodeURIComponent(code)}&toStation=KGWA`);
+          const res = await fetch(`/api/metro/plan?fromStation=${encodeURIComponent(code)}`);
           if (res.ok) {
             const data = await res.json();
             setSelectedMetro((prev) =>
@@ -407,7 +407,13 @@ export default function MapboxBusMap({
                 ? {
                     ...prev,
                     nextTrain: data.nextTrain,
-                    fare: data.fare,
+                    fare: data.fare || {
+                      token: 40,
+                      smartCardPeak: 38,
+                      smartCardOffPeak: 36,
+                      qr: 38,
+                      currency: "INR",
+                    },
                   }
                 : null
             );
@@ -941,35 +947,55 @@ export default function MapboxBusMap({
                   </div>
 
                   {/* Next Train Arrival Countdown Grid */}
-                  <div className="bg-slate-950/80 p-3 rounded-2xl border border-slate-800/80 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-400">
-                        <TrainFront size={20} />
-                      </div>
-                      <div>
-                        <span className="text-[10px] text-slate-400 font-bold uppercase block">
-                          Next Train Countdown (IST)
-                        </span>
-                        {isFetchingMetro ? (
-                          <span className="text-xs text-purple-300 flex items-center gap-1.5">
-                            <Loader2 size={12} className="animate-spin" /> Fetching real timetable...
+                  <div className="bg-slate-950/80 p-3 rounded-2xl border border-slate-800/80">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-400">
+                          <TrainFront size={20} />
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-slate-400 font-bold uppercase block">
+                            Next Train Countdown (IST)
                           </span>
-                        ) : (
-                          <span className="text-sm font-black text-white">
-                            {selectedMetro.nextTrain?.statusMessage || "Arriving in 3 mins (Next train 14:02 IST)"}
-                          </span>
-                        )}
+                          {isFetchingMetro ? (
+                            <span className="text-xs text-purple-300 flex items-center gap-1.5">
+                              <Loader2 size={12} className="animate-spin" /> Fetching real timetable...
+                            </span>
+                          ) : (
+                            <span className="text-sm font-black text-white">
+                              {selectedMetro.nextTrain?.statusMessage || "Arriving in 3 mins"}
+                            </span>
+                          )}
+                        </div>
                       </div>
+
+                      {selectedMetro.nextTrain?.nextDepartureTime && (
+                        <div className="text-right">
+                          <span className="text-[10px] font-mono text-purple-400 font-bold block">
+                            Departure {selectedMetro.nextTrain.nextDepartureTime}
+                          </span>
+                          <span className="text-[9px] text-slate-500 font-semibold">
+                            IST Live GTFS
+                          </span>
+                        </div>
+                      )}
                     </div>
 
-                    {selectedMetro.nextTrain?.nextDepartureTime && (
-                      <div className="text-right">
-                        <span className="text-[10px] font-mono text-purple-400 font-bold block">
-                          Departure {selectedMetro.nextTrain.nextDepartureTime}
-                        </span>
-                        <span className="text-[9px] text-slate-500 font-semibold">
-                          IST Live Telemetry
-                        </span>
+                    {/* Upcoming Trains */}
+                    {selectedMetro.nextTrain?.upcomingDepartures && selectedMetro.nextTrain.upcomingDepartures.length > 0 && (
+                      <div className="mt-2.5 pt-2 border-t border-slate-800/80 flex items-center justify-between flex-wrap gap-1 text-[10px]">
+                        <span className="text-slate-400 font-bold uppercase text-[9px]">Upcoming Trains:</span>
+                        <div className="flex items-center gap-2">
+                          {selectedMetro.nextTrain.upcomingDepartures.slice(0, 3).map((dep: any, idx: number) => {
+                            const time = typeof dep === "string" ? dep : dep.time;
+                            const head = typeof dep === "object" && dep.headsign ? `(${dep.headsign})` : "";
+                            return (
+                              <span key={`upcoming-${idx}`} className="bg-slate-900 border border-slate-800 px-2 py-0.5 rounded text-purple-300 font-mono font-bold">
+                                {time} {head}
+                              </span>
+                            );
+                          })}
+                        </div>
                       </div>
                     )}
                   </div>

@@ -71,11 +71,23 @@ html, body {
   -webkit-tap-highlight-color: transparent;
 }
 
-.no-scrollbar, .overflow-y-auto, .overflow-x-auto {
+.overflow-y-auto {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   overscroll-behavior-y: contain;
   touch-action: pan-y;
+}
+
+.overflow-x-auto {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  overscroll-behavior-x: contain;
+  touch-action: pan-x pan-y;
+}
+
+.no-scrollbar {
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pan-y;
 }
 
 /* Leaflet map tile rendering & clarity optimizations */
