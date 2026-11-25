@@ -20,6 +20,8 @@ import { MAPBOX_PUBLIC_TOKEN, MAPBOX_STYLES, MapboxStyleOption } from "@/lib/map
 import { requestBrowserLocation, reverseGeocodeCoordinates } from "@/lib/location";
 import metroData from "@/data/namma_metro.json";
 import { getCuratedStopsForBus } from "@/data/curatedCorridorStops";
+import { SmoothMetroTrainMarker } from "@/components/MetroMap";
+import { LiveMetroTrain } from "@/lib/bmrclGtfsEngine";
 
 interface LiveVehicle {
   v_id: string;
@@ -575,6 +577,39 @@ export default function LiveMap({
   const [showMetro, setShowMetro] = useState<boolean>(initialShowMetro);
   const [activeMetroLineFilter, setActiveMetroLineFilter] = useState<string>("All");
   const [showStops, setShowStops] = useState<boolean>(initialShowStops);
+
+  // Live Metro Fleet State
+  const [liveMetroTrains, setLiveMetroTrains] = useState<LiveMetroTrain[]>([]);
+
+  // Poll live metro trains when Metro layer is toggled on
+  useEffect(() => {
+    if (!showMetro) {
+      setLiveMetroTrains([]);
+      return;
+    }
+
+    let isMounted = true;
+    async function fetchLiveMetro() {
+      try {
+        const lineParam = activeMetroLineFilter !== "All" ? `?line=${encodeURIComponent(activeMetroLineFilter)}` : "";
+        const res = await fetch(`/api/metro/live${lineParam}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.success && isMounted) {
+          setLiveMetroTrains(data.trains || []);
+        }
+      } catch (err) {
+        console.warn("Live metro polling error on LiveMap:", err);
+      }
+    }
+
+    fetchLiveMetro();
+    const interval = setInterval(fetchLiveMetro, 4000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [showMetro, activeMetroLineFilter]);
 
   // Filtered Metro Lines
   const visibleMetroLines = useMemo(() => {
@@ -1161,6 +1196,12 @@ export default function LiveMap({
                 </div>
               </Popup>
             </CircleMarker>
+          ))}
+
+        {/* LIVE MOVING NAMMA METRO TRAINS: Real BMRCL Moving Fleet along tracks */}
+        {showMetro &&
+          liveMetroTrains.map((train) => (
+            <SmoothMetroTrainMarker key={`livemap-metro-train-${train.tripId}`} train={train} />
           ))}
 
         {/* BMTC BUS STOPS: All Bus Stops Along Selected Route */}

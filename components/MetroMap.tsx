@@ -128,7 +128,7 @@ function MetroFloatingControls({
 }
 
 // 60 FPS Smooth Moving Metro Train Marker with RequestAnimationFrame Lerp
-function SmoothMetroTrainMarker({ train }: { train: LiveMetroTrain }) {
+export function SmoothMetroTrainMarker({ train }: { train: LiveMetroTrain }) {
   const [pos, setPos] = useState<[number, number]>([train.lat, train.lng]);
   const prevPos = useRef<[number, number]>([train.lat, train.lng]);
   const targetPos = useRef<[number, number]>([train.lat, train.lng]);
