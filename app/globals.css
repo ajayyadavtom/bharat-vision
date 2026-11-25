@@ -58,10 +58,9 @@ html, body {
   overflow: hidden;
   overscroll-behavior: none;
   overscroll-behavior-y: none;
-  touch-action: pan-y;
+  touch-action: manipulation;
   -webkit-text-size-adjust: 100%;
   -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -75,7 +74,6 @@ html, body {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   overscroll-behavior-y: contain;
-  touch-action: pan-y;
 }
 
 .overflow-x-auto {

@@ -471,7 +471,7 @@ export default function MetroMap({
               }
             }}
             style={{ touchAction: "pan-x pan-y", WebkitOverflowScrolling: "touch" }}
-            className="flex items-center gap-1 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-1 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-x-auto no-scrollbar scroll-smooth"
+            className="flex items-center gap-1 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-1 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-x-auto no-scrollbar"
           >
             {["All", "Purple", "Green", "Yellow", "Blue", "Pink"].map((line) => (
               <button

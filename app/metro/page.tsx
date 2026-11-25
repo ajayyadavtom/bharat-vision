@@ -90,24 +90,42 @@ export default function MetroScreen() {
   const lineTabsRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
-  const isDraggingRef = useRef(false);
+  const isPointerDownRef = useRef(false);
   const startXRef = useRef(0);
   const scrollLeftRef = useRef(0);
+  const hasDraggedRef = useRef(false);
 
   const checkLineTabsScroll = useCallback(() => {
     const el = lineTabsRef.current;
     if (!el) return;
-    setCanScrollLeft(el.scrollLeft > 6);
-    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 6);
+    const hasLeft = el.scrollLeft > 4;
+    const hasRight = el.scrollLeft + el.clientWidth < el.scrollWidth - 4;
+    setCanScrollLeft(hasLeft);
+    setCanScrollRight(hasRight);
   }, []);
 
   useEffect(() => {
     const el = lineTabsRef.current;
     if (!el) return;
     checkLineTabsScroll();
+
+    let ro: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== "undefined") {
+      ro = new ResizeObserver(() => {
+        checkLineTabsScroll();
+      });
+      ro.observe(el);
+    }
+
+    const raf = requestAnimationFrame(checkLineTabsScroll);
+    const timer = setTimeout(checkLineTabsScroll, 200);
+
     el.addEventListener("scroll", checkLineTabsScroll, { passive: true });
     window.addEventListener("resize", checkLineTabsScroll);
     return () => {
+      if (ro) ro.disconnect();
+      cancelAnimationFrame(raf);
+      clearTimeout(timer);
       el.removeEventListener("scroll", checkLineTabsScroll);
       window.removeEventListener("resize", checkLineTabsScroll);
     };
@@ -130,26 +148,29 @@ export default function MetroScreen() {
     el.scrollBy({ left: amount, behavior: "smooth" });
   };
 
-  const handleTabsMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType === "mouse" && e.button !== 0) return;
     const el = lineTabsRef.current;
     if (!el) return;
-    isDraggingRef.current = true;
-    startXRef.current = e.pageX - el.offsetLeft;
+    isPointerDownRef.current = true;
+    hasDraggedRef.current = false;
+    startXRef.current = e.clientX;
     scrollLeftRef.current = el.scrollLeft;
   };
 
-  const handleTabsMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!isDraggingRef.current) return;
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isPointerDownRef.current) return;
     const el = lineTabsRef.current;
     if (!el) return;
-    e.preventDefault();
-    const x = e.pageX - el.offsetLeft;
-    const walk = (x - startXRef.current) * 1.5;
-    el.scrollLeft = scrollLeftRef.current - walk;
+    const deltaX = e.clientX - startXRef.current;
+    if (Math.abs(deltaX) > 4) {
+      hasDraggedRef.current = true;
+    }
+    el.scrollLeft = scrollLeftRef.current - deltaX;
   };
 
-  const handleTabsMouseUp = () => {
-    isDraggingRef.current = false;
+  const handlePointerUp = () => {
+    isPointerDownRef.current = false;
   };
 
   useEffect(() => {
@@ -441,7 +462,7 @@ export default function MetroScreen() {
                 type="button"
                 onClick={() => scrollLineTabs("left")}
                 aria-label="Scroll left to see earlier metro lines"
-                className="absolute left-1 z-20 w-7 h-7 rounded-xl bg-white/95 dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-center text-slate-700 dark:text-slate-200 hover:text-purple-600 transition-all cursor-pointer backdrop-blur-md shrink-0"
+                className="w-7 h-7 mr-1 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs flex items-center justify-center text-slate-700 dark:text-slate-200 hover:text-purple-600 transition-all cursor-pointer shrink-0"
               >
                 <ChevronLeft size={16} />
               </button>
@@ -454,12 +475,12 @@ export default function MetroScreen() {
                   e.currentTarget.scrollLeft += e.deltaY;
                 }
               }}
-              onMouseDown={handleTabsMouseDown}
-              onMouseMove={handleTabsMouseMove}
-              onMouseUp={handleTabsMouseUp}
-              onMouseLeave={handleTabsMouseUp}
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+              onPointerCancel={handlePointerUp}
               style={{ touchAction: "pan-x pan-y", WebkitOverflowScrolling: "touch" }}
-              className="flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth w-full p-0.5 select-none cursor-grab active:cursor-grabbing"
+              className="flex items-center gap-1.5 overflow-x-auto no-scrollbar w-full p-0.5 select-none cursor-grab active:cursor-grabbing"
             >
               {lineFilters.map((filter) => {
                 const isSelected = activeLineFilter === filter.key;
@@ -468,7 +489,10 @@ export default function MetroScreen() {
                     key={filter.key}
                     data-line-filter={filter.key}
                     type="button"
-                    onClick={() => setActiveLineFilter(filter.key)}
+                    onClick={() => {
+                      if (hasDraggedRef.current) return;
+                      setActiveLineFilter(filter.key);
+                    }}
                     className={`py-2 px-3.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer ${
                       isSelected
                         ? filter.activeClass
@@ -482,13 +506,13 @@ export default function MetroScreen() {
               })}
             </div>
 
-            {/* Right Scroll Chevron Button - Gently pulses pink to indicate Pink Line is available */}
+            {/* Right Scroll Chevron Button - Always accessible to scroll directly to Pink Line */}
             {canScrollRight && (
               <button
                 type="button"
                 onClick={() => scrollLineTabs("right")}
                 aria-label="Scroll right to see Pink line"
-                className="absolute right-1 z-20 w-7 h-7 rounded-xl bg-pink-500 hover:bg-pink-600 text-white shadow-md flex items-center justify-center transition-all cursor-pointer shadow-pink-500/30 animate-pulse shrink-0"
+                className="w-7 h-7 ml-1 rounded-xl bg-pink-500 hover:bg-pink-600 text-white shadow-md flex items-center justify-center transition-all cursor-pointer shadow-pink-500/30 animate-pulse shrink-0"
                 title="Scroll right to see Pink Line (13)"
               >
                 <ChevronRight size={16} />
@@ -537,7 +561,15 @@ export default function MetroScreen() {
         </div>
 
         {/* Popular Stations Shortcuts */}
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 mb-3">
+        <div 
+          onWheel={(e) => {
+            if (e.deltaY !== 0) {
+              e.currentTarget.scrollLeft += e.deltaY;
+            }
+          }}
+          style={{ touchAction: "pan-x pan-y", WebkitOverflowScrolling: "touch" }}
+          className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 mb-3"
+        >
           <span className="text-[10px] text-slate-400 uppercase font-black shrink-0 mr-1">Quick:</span>
           {popularStations.map((pop) => (
             <button
