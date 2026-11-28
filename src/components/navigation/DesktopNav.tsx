@@ -18,7 +18,9 @@ import {
   Crosshair, 
   User, 
   Bus,
-  Settings
+  Settings,
+  Navigation,
+  Compass
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useAppStore } from "@/lib/store";
@@ -64,6 +66,7 @@ export default function DesktopNav() {
   const navLinks = [
     { name: "Home", shortName: "Home", href: "/", icon: Home },
     { name: "Live Track", shortName: "Track", href: "/track", icon: MapIcon, badge: "BMTC GTFS" },
+    { name: "Navigation", shortName: "Nav", href: "/map", icon: Navigation, badge: "Google Nav" },
     { name: "Namma Metro", shortName: "Metro", href: "/metro", icon: TrainFront, badge: "BMRCL" },
     { name: "Pass & NCMC", shortName: "Pass", href: "/pass", icon: QrCode },
     { name: "SafeKeep", shortName: "Safety", href: "/safety", icon: ShieldAlert },

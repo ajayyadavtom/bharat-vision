@@ -306,29 +306,33 @@ export default function VisionHome() {
             </div>
           </motion.div>
 
-          {/* Where to? Navigation Search Bar */}
+          {/* Where to? Google Map Navigation Search Bar */}
           <motion.div variants={itemVariants} className="relative group">
-            <Link href="/route" className="block">
+            <Link href="/map" className="block">
               <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                <Search size={20} className="text-slate-400 group-hover:text-emerald-500 transition-colors" />
+                <Search size={20} className="text-slate-400 group-hover:text-blue-500 transition-colors" />
               </div>
-              <div className="w-full bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 rounded-2xl py-4 pl-12 pr-4 border border-slate-200 dark:border-slate-800 group-hover:border-emerald-500 transition-all shadow-sm text-sm text-left font-bold">
-                Where to? (e.g., Silk Board to Majestic)
+              <div className="w-full bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 rounded-2xl py-4 pl-12 pr-4 border border-slate-200 dark:border-slate-800 group-hover:border-blue-500 transition-all shadow-sm text-sm text-left font-bold flex items-center justify-between">
+                <span>Where to? (e.g., Silk Board to Majestic)</span>
+                <span className="text-[10px] uppercase font-black px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 flex items-center gap-1 shadow-xs">
+                  <Compass size={11} className="text-blue-500" />
+                  Google Nav
+                </span>
               </div>
             </Link>
             {/* Quick Corridor Hubs */}
             <div className="flex items-center gap-1.5 mt-2.5 overflow-x-auto no-scrollbar">
               <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 shrink-0">Popular:</span>
               {[
-                { label: "Silk Board ⇄ Hebbal (500D)", href: "/track" },
-                { label: "Majestic ⇄ Whitefield (Purple)", href: "/metro" },
-                { label: "Airport Vayu Vajra (KIA-9)", href: "/track" },
-                { label: "Indiranagar ⇄ MG Road", href: "/route" },
+                { label: "Silk Board ⇄ Hebbal", href: "/map" },
+                { label: "Majestic ⇄ Whitefield", href: "/map" },
+                { label: "Airport Vayu Vajra", href: "/map" },
+                { label: "Indiranagar ⇄ MG Road", href: "/map" },
               ].map((hub) => (
                 <Link
                   key={hub.label}
                   href={hub.href}
-                  className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 bg-white/80 dark:bg-slate-900/80 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-600 dark:hover:text-emerald-400 border border-slate-200 dark:border-slate-800 px-2.5 py-1 rounded-lg transition-colors whitespace-nowrap shadow-xs"
+                  className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 bg-white/80 dark:bg-slate-900/80 hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:text-blue-600 dark:hover:text-blue-400 border border-slate-200 dark:border-slate-800 px-2.5 py-1 rounded-lg transition-colors whitespace-nowrap shadow-xs"
                 >
                   {hub.label}
                 </Link>

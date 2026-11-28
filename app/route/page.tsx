@@ -43,12 +43,16 @@ import {
   BmtcStop 
 } from "@/lib/busNavigation";
 
-// Dynamically import LiveMap (Client-side only)
+// Dynamically import LiveMap and GoogleNavSystem (Client-side only)
 const LiveMap = dynamic(() => import("../../components/LiveMap"), { ssr: false });
+const GoogleNavSystem = dynamic(() => import("../../components/GoogleNavSystem"), { ssr: false });
 
 export default function RoutePlannerScreen() {
   const router = useRouter();
   const { addKarma, walletBalance } = useAppStore();
+
+  // Navigation mode: Google Maps Navigation vs BMTC Bus Planner
+  const [plannerTab, setPlannerTab] = useState<"google_nav" | "bus_planner">("google_nav");
 
   // User live location state
   const [userLoc, setUserLoc] = useState<[number, number] | null>(null);
@@ -292,8 +296,63 @@ export default function RoutePlannerScreen() {
     }
   };
 
+  if (plannerTab === "google_nav") {
+    return (
+      <div className="relative w-full h-[100dvh] lg:h-full bg-[#09090b] flex flex-col">
+        {/* Floating Mode Switcher */}
+        <div className="absolute top-3 right-3 lg:top-6 lg:right-6 z-[650] flex items-center gap-1 bg-slate-900/90 backdrop-blur-md p-1 rounded-2xl border border-slate-700 shadow-2xl">
+          <button
+            type="button"
+            onClick={() => setPlannerTab("google_nav")}
+            className="px-3 py-1.5 rounded-xl text-xs font-black bg-blue-600 text-white shadow-md flex items-center gap-1.5 transition-all"
+          >
+            <Compass size={13} />
+            <span>Google Nav</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setPlannerTab("bus_planner")}
+            className="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800 flex items-center gap-1.5 transition-all"
+          >
+            <Bus size={13} />
+            <span>Bus Planner</span>
+          </button>
+        </div>
+
+        <GoogleNavSystem
+          initialOrigin={
+            userLoc ? { name: liveLocationAddress || "Your Location", coords: userLoc } : undefined
+          }
+          initialDestination={
+            destination ? { name: destination, coords: [12.9781, 77.5695] } : undefined
+          }
+          onBack={() => router.push("/")}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col lg:grid lg:grid-cols-12 lg:gap-8 h-[100dvh] lg:h-full bg-slate-100 dark:bg-[#09090b] relative overflow-hidden text-slate-900 dark:text-slate-100 lg:max-w-[1720px] lg:mx-auto lg:w-full lg:px-10 xl:px-14 lg:py-4">
+      {/* Floating Mode Switcher */}
+      <div className="absolute top-3 right-3 lg:top-6 lg:right-6 z-30 flex items-center gap-1 bg-slate-900/90 backdrop-blur-md p-1 rounded-2xl border border-slate-700 shadow-2xl">
+        <button
+          type="button"
+          onClick={() => setPlannerTab("google_nav")}
+          className="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800 flex items-center gap-1.5 transition-all"
+        >
+          <Compass size={13} />
+          <span>Google Nav</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setPlannerTab("bus_planner")}
+          className="px-3 py-1.5 rounded-xl text-xs font-black bg-emerald-600 text-white shadow-md flex items-center gap-1.5 transition-all"
+        >
+          <Bus size={13} />
+          <span>Bus Planner</span>
+        </button>
+      </div>
       
       {/* Top Half: Live Map with Route, Boarding, and GPS Markers */}
       <div className={`absolute top-0 left-0 right-0 lg:static lg:col-start-6 xl:col-start-5 lg:col-span-7 xl:col-span-8 lg:h-[calc(100vh-140px)] lg:min-h-[620px] lg:max-h-[860px] lg:rounded-3xl lg:overflow-hidden lg:shadow-xl transition-all duration-500 ease-in-out ${suggestion ? 'h-[38vh]' : 'h-[52vh]'} z-0`}>
